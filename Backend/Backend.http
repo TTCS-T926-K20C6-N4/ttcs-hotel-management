@@ -1,6 +1,9 @@
 @Backend_HostAddress = http://localhost:5097
 
-GET {{Backend_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{Backend_HostAddress}}/api/auth/login
+Content-Type: application/json
 
-###
+{
+  "email": "admin@hotel.com",
+  "password": "Admin@123"
+}

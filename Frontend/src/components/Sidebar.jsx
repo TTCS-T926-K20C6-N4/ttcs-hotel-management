@@ -1,6 +1,38 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 function Sidebar() {
+  const navigate = useNavigate()
+
+  // ==========================================
+  // ĐĂNG XUẤT
+  // ==========================================
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:5097/api/auth/logout',
+        {
+          method: 'POST',
+
+          // QUAN TRỌNG:
+          // gửi cookie Session sang Backend
+          credentials: 'include'
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Đăng xuất thất bại')
+      }
+
+      // Backend đã HttpContext.Session.Clear()
+      // Chuyển về trang đăng nhập
+      navigate('/login', { replace: true })
+    } catch (error) {
+      console.error('Lỗi đăng xuất:', error)
+
+      alert('Không thể đăng xuất. Vui lòng thử lại.')
+    }
+  }
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -64,7 +96,11 @@ function Sidebar() {
           🔒 <span>Đổi mật khẩu</span>
         </NavLink>
 
-        <button className="logout-menu">
+        <button
+          type="button"
+          className="logout-menu"
+          onClick={handleLogout}
+        >
           🚪 <span>Đăng xuất</span>
         </button>
 
