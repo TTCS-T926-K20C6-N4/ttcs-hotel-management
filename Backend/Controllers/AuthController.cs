@@ -21,7 +21,90 @@ public class AuthController : ControllerBase
         _context = context;
         _tokenService = tokenService;
     }
+// ==========================================
+// POST: /api/auth/register
+// ĐĂNG KÝ TÀI KHOẢN
+// ==========================================
+[HttpPost("register")]
+public async Task<IActionResult> Register(
+    [FromBody] RegisterRequest request)
+{
+    // Kiểm tra dữ liệu
+    if (request == null ||
+        string.IsNullOrWhiteSpace(request.FullName) ||
+        string.IsNullOrWhiteSpace(request.Email) ||
+        string.IsNullOrWhiteSpace(request.Password) ||
+        string.IsNullOrWhiteSpace(request.ConfirmPassword))
+    {
+        return BadRequest(new
+        {
+            message = "Vui lòng nhập đầy đủ thông tin."
+        });
+    }
 
+    // Kiểm tra xác nhận mật khẩu
+    if (request.Password != request.ConfirmPassword)
+    {
+        return BadRequest(new
+        {
+            message = "Mật khẩu xác nhận không khớp."
+        });
+    }
+
+    // Kiểm tra độ dài mật khẩu
+    if (request.Password.Length < 6)
+    {
+        return BadRequest(new
+        {
+            message = "Mật khẩu phải có ít nhất 6 ký tự."
+        });
+    }
+
+    // Chuẩn hóa email
+    var email = request.Email.Trim().ToLower();
+
+    // Kiểm tra email đã tồn tại chưa
+    var emailExists = await _context.Users
+        .AnyAsync(u => u.Email.ToLower() == email);
+
+    if (emailExists)
+    {
+        return Conflict(new
+        {
+            message = "Email này đã được đăng ký."
+        });
+    }
+
+    // Hash mật khẩu
+    var passwordHash =
+        BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+    // Tạo tài khoản
+    var user = new Backend.Models.User
+    {
+        FullName = request.FullName.Trim(),
+        Email = email,
+        PasswordHash = passwordHash,
+        Role = "User",
+        IsActive = true
+    };
+
+    // Lưu SQL Server
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+
+    return Ok(new
+    {
+        message = "Đăng ký tài khoản thành công.",
+        user = new
+        {
+            user.Id,
+            user.FullName,
+            user.Email,
+            user.Role
+        }
+    });
+}
     // ==========================================
     // POST: /api/auth/login
     // ĐĂNG NHẬP
