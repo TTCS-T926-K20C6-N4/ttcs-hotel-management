@@ -355,3 +355,362 @@
     flex-direction: column;
   }
 }
+
+/* =========================================
+   ADD ROOM PAGE
+========================================= */
+
+.add-room-page {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 10px 0 40px;
+}
+
+.page-heading {
+  margin-bottom: 25px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.page-heading p {
+  margin-top: 7px;
+  color: #7c8799;
+  font-size: 15px;
+}
+
+
+/* CARD FORM */
+
+.room-form {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px 32px;
+  border: 1px solid #e5e9f0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+
+/* 2 CỘT */
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #344054;
+}
+
+
+/* INPUT */
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+  background: #ffffff;
+
+  padding: 11px 13px;
+
+  font-family: inherit;
+  font-size: 14px;
+  color: #1f2937;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group input,
+.form-group select {
+  height: 44px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+
+/* FOCUS */
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
+}
+
+
+/* PLACEHOLDER */
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a0a8b5;
+}
+
+
+/* BUTTON */
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  margin-top: 8px;
+  padding-top: 22px;
+
+  border-top: 1px solid #edf0f4;
+}
+
+.btn-cancel,
+.btn-save {
+  min-width: 120px;
+  height: 42px;
+
+  border-radius: 8px;
+
+  padding: 0 20px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-cancel {
+  background: #ffffff;
+  border: 1px solid #d5dae2;
+  color: #475467;
+}
+
+.btn-cancel:hover {
+  background: #f6f7f9;
+}
+
+.btn-save {
+  background: #2f6fed;
+  border: 1px solid #2f6fed;
+  color: #ffffff;
+}
+
+.btn-save:hover {
+  background: #245ed0;
+}
+
+
+/* MESSAGE */
+
+.form-error,
+.form-success {
+  padding: 11px 14px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.form-error {
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+}
+
+.form-success {
+  color: #067647;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+  .add-room-page {
+    padding: 5px;
+  }
+
+  .room-form {
+    padding: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+  }
+}
+/* ==============================
+   DANH SÁCH PHÒNG
+================================ */
+
+.room-list-page {
+  width: 100%;
+}
+
+.room-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.room-list-header h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #172033;
+}
+
+.room-list-header p {
+  margin-top: 7px;
+  color: #8491a7;
+}
+
+.add-room-button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 13px 22px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-room-button:hover {
+  opacity: 0.9;
+}
+
+.room-table-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e5eaf1;
+  overflow: hidden;
+}
+
+.room-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.room-table thead {
+  background: #f7f9fc;
+}
+
+.room-table th {
+  padding: 16px 18px;
+  text-align: left;
+  color: #65748b;
+  font-size: 14px;
+  border-bottom: 1px solid #e5eaf1;
+}
+
+.room-table td {
+  padding: 17px 18px;
+  border-bottom: 1px solid #edf0f5;
+  color: #25324b;
+}
+
+.room-table tbody tr:hover {
+  background: #f8faff;
+}
+
+.room-price {
+  font-weight: 600;
+}
+
+.room-status {
+  display: inline-block;
+  padding: 6px 11px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-available {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-occupied {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-maintenance {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.room-message {
+  padding: 25px;
+  background: white;
+  border-radius: 12px;
+}
+
+.room-error {
+  color: #dc2626;
+}
+
+.empty-room {
+  text-align: center;
+  color: #8491a7 !important;
+  padding: 35px !important;
+}
+
+/* ===== PREVIEW ẢNH PHÒNG ===== */
+
+.image-preview {
+  margin-top: 16px;
+  width: 280px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  display: block;
+}
+
+.image-preview p {
+  margin-top: 8px;
+
+  font-size: 14px;
+  color: #64748b;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
