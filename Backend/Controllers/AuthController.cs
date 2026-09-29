@@ -30,204 +30,102 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request)
     {
-        // ======================================
-        // KIỂM TRA DỮ LIỆU
-        // ======================================
-
+        // Kiểm tra dữ liệu
         if (request == null ||
             string.IsNullOrWhiteSpace(request.Email) ||
             string.IsNullOrWhiteSpace(request.Password))
         {
             return BadRequest(new
             {
-                message =
-                    "Vui lòng nhập đầy đủ Email và mật khẩu."
+                message = "Vui lòng nhập đầy đủ Email và mật khẩu."
             });
         }
 
-        // ======================================
-        // CHUẨN HÓA EMAIL
-        // ======================================
+        // Chuẩn hóa email
+        var email = request.Email.Trim().ToLower();
 
-        var email =
-            request.Email.Trim().ToLower();
-
-        // ======================================
-        // TÌM USER
-        // ======================================
-
+        // Tìm tài khoản
         var user = await _context.Users
             .FirstOrDefaultAsync(
                 u => u.Email.ToLower() == email
             );
 
-        // Không tìm thấy tài khoản
         if (user == null)
         {
             return Unauthorized(new
             {
-                message =
-                    "Email hoặc mật khẩu không chính xác."
+                message = "Email hoặc mật khẩu không chính xác."
             });
         }
 
-        // ======================================
-        // KIỂM TRA TÀI KHOẢN HOẠT ĐỘNG
-        // ======================================
-
+        // Kiểm tra tài khoản còn hoạt động
         if (!user.IsActive)
         {
             return StatusCode(403, new
             {
-                message =
-                    "Tài khoản đã bị vô hiệu hóa."
+                message = "Tài khoản đã bị vô hiệu hóa."
             });
         }
 
-        // ======================================
-        // KIỂM TRA TÀI KHOẢN ĐANG BỊ KHÓA
-        // ======================================
-
-        if (user.LockoutEnd.HasValue &&
-            user.LockoutEnd.Value > DateTime.UtcNow)
-        {
-            var remaining =
-                user.LockoutEnd.Value -
-                DateTime.UtcNow;
-
-            return StatusCode(423, new
-            {
-                message =
-                    "Tài khoản đang bị khóa. " +
-                    "Vui lòng thử lại sau.",
-
-                remainingMinutes =
-                    Math.Ceiling(
-                        remaining.TotalMinutes
-                    )
-            });
-        }
-
-        // ======================================
-        // NẾU THỜI GIAN KHÓA ĐÃ HẾT
-        // ======================================
-
-        if (user.LockoutEnd.HasValue &&
-            user.LockoutEnd.Value <= DateTime.UtcNow)
-        {
-            user.LockoutEnd = null;
-
-            user.FailedLoginAttempts = 0;
-
-            await _context.SaveChangesAsync();
-        }
-
-        // ======================================
-        // KIỂM TRA PASSWORD BẰNG BCRYPT
-        // ======================================
-
+        // ==========================================
+        // KIỂM TRA MẬT KHẨU
+        // ==========================================
         var passwordCorrect =
             BCrypt.Net.BCrypt.Verify(
                 request.Password,
                 user.PasswordHash
             );
 
-        // ======================================
-        // PASSWORD SAI
-        // ======================================
-
         if (!passwordCorrect)
         {
-            user.FailedLoginAttempts++;
-
-            // Sai đủ 5 lần
-            if (user.FailedLoginAttempts >= 5)
-            {
-                user.LockoutEnd =
-                    DateTime.UtcNow.AddMinutes(15);
-
-                user.FailedLoginAttempts = 0;
-
-                await _context.SaveChangesAsync();
-
-                return StatusCode(423, new
-                {
-                    message =
-                        "Bạn đã nhập sai mật khẩu 5 lần. " +
-                        "Tài khoản bị khóa trong 15 phút."
-                });
-            }
-
-            await _context.SaveChangesAsync();
-
+            // Không đếm số lần sai
+            // Không khóa tài khoản
             return Unauthorized(new
             {
-                message =
-                    "Email hoặc mật khẩu không chính xác.",
-
-                remainingAttempts =
-                    5 - user.FailedLoginAttempts
+                message = "Email hoặc mật khẩu không chính xác."
             });
         }
 
-        // ======================================
-        // PASSWORD ĐÚNG
-        // ======================================
+        // ==========================================
+        // ĐĂNG NHẬP ĐÚNG -> TẠO SESSION
+        // ==========================================
 
-        user.FailedLoginAttempts = 0;
-        user.LockoutEnd = null;
-
-        await _context.SaveChangesAsync();
-
-        // ======================================
-        // TẠO SESSION
-        // ======================================
-
-        // Lưu trạng thái đăng nhập
         HttpContext.Session.SetString(
             "IsLoggedIn",
             "true"
         );
 
-        // Lưu ID người đăng nhập
         HttpContext.Session.SetInt32(
             "UserId",
             user.Id
         );
 
-        // Lưu Email
         HttpContext.Session.SetString(
             "UserEmail",
             user.Email
         );
 
-        // Lưu họ tên
         HttpContext.Session.SetString(
             "UserName",
             user.FullName ?? ""
         );
 
-        // Lưu quyền
         HttpContext.Session.SetString(
             "UserRole",
             user.Role ?? ""
         );
 
-        // ======================================
+        // ==========================================
         // TẠO JWT
-        // ======================================
+        // ==========================================
+        var token = _tokenService.CreateToken(user);
 
-        var token =
-            _tokenService.CreateToken(user);
-
-        // ======================================
-        // ĐĂNG NHẬP THÀNH CÔNG
-        // ======================================
-
+        // ==========================================
+        // TRẢ KẾT QUẢ
+        // ==========================================
         return Ok(new
         {
-            message =
-                "Đăng nhập thành công.",
+            message = "Đăng nhập thành công.",
 
             token,
 
@@ -243,51 +141,34 @@ public class AuthController : ControllerBase
 
     // ==========================================
     // GET: /api/auth/me
-    // KIỂM TRA NGƯỜI DÙNG ĐÃ LOGIN CHƯA
+    // KIỂM TRA SESSION
     // ==========================================
     [HttpGet("me")]
     public IActionResult GetCurrentUser()
     {
         var isLoggedIn =
-            HttpContext.Session.GetString(
-                "IsLoggedIn"
-            );
+            HttpContext.Session.GetString("IsLoggedIn");
 
-        // Chưa đăng nhập hoặc Session hết hạn
         if (isLoggedIn != "true")
         {
             return Unauthorized(new
             {
                 isLoggedIn = false,
-
-                message =
-                    "Bạn chưa đăng nhập."
+                message = "Bạn chưa đăng nhập."
             });
         }
 
-        // ======================================
-        // LẤY THÔNG TIN TỪ SESSION
-        // ======================================
-
         var userId =
-            HttpContext.Session.GetInt32(
-                "UserId"
-            );
+            HttpContext.Session.GetInt32("UserId");
 
         var email =
-            HttpContext.Session.GetString(
-                "UserEmail"
-            );
+            HttpContext.Session.GetString("UserEmail");
 
         var fullName =
-            HttpContext.Session.GetString(
-                "UserName"
-            );
+            HttpContext.Session.GetString("UserName");
 
         var role =
-            HttpContext.Session.GetString(
-                "UserRole"
-            );
+            HttpContext.Session.GetString("UserRole");
 
         return Ok(new
         {
@@ -310,13 +191,11 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        // Xóa toàn bộ Session
         HttpContext.Session.Clear();
 
         return Ok(new
         {
-            message =
-                "Đăng xuất thành công."
+            message = "Đăng xuất thành công."
         });
     }
 }

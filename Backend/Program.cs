@@ -2,7 +2,6 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -74,17 +73,23 @@ builder.Services.AddSession(options =>
     // Session hết hạn sau 30 phút không hoạt động
     options.IdleTimeout = TimeSpan.FromMinutes(30);
 
-    // Không cho JavaScript đọc cookie Session
+    // JavaScript không được đọc cookie Session
     options.Cookie.HttpOnly = true;
 
+    // Cookie cần thiết cho hệ thống
     options.Cookie.IsEssential = true;
 
-    // Phù hợp khi chạy localhost
+    // Frontend localhost:5173 gọi Backend localhost:5097
     options.Cookie.SameSite = SameSiteMode.Lax;
 
-    // Hiện tại đang chạy HTTP localhost
+    // Đang chạy HTTP localhost
     options.Cookie.SecurePolicy =
         CookieSecurePolicy.SameAsRequest;
+
+    // QUAN TRỌNG:
+    // Không đặt MaxAge/Expires.
+    // Đây là session cookie.
+    // Đóng phiên trình duyệt thì cookie không được lưu lâu dài.
 });
 
 // =====================================
@@ -99,7 +104,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
 
-            // Cho phép React gửi cookie Session
+            // Bắt buộc để gửi cookie Session
             .AllowCredentials();
     });
 });
@@ -123,12 +128,12 @@ if (app.Environment.IsDevelopment())
 // MIDDLEWARE
 // =====================================
 
-// Tạm thời không redirect HTTPS khi chạy localhost HTTP
+// Hiện đang dùng HTTP localhost
 // app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-// Session phải được kích hoạt trước Controllers
+// Phải có trước khi Controller sử dụng HttpContext.Session
 app.UseSession();
 
 app.UseAuthentication();
@@ -144,20 +149,15 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-    // Tự động áp dụng Migration
     db.Database.Migrate();
 
-    // Tạo tài khoản Admin nếu chưa tồn tại
     if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
     {
         var admin = new User
         {
             Email = "admin@hotel.com",
-
             FullName = "Administrator",
-
             Role = "Admin",
-
             IsActive = true,
 
             PasswordHash =
@@ -166,14 +166,11 @@ using (var scope = app.Services.CreateScope())
                 ),
 
             FailedLoginAttempts = 0,
-
             LockoutEnd = null,
-
             CreatedAt = DateTime.UtcNow
         };
 
         db.Users.Add(admin);
-
         db.SaveChanges();
 
         Console.WriteLine(
@@ -183,6 +180,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 // =====================================
-// PHẢI LÀ DÒNG CUỐI
+// RUN
 // =====================================
 app.Run();
