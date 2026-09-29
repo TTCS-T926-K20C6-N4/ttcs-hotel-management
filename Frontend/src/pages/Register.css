@@ -1,0 +1,167 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f3f6fb;
+  padding: 30px 15px;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 40px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+}
+
+.register-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #2f66e9;
+  color: #ffffff;
+
+  font-size: 32px;
+  border-radius: 14px;
+}
+
+.register-card .hotel-name {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+
+.register-card h1 {
+  text-align: center;
+  margin: 0;
+  font-size: 28px;
+}
+
+.register-subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin: 10px 0 30px;
+}
+
+.register-card .form-group {
+  margin-bottom: 18px;
+}
+
+.register-card label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 600;
+}
+
+.register-card input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  box-sizing: border-box;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  font-size: 15px;
+  outline: none;
+}
+
+.register-card input:focus {
+  border-color: #2f66e9;
+}
+
+.register-card .password-wrapper {
+  position: relative;
+}
+
+.register-card .password-wrapper input {
+  padding-right: 65px;
+}
+
+.register-card .eye-button {
+  position: absolute;
+
+  right: 12px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.register-card .input-error {
+  border-color: #dc2626;
+}
+
+.register-card .error-message {
+  display: block;
+
+  color: #dc2626;
+
+  font-size: 13px;
+
+  margin-top: 5px;
+}
+
+.register-error {
+  margin-bottom: 12px;
+}
+
+.register-button {
+  width: 100%;
+  height: 50px;
+
+  margin-top: 8px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2f66e9;
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background: #2458d3;
+}
+
+.register-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.login-link span {
+  color: #6b7280;
+}
+
+.login-link button {
+  border: none;
+  background: transparent;
+
+  color: #2563eb;
+  font-weight: 600;
+
+  cursor: pointer;
+  padding: 0;
+}

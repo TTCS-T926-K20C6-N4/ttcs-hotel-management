@@ -13,20 +13,27 @@ import Home from './pages/Home'
 import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
 import Login from './pages/Login'
+import Register from './pages/Register'
 
 import './App.css'
 
 
 // ==========================================
 // PROTECTED ROUTE
-// Chặn người chưa đăng nhập
+// Chỉ cho phép truy cập khi đã đăng nhập
 // ==========================================
+
 function ProtectedRoute() {
+
   const [isLoggedIn, setIsLoggedIn] = useState(null)
 
+
   useEffect(() => {
+
     const checkLogin = async () => {
+
       try {
+
         const response = await fetch(
           'http://localhost:5097/api/auth/me',
           {
@@ -37,60 +44,100 @@ function ProtectedRoute() {
           }
         )
 
+
         if (response.ok) {
+
           setIsLoggedIn(true)
+
         } else {
+
           setIsLoggedIn(false)
+
         }
+
       } catch (error) {
+
         console.error(
           'Không thể kết nối Backend:',
           error
         )
 
         setIsLoggedIn(false)
+
       }
+
     }
 
+
     checkLogin()
+
   }, [])
 
 
-  // Đang kiểm tra Session
+  // ========================================
+  // ĐANG KIỂM TRA SESSION
+  // ========================================
+
   if (isLoggedIn === null) {
+
     return (
-      <div style={{ padding: '30px' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
         Đang kiểm tra đăng nhập...
       </div>
     )
+
   }
 
 
-  // Chưa đăng nhập
+  // ========================================
+  // CHƯA ĐĂNG NHẬP
+  // ========================================
+
   if (!isLoggedIn) {
+
     return (
       <Navigate
         to="/login"
         replace
       />
     )
+
   }
 
 
-  // Đã đăng nhập
+  // ========================================
+  // ĐÃ ĐĂNG NHẬP
+  // ========================================
+
   return <Outlet />
 }
 
 
+// ==========================================
+// APP
+// ==========================================
+
 function App() {
+
   return (
+
     <BrowserRouter>
 
       <Routes>
 
-        {/* ============================= */}
-        {/* LOGIN */}
-        {/* ============================= */}
+
+        {/* ================================== */}
+        {/* TRANG CÔNG KHAI */}
+        {/* Không cần đăng nhập */}
+        {/* ================================== */}
+
 
         <Route
           path="/login"
@@ -98,37 +145,56 @@ function App() {
         />
 
 
-        {/* ============================= */}
-        {/* CÁC TRANG PHẢI ĐĂNG NHẬP */}
-        {/* ============================= */}
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+
+        {/* ================================== */}
+        {/* TRANG BẮT BUỘC PHẢI ĐĂNG NHẬP */}
+        {/* ================================== */}
+
 
         <Route element={<ProtectedRoute />}>
 
+
           <Route element={<MainLayout />}>
+
+
+            {/* Trang chủ */}
 
             <Route
               path="/"
               element={<Home />}
             />
 
+
+            {/* Danh sách phòng */}
+
             <Route
               path="/rooms"
               element={<RoomList />}
             />
+
+
+            {/* Thêm phòng */}
 
             <Route
               path="/rooms/add"
               element={<AddRoom />}
             />
 
+
           </Route>
+
 
         </Route>
 
 
-        {/* ============================= */}
+        {/* ================================== */}
         {/* ROUTE KHÔNG TỒN TẠI */}
-        {/* ============================= */}
+        {/* ================================== */}
 
         <Route
           path="*"
@@ -140,10 +206,13 @@ function App() {
           }
         />
 
+
       </Routes>
 
     </BrowserRouter>
+
   )
+
 }
 
 export default App

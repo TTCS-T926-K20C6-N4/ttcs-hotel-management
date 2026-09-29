@@ -13,17 +13,18 @@ function Login() {
   // STATE
   // ==========================================
 
-  const [email, setEmail] =
-    useState('')
+  const [email, setEmail] = useState('')
 
-  const [password, setPassword] =
-    useState('')
+  const [password, setPassword] = useState('')
 
   const [showPassword, setShowPassword] =
     useState(false)
 
   const [loading, setLoading] =
     useState(false)
+
+  const [checkingSession, setCheckingSession] =
+    useState(true)
 
   const [loginError, setLoginError] =
     useState('')
@@ -36,7 +37,8 @@ function Login() {
 
 
   // ==========================================
-  // NẾU ĐÃ LOGIN THÌ KHÔNG CHO VỀ LOGIN
+  // KIỂM TRA SESSION
+  // Nếu đã đăng nhập thì chuyển về Home
   // ==========================================
 
   useEffect(() => {
@@ -50,16 +52,22 @@ function Login() {
           {
             method: 'GET',
 
+            // Bắt buộc để gửi Session Cookie
             credentials: 'include'
           }
         )
 
+
         if (response.ok) {
 
-          navigate('/', {
-            replace: true
-          })
+          navigate(
+            '/',
+            {
+              replace: true
+            }
+          )
 
+          return
         }
 
       } catch (error) {
@@ -69,9 +77,14 @@ function Login() {
           error
         )
 
+      } finally {
+
+        setCheckingSession(false)
+
       }
 
     }
+
 
     checkExistingSession()
 
@@ -90,7 +103,10 @@ function Login() {
     }
 
 
-    // Email
+    // ========================================
+    // EMAIL
+    // ========================================
+
     if (!email.trim()) {
 
       newErrors.email =
@@ -101,7 +117,8 @@ function Login() {
       const emailRegex =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-      if (!emailRegex.test(email)) {
+
+      if (!emailRegex.test(email.trim())) {
 
         newErrors.email =
           'Email không hợp lệ'
@@ -111,11 +128,14 @@ function Login() {
     }
 
 
-    // Password
-    if (!password.trim()) {
+    // ========================================
+    // PASSWORD
+    // ========================================
+
+    if (!password) {
 
       newErrors.password =
-        'Vui lòng nhập Password'
+        'Vui lòng nhập mật khẩu'
 
     }
 
@@ -142,7 +162,7 @@ function Login() {
     setLoginError('')
 
 
-    // Kiểm tra dữ liệu trước
+    // Kiểm tra dữ liệu
     if (!validateForm()) {
       return
     }
@@ -154,7 +174,7 @@ function Login() {
     try {
 
       // ======================================
-      // GỌI BACKEND
+      // GỌI API LOGIN
       // ======================================
 
       const response = await fetch(
@@ -167,7 +187,8 @@ function Login() {
               'application/json'
           },
 
-          // Bắt buộc để nhận Session Cookie
+          // Rất quan trọng:
+          // Cho phép Backend tạo Session Cookie
           credentials: 'include',
 
           body: JSON.stringify({
@@ -178,19 +199,28 @@ function Login() {
       )
 
 
-      const data =
-        await response.json()
+      let data = {}
+
+      try {
+
+        data = await response.json()
+
+      } catch {
+
+        data = {}
+
+      }
 
 
       // ======================================
-      // BACKEND BÁO LỖI
+      // ĐĂNG NHẬP THẤT BẠI
       // ======================================
 
       if (!response.ok) {
 
         setLoginError(
           data.message ||
-          'Đăng nhập không thành công.'
+          'Email hoặc mật khẩu không chính xác.'
         )
 
         return
@@ -200,6 +230,7 @@ function Login() {
 
       // ======================================
       // ĐĂNG NHẬP THÀNH CÔNG
+      // Backend đã tạo Session
       // ======================================
 
       console.log(
@@ -208,17 +239,22 @@ function Login() {
       )
 
 
-      // Backend đã lưu Session.
-      // Chuyển vào Home.
-
-      navigate('/', {
-        replace: true
-      })
+      // Chuyển vào Trang chủ
+      navigate(
+        '/',
+        {
+          replace: true
+        }
+      )
 
 
     } catch (error) {
 
-      console.error(error)
+      console.error(
+        'Lỗi đăng nhập:',
+        error
+      )
+
 
       setLoginError(
         'Không thể kết nối đến máy chủ.'
@@ -234,7 +270,37 @@ function Login() {
 
 
   // ==========================================
-  // GIAO DIỆN
+  // ĐANG KIỂM TRA SESSION
+  // ==========================================
+
+  if (checkingSession) {
+
+    return (
+
+      <div
+        className="login-page"
+      >
+
+        <div
+          className="login-card"
+          style={{
+            textAlign: 'center'
+          }}
+        >
+
+          Đang kiểm tra đăng nhập...
+
+        </div>
+
+      </div>
+
+    )
+
+  }
+
+
+  // ==========================================
+  // GIAO DIỆN LOGIN
   // ==========================================
 
   return (
@@ -256,6 +322,8 @@ function Login() {
         </div>
 
 
+        {/* TIÊU ĐỀ */}
+
         <h1>
           Đăng nhập
         </h1>
@@ -268,15 +336,17 @@ function Login() {
         </p>
 
 
+        {/* FORM */}
+
         <form
           onSubmit={handleSubmit}
           noValidate
         >
 
 
-          {/* ========================= */}
+          {/* ================================= */}
           {/* EMAIL */}
-          {/* ========================= */}
+          {/* ================================= */}
 
           <div className="form-group">
 
@@ -287,7 +357,10 @@ function Login() {
 
             <input
               id="email"
+
               type="email"
+
+              autoComplete="email"
 
               placeholder="Nhập email của bạn"
 
@@ -329,9 +402,9 @@ function Login() {
           </div>
 
 
-          {/* ========================= */}
+          {/* ================================= */}
           {/* PASSWORD */}
-          {/* ========================= */}
+          {/* ================================= */}
 
           <div className="form-group">
 
@@ -350,6 +423,8 @@ function Login() {
                     ? 'text'
                     : 'password'
                 }
+
+                autoComplete="current-password"
 
                 placeholder="Nhập mật khẩu"
 
@@ -383,11 +458,13 @@ function Login() {
 
                 className="eye-button"
 
-                onClick={() =>
+                onClick={() => {
+
                   setShowPassword(
                     !showPassword
                   )
-                }
+
+                }}
               >
 
                 {
@@ -414,9 +491,9 @@ function Login() {
           </div>
 
 
-          {/* ========================= */}
+          {/* ================================= */}
           {/* LỖI ĐĂNG NHẬP */}
-          {/* ========================= */}
+          {/* ================================= */}
 
           {loginError && (
 
@@ -429,22 +506,27 @@ function Login() {
           )}
 
 
-          {/* ========================= */}
+          {/* ================================= */}
           {/* QUÊN MẬT KHẨU */}
-          {/* ========================= */}
+          {/* ================================= */}
 
           <div className="forgot-password">
 
-            <a href="#">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+              }}
+            >
               Quên mật khẩu?
             </a>
 
           </div>
 
 
-          {/* ========================= */}
-          {/* BUTTON */}
-          {/* ========================= */}
+          {/* ================================= */}
+          {/* BUTTON ĐĂNG NHẬP */}
+          {/* ================================= */}
 
           <button
             type="submit"
@@ -461,6 +543,52 @@ function Login() {
             }
 
           </button>
+
+
+          {/* ================================= */}
+          {/* CHUYỂN SANG ĐĂNG KÝ */}
+          {/* ================================= */}
+
+          <div
+            style={{
+              textAlign: 'center',
+              marginTop: '18px',
+              fontSize: '14px'
+            }}
+          >
+
+            <span
+              style={{
+                color: '#6b7280'
+              }}
+            >
+              Chưa có tài khoản?{' '}
+            </span>
+
+
+            <button
+              type="button"
+
+              onClick={() =>
+                navigate('/register')
+              }
+
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#2563eb',
+                fontWeight: '600',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+
+              Đăng ký
+
+            </button>
+
+          </div>
+
 
         </form>
 
