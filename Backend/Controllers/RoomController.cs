@@ -11,13 +11,23 @@ public class RoomController : ControllerBase
 {
     private readonly AppDbContext _db;
 
-    public RoomController(AppDbContext db)
-    {
-        _db = db;
-    }
+   public RoomController(AppDbContext db)
+{
+    _db = db;
+}
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteRoom(int id)
+[HttpGet]
+public async Task<IActionResult> GetRooms()
+{
+    var rooms = await _db.Rooms
+        .Include(r => r.RoomType)
+        .ToListAsync();
+
+    return Ok(rooms);
+}
+
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteRoom(int id)
     {
         var room = await _db.Rooms.FindAsync(id);
 
