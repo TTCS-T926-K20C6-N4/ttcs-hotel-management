@@ -1,5 +1,7 @@
 using Backend.Data;
+using Backend.DTOs;
 using Backend.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +44,65 @@ _db.Rooms.Remove(room);
     {
         var roomTypes = await _db.RoomTypes.ToListAsync();
         return Ok(roomTypes);
+    }
+
+    [HttpPost("room-types")]
+    public async Task<IActionResult> CreateRoomType(
+        [FromBody] CreateRoomTypeRequest request)
+    {
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true")
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
+        var role = HttpContext.Session.GetString("UserRole");
+        if (role is not ("Admin" or "Manager"))
+        {
+            return StatusCode(403, new
+            {
+                message = "Bạn không có quyền tạo loại phòng."
+            });
+        }
+
+        var name = request.Name.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return BadRequest(new { message = "Tên loại phòng là bắt buộc." });
+        }
+
+        if (await _db.RoomTypes.AnyAsync(roomType => roomType.Name == name))
+        {
+            return Conflict(new { message = "Tên loại phòng đã tồn tại." });
+        }
+
+        var roomType = new RoomType
+        {
+            Name = name,
+            PricePerNight = request.PricePerNight,
+            Capacity = request.Capacity,
+            Description = string.IsNullOrWhiteSpace(request.Description)
+                ? null
+                : request.Description.Trim()
+        };
+
+        _db.RoomTypes.Add(roomType);
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException exception) when (
+            exception.InnerException is SqlException { Number: 2601 or 2627 })
+        {
+            return Conflict(new { message = "Tên loại phòng đã tồn tại." });
+        }
+
+        return Created(
+            $"/api/rooms/room-types/{roomType.Id}",
+            new
+            {
+                message = "Tạo loại phòng thành công.",
+                data = roomType
+            });
     }
 
     [HttpGet("room-types/{id}")]

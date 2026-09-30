@@ -25,5 +25,24 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        modelBuilder.Entity<RoomType>(entity =>
+        {
+            entity.Property(roomType => roomType.PricePerNight)
+                .HasPrecision(14, 2);
+
+            entity.HasIndex(roomType => roomType.Name)
+                .IsUnique();
+
+            entity.ToTable(table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_RoomTypes_PricePerNight_Positive",
+                    "[PricePerNight] > 0");
+                table.HasCheckConstraint(
+                    "CK_RoomTypes_Capacity_Positive",
+                    "[Capacity] >= 1");
+            });
+        });
     }
 }
