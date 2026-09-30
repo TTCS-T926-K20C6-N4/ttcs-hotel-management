@@ -22,11 +22,16 @@ public class RoomController : ControllerBase
         var room = await _db.Rooms.FindAsync(id);
 
         if (room == null)
-        {
-            return NotFound(new { message = "Không tìm thấy phòng." });
-        }
+{
+    return NotFound(new { message = "Không tìm thấy phòng." });
+}
 
-        _db.Rooms.Remove(room);
+if (room.Status == RoomStatus.Occupied)
+{
+    return BadRequest(new { message = "Không thể xóa phòng đang cho thuê." });
+}
+
+_db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "Xóa phòng thành công." });
