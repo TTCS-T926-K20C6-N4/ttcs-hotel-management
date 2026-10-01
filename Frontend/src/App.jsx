@@ -12,6 +12,8 @@ import MainLayout from './layouts/MainLayout'
 import Home from './pages/Home'
 import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
+import RoomTypes from './pages/RoomTypes'
+import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -183,6 +185,22 @@ function App() {
             <Route
               path="/rooms/add"
               element={<AddRoom />}
+            />
+
+
+            {/* Thể loại phòng */}
+
+            <Route
+              path="/room-types"
+              element={<RoomTypes />}
+            />
+
+
+            {/* Thuê phòng */}
+
+            <Route
+              path="/rent-room"
+              element={<RentRoom />}
             />
 
 
