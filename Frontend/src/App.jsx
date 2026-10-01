@@ -14,6 +14,7 @@ import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RoomTypes from './pages/RoomTypes'
 
 import './App.css'
 
@@ -183,6 +184,11 @@ function App() {
             <Route
               path="/rooms/add"
               element={<AddRoom />}
+            />
+
+            <Route
+              path="/room-types"
+              element={<RoomTypes />}
             />
 
 
