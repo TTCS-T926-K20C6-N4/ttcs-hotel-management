@@ -27,9 +27,25 @@ function getStatusCode(status) {
   }[status] ?? -1
 }
 
+function formatDateTime(value) {
+  if (!value) return '--'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '--'
+
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
 function RoomList() {
   const location = useLocation()
   const [rooms, setRooms] = useState([])
+  const [activeBookings, setActiveBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
@@ -58,9 +74,30 @@ function RoomList() {
   }, [])
 
   useEffect(() => {
+    let active = true
+
     api.getCurrentUser()
-      .then((data) => setIsAdmin(data.user?.role?.toLowerCase() === 'admin'))
-      .catch(() => setIsAdmin(false))
+      .then(async (data) => {
+        const admin = data.user?.role?.toLowerCase() === 'admin'
+        if (!active) return
+        setIsAdmin(admin)
+
+        if (admin) {
+          try {
+            const bookings = await api.getActiveBookings()
+            if (active) setActiveBookings(Array.isArray(bookings) ? bookings : [])
+          } catch (err) {
+            console.warn('Không thể tải giờ nhận/trả phòng:', err)
+          }
+        }
+      })
+      .catch(() => {
+        if (active) setIsAdmin(false)
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const filteredRooms = useMemo(() => {
@@ -179,7 +216,7 @@ function RoomList() {
             <span aria-hidden="true">⌕</span>
             <strong>{rooms.length ? 'Không tìm thấy phòng phù hợp' : 'Chưa có phòng nào'}</strong>
             <p>{rooms.length ? 'Thử thay đổi từ khóa hoặc bộ lọc.' : 'Thêm phòng đầu tiên để bắt đầu quản lý lưu trú.'}</p>
-            {!rooms.length && <Link to="/rooms/add">Thêm phòng mới</Link>}
+            {!rooms.length && isAdmin && <Link to="/rooms/add">Thêm phòng mới</Link>}
           </div>
         ) : (
           <div className="room-table-scroll">
@@ -197,6 +234,9 @@ function RoomList() {
                 {filteredRooms.map((room) => {
                   const code = getStatusCode(room.status)
                   const statusIndex = code >= 0 && code < 4 ? code : -1
+                  const activeBooking = activeBookings.find(
+                    (booking) => Number(booking.roomId) === Number(room.id)
+                  )
                   const imageUrl = room.imageUrl
                     ? (room.imageUrl.startsWith('http') ? room.imageUrl : `${API_ORIGIN}${room.imageUrl}`)
                     : ''
@@ -210,7 +250,17 @@ function RoomList() {
                           ) : (
                             <span className="room-thumbnail-placeholder" aria-hidden="true">⌂</span>
                           )}
-                          <div><strong>Phòng {room.roomNumber}</strong><span>Mã phòng #{room.id}</span></div>
+                          <div>
+                            <strong>Phòng {room.roomNumber}</strong>
+                            <span>Mã phòng #{room.id}</span>
+                            {activeBooking && (
+                              <span className="room-live-booking">
+                                Nhận {formatDateTime(activeBooking.checkInDate)}
+                                <br />
+                                Trả {formatDateTime(activeBooking.actualCheckOutDate || activeBooking.expectedCheckOutDate)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td>{room.roomType?.name || 'Chưa phân loại'}</td>

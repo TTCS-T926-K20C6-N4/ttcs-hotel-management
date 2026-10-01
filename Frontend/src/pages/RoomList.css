@@ -65,17 +65,18 @@
 .room-table-scroll { overflow-x: auto; }
 .room-list-table { width: 100%; border-collapse: collapse; text-align: left; }
 .room-list-table th { height: 44px; padding: 0 20px; background: #f7f9fb; color: #738193; font-size: 11px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-.room-list-table td { height: 74px; padding: 10px 20px; border-top: 1px solid #edf0f3; color: #4a596a; font-size: 13px; white-space: nowrap; }
+.room-list-table td { min-height: 74px; padding: 12px 20px; border-top: 1px solid #edf0f3; color: #4a596a; font-size: 13px; white-space: nowrap; }
 .room-list-table tbody tr { transition: background .14s ease; }
 .room-list-table tbody tr:hover { background: #fbfcfd; }
 .room-list-table th:first-child, .room-list-table td:first-child { min-width: 245px; }
 .room-actions-heading { width: 210px; text-align: right; }
-.room-identity { display: flex; align-items: center; gap: 11px; }
+.room-identity { display: flex; align-items: flex-start; gap: 11px; }
 .room-identity img, .room-thumbnail-placeholder { display: grid; width: 46px; height: 42px; flex: 0 0 46px; place-items: center; border-radius: 5px; object-fit: cover; }
 .room-thumbnail-placeholder { background: #e9f0f4; color: #53758e; font-size: 21px; }
 .room-identity div { display: flex; flex-direction: column; gap: 4px; }
 .room-identity strong { color: #253a4e; font-size: 13px; }
 .room-identity div span { color: #97a2ad; font-size: 11px; }
+.room-identity div .room-live-booking { margin-top: 3px; color: #8b6b38; font-size: 10px; line-height: 1.55; }
 
 .room-status { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid #d9e9dd; border-radius: 20px; background: #f0f7f1; color: #347347; font-size: 11px; font-weight: 600; }
 .room-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

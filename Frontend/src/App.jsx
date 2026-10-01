@@ -18,6 +18,7 @@ import EditBookedRoom from './pages/EditBookedRoom'
 import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RoomTypes from './pages/RoomTypes'
 
 import './App.css'
 
@@ -262,6 +263,11 @@ function App() {
                 element={<EditRoom />}
               />
             </Route>
+
+            <Route
+              path="/room-types"
+              element={<RoomTypes />}
+            />
 
 
           </Route>

@@ -30,6 +30,7 @@ public class RoomController : ControllerBase
 public async Task<IActionResult> GetRooms()
 {
     var rooms = await _db.Rooms
+    .AsNoTracking()
         .Select(room => new
         {
             id = room.Id,
