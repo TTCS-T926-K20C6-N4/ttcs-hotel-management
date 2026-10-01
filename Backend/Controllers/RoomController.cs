@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.DTOs;
 using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -166,29 +167,128 @@ _db.Rooms.Remove(room);
     }
 
     [HttpGet("room-types")]
-    public async Task<IActionResult> GetRoomTypes()
+    public async Task<IActionResult> GetRoomTypes([FromQuery] string? search = null)
     {
-        var roomTypes = await _db.RoomTypes.ToListAsync();
+        var query = _db.RoomTypes.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = search.Trim().ToLower();
+            query = query.Where(rt => rt.Name.ToLower().Contains(keyword) || 
+                                     (rt.Description != null && rt.Description.ToLower().Contains(keyword)));
+        }
+
+        var roomTypes = await query
+            .Select(rt => new
+            {
+                rt.Id,
+                rt.Name,
+                rt.PricePerNight,
+                rt.Capacity,
+                rt.Description,
+                TotalRooms = rt.Rooms.Count(),
+                AvailableRooms = rt.Rooms.Count(r => r.Status == RoomStatus.Available),
+                OccupiedRooms = rt.Rooms.Count(r => r.Status == RoomStatus.Occupied)
+            })
+            .OrderBy(rt => rt.Id)
+            .ToListAsync();
+
         return Ok(roomTypes);
     }
 
     [HttpGet("room-types/{id}")]
     public async Task<IActionResult> GetRoomTypeById(int id)
     {
-        var roomType = await _db.RoomTypes.FindAsync(id);
+        var roomType = await _db.RoomTypes
+            .AsNoTracking()
+            .Where(rt => rt.Id == id)
+            .Select(rt => new
+            {
+                rt.Id,
+                rt.Name,
+                rt.PricePerNight,
+                rt.Capacity,
+                rt.Description,
+                TotalRooms = rt.Rooms.Count,
+                AvailableRooms = rt.Rooms.Count(r => r.Status == RoomStatus.Available),
+                OccupiedRooms = rt.Rooms.Count(r => r.Status == RoomStatus.Occupied),
+                Rooms = rt.Rooms.Select(r => new
+                {
+                    r.Id,
+                    r.RoomNumber,
+                    r.Floor,
+                    Status = (int)r.Status,
+                    StatusName = r.Status == RoomStatus.Available ? "Phòng trống" :
+                                 r.Status == RoomStatus.Occupied ? "Đang có khách" :
+                                 r.Status == RoomStatus.Maintenance ? "Bảo trì" : "Đã đặt trước",
+                    r.Note,
+                    r.ImageUrl
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
         if (roomType == null)
         {
             return NotFound(new { message = "Không tìm thấy thể loại phòng." });
         }
+
         return Ok(roomType);
     }
 
-    [HttpPut("room-types/{id}")]
-    public async Task<IActionResult> UpdateRoomType(int id, RoomType updatedRoomType)
+    [HttpPost("room-types")]
+    public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeRequest request)
     {
-        if (id != updatedRoomType.Id)
+        if (!ModelState.IsValid)
         {
-            return BadRequest(new { message = "ID thể loại phòng không trùng khớp." });
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault();
+            return BadRequest(new { message = errors ?? "Dữ liệu không hợp lệ." });
+        }
+
+        var trimmedName = request.Name.Trim();
+        var exists = await _db.RoomTypes.AnyAsync(rt => rt.Name.ToLower() == trimmedName.ToLower());
+        if (exists)
+        {
+            return BadRequest(new { message = $"Thể loại phòng '{trimmedName}' đã tồn tại trong hệ thống." });
+        }
+
+        var roomType = new RoomType
+        {
+            Name = trimmedName,
+            PricePerNight = request.PricePerNight,
+            Capacity = request.Capacity,
+            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim()
+        };
+
+        _db.RoomTypes.Add(roomType);
+        await _db.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetRoomTypeById), new { id = roomType.Id }, new
+        {
+            id = roomType.Id,
+            name = roomType.Name,
+            pricePerNight = roomType.PricePerNight,
+            capacity = roomType.Capacity,
+            description = roomType.Description,
+            totalRooms = 0,
+            availableRooms = 0,
+            occupiedRooms = 0,
+            message = "Thêm thể loại phòng thành công."
+        });
+    }
+
+    [HttpPut("room-types/{id}")]
+    public async Task<IActionResult> UpdateRoomType(int id, [FromBody] RoomTypeRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault();
+            return BadRequest(new { message = errors ?? "Dữ liệu không hợp lệ." });
         }
 
         var existingRoomType = await _db.RoomTypes.FindAsync(id);
@@ -197,13 +297,55 @@ _db.Rooms.Remove(room);
             return NotFound(new { message = "Không tìm thấy thể loại phòng cần cập nhật." });
         }
 
-        existingRoomType.Name = updatedRoomType.Name;
-        existingRoomType.PricePerNight = updatedRoomType.PricePerNight;
-        existingRoomType.Capacity = updatedRoomType.Capacity;
-        existingRoomType.Description = updatedRoomType.Description;
+        var trimmedName = request.Name.Trim();
+        var duplicate = await _db.RoomTypes
+            .AnyAsync(rt => rt.Id != id && rt.Name.ToLower() == trimmedName.ToLower());
+        if (duplicate)
+        {
+            return BadRequest(new { message = $"Tên thể loại phòng '{trimmedName}' đã được sử dụng." });
+        }
+
+        existingRoomType.Name = trimmedName;
+        existingRoomType.PricePerNight = request.PricePerNight;
+        existingRoomType.Capacity = request.Capacity;
+        existingRoomType.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
 
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Cập nhật thể loại phòng thành công.", data = existingRoomType });
+        return Ok(new
+        {
+            id = existingRoomType.Id,
+            name = existingRoomType.Name,
+            pricePerNight = existingRoomType.PricePerNight,
+            capacity = existingRoomType.Capacity,
+            description = existingRoomType.Description,
+            message = "Cập nhật thể loại phòng thành công."
+        });
+    }
+
+    [HttpDelete("room-types/{id}")]
+    public async Task<IActionResult> DeleteRoomType(int id)
+    {
+        var roomType = await _db.RoomTypes
+            .Include(rt => rt.Rooms)
+            .FirstOrDefaultAsync(rt => rt.Id == id);
+
+        if (roomType == null)
+        {
+            return NotFound(new { message = "Không tìm thấy thể loại phòng." });
+        }
+
+        if (roomType.Rooms.Count > 0)
+        {
+            return BadRequest(new
+            {
+                message = $"Không thể xóa thể loại phòng '{roomType.Name}' vì đang có {roomType.Rooms.Count} phòng liên kết. Vui lòng chuyển hoặc xóa các phòng trước."
+            });
+        }
+
+        _db.RoomTypes.Remove(roomType);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = $"Đã xóa thể loại phòng '{roomType.Name}' thành công." });
     }
 }
