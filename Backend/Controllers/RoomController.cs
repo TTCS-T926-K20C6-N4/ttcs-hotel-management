@@ -20,7 +20,24 @@ public class RoomController : ControllerBase
 public async Task<IActionResult> GetRooms()
 {
     var rooms = await _db.Rooms
-        .Include(r => r.RoomType)
+        .AsNoTracking()
+        .Select(r => new
+        {
+            id = r.Id,
+            roomNumber = r.RoomNumber,
+            floor = r.Floor,
+            roomTypeId = r.RoomTypeId,
+            roomType = r.RoomType == null ? null : new
+            {
+                id = r.RoomType.Id,
+                name = r.RoomType.Name,
+                pricePerNight = r.RoomType.PricePerNight,
+                capacity = r.RoomType.Capacity
+            },
+            status = r.Status,
+            note = r.Note,
+            imageUrl = r.ImageUrl
+        })
         .ToListAsync();
 
     return Ok(rooms);
