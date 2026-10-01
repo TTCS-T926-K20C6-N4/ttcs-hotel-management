@@ -21,6 +21,7 @@ function getRoomTypeMeta(item) {
       category: 'VIP HOÀNG GIA',
       categoryKey: 'vip',
       bed: '1 Giường King Hoàng Gia',
+      bedShort: 'Giường King',
       area: '120 m²',
       defaultImage: '/room-types/06.jpg',
       gallery: ['/room-types/06.jpg', '/room-types/032.jpg', '/room-types/05.jpg', '/room-types/013.jpg'],
@@ -32,6 +33,7 @@ function getRoomTypeMeta(item) {
       category: 'GIA ĐÌNH',
       categoryKey: 'family',
       bed: '1 King + 2 Giường Đơn',
+      bedShort: '1 King + 2 Đơn',
       area: '85 m²',
       defaultImage: '/room-types/02.jpg',
       gallery: ['/room-types/02.jpg', '/room-types/06.jpg', '/room-types/05.jpg', '/room-types/033.jpg'],
@@ -43,6 +45,7 @@ function getRoomTypeMeta(item) {
       category: 'SANG TRỌNG',
       categoryKey: 'luxury',
       bed: '1 Giường Queen Đôi 1m8',
+      bedShort: 'Giường Queen 1m8',
       area: '55 m²',
       defaultImage: '/room-types/013.jpg',
       gallery: ['/room-types/013.jpg', '/room-types/032.jpg', '/room-types/03.jpg', '/room-types/031.jpg'],
@@ -54,6 +57,7 @@ function getRoomTypeMeta(item) {
       category: 'SANG TRỌNG',
       categoryKey: 'luxury',
       bed: '1 Giường Queen 1m8',
+      bedShort: 'Giường Queen 1m8',
       area: '48 m²',
       defaultImage: '/room-types/05.jpg',
       gallery: ['/room-types/05.jpg', '/room-types/032.jpg', '/room-types/03.jpg', '/room-types/031.jpg'],
@@ -64,6 +68,7 @@ function getRoomTypeMeta(item) {
     category: 'CẶP ĐÔI',
     categoryKey: 'couple',
     bed: '1 Giường Đôi Tiêu Chuẩn',
+    bedShort: 'Giường Đôi',
     area: '38 m²',
     defaultImage: '/room-types/041.jpg',
     gallery: ['/room-types/041.jpg', '/room-types/013.jpg', '/room-types/05.jpg', '/room-types/02.jpg'],
@@ -291,11 +296,6 @@ function RoomTypes() {
         <div className="encore-title-inner">
           <div className="encore-title-center">
             <h1>LOẠI PHÒNG &amp; SUITES</h1>
-            <div className="encore-breadcrumbs">
-              <span>TRANG CHỦ</span>
-              <span className="divider">/</span>
-              <strong>LOẠI PHÒNG ENCORE</strong>
-            </div>
           </div>
 
           <div className="encore-title-right">
@@ -329,6 +329,7 @@ function RoomTypes() {
 
       {/* ===== FILTER TABS & SEARCH BAR ===== */}
       <div className="encore-nav-bar">
+        {/* Category Tabs: Seamless Segmented Control */}
         <div className="encore-category-nav">
           <button
             type="button"
@@ -367,8 +368,22 @@ function RoomTypes() {
           </button>
         </div>
 
+        {/* Search input: shifted leftwards with clean vector monochrome icon */}
         <div className="encore-search-input-wrap">
-          <span className="encore-search-icon">🔍</span>
+          <svg
+            className="encore-search-icon-svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
           <input
             type="text"
             placeholder="Tìm kiếm hạng phòng..."
@@ -378,7 +393,7 @@ function RoomTypes() {
         </div>
       </div>
 
-      {/* ===== 3-COLUMN ENCORE PRODUCT GRID (EXACTLY LIKE SCREENSHOT) ===== */}
+      {/* ===== 3-COLUMN ENCORE PRODUCT GRID ===== */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
           <p>Đang tải danh sách thể loại phòng Encore...</p>
@@ -446,7 +461,7 @@ function RoomTypes() {
                   </div>
                 </div>
 
-                {/* Text Content (Matching screenshot typography & spacing) */}
+                {/* Text Content */}
                 <div className="encore-box-text">
                   <div className="encore-product-category">{meta.category}</div>
                   <h3
@@ -459,44 +474,69 @@ function RoomTypes() {
                     {formatMoney(item.pricePerNight)}
                   </div>
 
-                  {/* Specs row */}
-                  <div className="encore-product-meta-row">
-                    <div className="encore-meta-spec">
-                      👥 <strong>{item.capacity} khách</strong>
+                  {/* Clean Specs Row */}
+                  <div className="encore-product-specs">
+                    <div className="spec-chip" title={`Sức chứa: ${item.capacity} khách`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                      <span>{item.capacity} khách</span>
                     </div>
-                    <div className="encore-meta-spec">
-                      🛏️ <strong>{meta.bed}</strong>
+
+                    <div className="spec-chip" title={meta.bed}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path>
+                      </svg>
+                      <span>{meta.bedShort || meta.bed}</span>
                     </div>
-                    <div className="encore-meta-spec">
-                      🚪 <strong>{item.totalRooms} phòng</strong>
+
+                    <div className="spec-chip" title={`Tổng: ${item.totalRooms} phòng`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                        <path d="M9 9h1"></path>
+                      </svg>
+                      <span>{item.totalRooms} phòng</span>
                     </div>
                   </div>
 
-                  {/* Admin text actions */}
-                  <div className="encore-card-admin-row">
+                  {/* Action Buttons Row */}
+                  <div className="encore-card-actions-row">
                     <button
                       type="button"
-                      className="btn-encore-text-action"
+                      className="btn-card-detail"
                       onClick={() => handleOpenDetail(item)}
                     >
-                      🔍 Xem chi tiết
+                      <span>Xem chi tiết</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
                     </button>
-                    <div>
+
+                    <div className="card-quick-actions">
                       <button
                         type="button"
-                        className="btn-encore-text-action"
+                        className="btn-action-icon edit"
                         onClick={() => handleOpenEdit(item)}
                         title="Chỉnh sửa loại phòng"
                       >
-                        ✏️ Sửa
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
                       </button>
                       <button
                         type="button"
-                        className="btn-encore-text-action delete"
+                        className="btn-action-icon delete"
                         onClick={() => handleOpenDelete(item)}
                         title="Xóa loại phòng"
                       >
-                        🗑️ Xóa
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -507,7 +547,7 @@ function RoomTypes() {
         </div>
       )}
 
-      {/* ===== LUXURY DETAIL MODAL (MATCHING LUXURY DOUBLE ROOM SUITE ENCORE) ===== */}
+      {/* ===== LUXURY DETAIL MODAL (BALANCED GRID - NO OVERFLOW) ===== */}
       {detailModal.open && detailModal.data && (
         <div
           className="encore-modal-overlay"
@@ -549,7 +589,7 @@ function RoomTypes() {
                 </div>
               </div>
 
-              {/* Right Column: Information & Specs */}
+              {/* Right Column: Information & Specs (Properly Contained) */}
               <div className="detail-info-col">
                 <span className="detail-cat-tag">
                   {detailModal.data.meta.category}
@@ -595,18 +635,18 @@ function RoomTypes() {
                 </div>
 
                 {/* Subtable: Rooms in Hotel */}
-                <h4 style={{ margin: '14px 0 8px', fontSize: '14px', textTransform: 'uppercase', color: '#1c1c1c' }}>
+                <h4 style={{ margin: '14px 0 8px', fontSize: '13.5px', textTransform: 'uppercase', color: '#1c1c1c', letterSpacing: '0.04em' }}>
                   Danh Sách Phòng Khách Sạn:
                 </h4>
 
                 {detailModal.loading ? (
                   <p style={{ color: '#64748b', fontSize: '13px' }}>Đang tải danh sách phòng...</p>
                 ) : !detailModal.data.rooms || detailModal.data.rooms.length === 0 ? (
-                  <p style={{ color: '#64748b', fontStyle: 'italic', fontSize: '13px', margin: 0 }}>
+                  <p style={{ color: '#64748b', fontStyle: 'italic', fontSize: '13px', margin: '4px 0 16px' }}>
                     Chưa có phòng nào được gán cho thể loại này trong hệ thống.
                   </p>
                 ) : (
-                  <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', marginBottom: '16px' }}>
                     <table className="detail-rooms-table">
                       <thead>
                         <tr>
@@ -646,7 +686,7 @@ function RoomTypes() {
                   </div>
                 )}
 
-                <div className="encore-modal-footer" style={{ marginTop: 'auto' }}>
+                <div className="encore-modal-footer">
                   <button
                     type="button"
                     className="btn-encore-secondary"
