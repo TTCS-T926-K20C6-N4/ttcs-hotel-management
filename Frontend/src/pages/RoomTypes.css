@@ -7,7 +7,7 @@
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 0 60px;
+  padding: 0 8px 60px;
   background-color: #ffffff;
   color: #1c1c1c;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -17,7 +17,7 @@
 /* ===== ENCORE PAGE TITLE BANNER ===== */
 .encore-page-title-banner {
   position: relative;
-  min-height: 130px;
+  min-height: 125px;
   margin-bottom: 28px;
   background-color: #1e1e1e;
   background-size: cover;
@@ -27,6 +27,7 @@
   display: flex;
   align-items: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .encore-page-title-banner::before {
@@ -50,6 +51,7 @@
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 .encore-title-center {
@@ -60,11 +62,12 @@
 .encore-title-center h1 {
   margin: 0;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  line-height: 1.2;
 }
 
 .encore-title-right {
@@ -133,7 +136,7 @@
   flex-wrap: wrap;
 }
 
-/* Segmented pill group for categories (No black outline on click!) */
+/* Segmented pill group for categories */
 .encore-category-nav {
   display: flex;
   align-items: center;
@@ -182,7 +185,7 @@
 .encore-search-input-wrap {
   position: relative;
   width: 280px;
-  margin-right: 14px; /* Dịch sang bên trái 1 chút như người dùng yêu cầu */
+  margin-right: 14px;
 }
 
 .encore-search-input-wrap input {
@@ -210,7 +213,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8; /* Monochrome gray icon */
+  color: #94a3b8;
   pointer-events: none;
   transition: color 0.2s;
 }
@@ -345,8 +348,8 @@
 }
 
 .encore-product-category {
-  margin: 0 0 4px;
-  font-size: 11px;
+  margin: 0 0 6px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #888888;
   text-transform: uppercase;
@@ -355,7 +358,7 @@
 
 /* Elegant Title with Vietnamese Playfair Display support */
 .encore-product-name {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 18px;
   font-weight: 700;
@@ -372,44 +375,40 @@
 }
 
 .encore-product-price {
-  margin: 0 0 12px;
-  font-size: 16.5px;
+  margin: 0 0 14px;
+  font-size: 17px;
   font-weight: 800;
   color: #0f172a;
 }
 
-/* Beautiful Specs Bar */
+/* Clean Specs Row without bulky icons - Never cramped or stuck together */
 .encore-product-specs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #edf2f7;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-}
-
-.spec-chip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  font-size: 12px;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #edf2f7;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.spec-val {
+  font-size: 12.5px;
   color: #475569;
   font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.spec-chip svg {
-  color: #64748b;
-  flex-shrink: 0;
+.spec-sep {
+  color: #cbd5e1;
+  font-size: 10px;
+  user-select: none;
 }
 
-/* Card Admin Action Buttons (Redesigned & Clean) */
+/* Card Admin Action Buttons */
 .encore-card-actions-row {
   display: flex;
   align-items: center;
@@ -473,7 +472,7 @@
   border-color: #fecaca;
 }
 
-/* ===== LUXURY DETAIL MODAL (MATCHING ENCORE SUITE) ===== */
+/* ===== LUXURY DETAIL MODAL ===== */
 .encore-modal-overlay {
   position: fixed;
   top: 0;
@@ -526,7 +525,7 @@
   color: #0f172a;
 }
 
-/* Grid columns balanced so text NEVER overflows or sticks out */
+/* Grid columns balanced so text NEVER overflows */
 .encore-detail-inner {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
@@ -578,7 +577,7 @@
   border-color: #2098d1;
 }
 
-/* Detail Right Info: Contained with no overflow */
+/* Detail Right Info */
 .detail-info-col {
   display: flex;
   flex-direction: column;
@@ -627,6 +626,7 @@
   margin-bottom: 16px;
 }
 
+/* Specs Box without icons */
 .detail-specs-box {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -646,11 +646,12 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .detail-specs-box div strong {
   color: #0f172a;
+  font-size: 13.5px;
   font-weight: 700;
 }
 
@@ -673,6 +674,13 @@
 .detail-rooms-table td {
   padding: 8px 10px;
   border-bottom: 1px solid #f1f5f9;
+}
+
+/* Plain text status in table - No background color, no colored badge */
+.room-status-text {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 /* Form Modal */
@@ -822,35 +830,6 @@
 .btn-encore-danger:disabled {
   background: #fca5a5;
   cursor: not-allowed;
-}
-
-/* Status Pills for Rooms */
-.status-pill {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.status-pill.available {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.status-pill.occupied {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.status-pill.reserved {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.status-pill.maintenance {
-  background: #fefce8;
-  color: #ca8a04;
 }
 
 /* Empty State */

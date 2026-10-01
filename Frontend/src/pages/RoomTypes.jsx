@@ -474,32 +474,13 @@ function RoomTypes() {
                     {formatMoney(item.pricePerNight)}
                   </div>
 
-                  {/* Clean Specs Row */}
+                  {/* Clean Specs Row - No bulky icons, completely fixes text collision */}
                   <div className="encore-product-specs">
-                    <div className="spec-chip" title={`Sức chứa: ${item.capacity} khách`}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                      <span>{item.capacity} khách</span>
-                    </div>
-
-                    <div className="spec-chip" title={meta.bed}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                        <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path>
-                      </svg>
-                      <span>{meta.bedShort || meta.bed}</span>
-                    </div>
-
-                    <div className="spec-chip" title={`Tổng: ${item.totalRooms} phòng`}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                        <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
-                        <path d="M9 9h1"></path>
-                      </svg>
-                      <span>{item.totalRooms} phòng</span>
-                    </div>
+                    <span className="spec-val">{item.capacity} khách</span>
+                    <span className="spec-sep">•</span>
+                    <span className="spec-val">{meta.bedShort || meta.bed}</span>
+                    <span className="spec-sep">•</span>
+                    <span className="spec-val">{item.totalRooms} phòng</span>
                   </div>
 
                   {/* Action Buttons Row */}
@@ -612,24 +593,24 @@ function RoomTypes() {
                     'Không gian nghỉ dưỡng sang trọng với tầm nhìn khoáng đạt, thiết kế hoàng gia và trang thiết bị hiện đại bậc nhất. Dịch vụ ẩm thực phòng và chăm sóc khách hàng 24/7.'}
                 </p>
 
+                {/* Specs Box: Icons removed as requested in Image 3 */}
                 <div className="detail-specs-box">
                   <div>
                     <span>SỨC CHỨA TỐI ĐA</span>
-                    <strong>👥 {detailModal.data.capacity} người lớn</strong>
+                    <strong>{detailModal.data.capacity} người lớn</strong>
                   </div>
                   <div>
                     <span>LOẠI GIƯỜNG</span>
-                    <strong>🛏️ {detailModal.data.meta.bed}</strong>
+                    <strong>{detailModal.data.meta.bed}</strong>
                   </div>
                   <div>
                     <span>DIỆN TÍCH PHÒNG</span>
-                    <strong>📐 {detailModal.data.meta.area}</strong>
+                    <strong>{detailModal.data.meta.area}</strong>
                   </div>
                   <div>
                     <span>TỔNG SỐ PHÒNG</span>
                     <strong>
-                      🚪 {detailModal.data.totalRooms} phòng (
-                      {detailModal.data.availableRooms} phòng trống)
+                      {detailModal.data.totalRooms} phòng ({detailModal.data.availableRooms} phòng trống)
                     </strong>
                   </div>
                 </div>
@@ -664,17 +645,8 @@ function RoomTypes() {
                             </td>
                             <td>Tầng {room.floor}</td>
                             <td>
-                              <span
-                                className={`status-pill ${
-                                  room.status === 0
-                                    ? 'available'
-                                    : room.status === 1
-                                    ? 'occupied'
-                                    : room.status === 3
-                                    ? 'reserved'
-                                    : 'maintenance'
-                                }`}
-                              >
+                              {/* Status text: No background colors, clean neutral typography as requested in Image 4 */}
+                              <span className="room-status-text">
                                 {room.statusName}
                               </span>
                             </td>
