@@ -11,6 +11,16 @@ public class RoomController : ControllerBase
 {
     private readonly AppDbContext _db;
 
+    private bool IsAdmin() => string.Equals(
+        HttpContext.Session.GetString("UserRole"),
+        "Admin",
+        StringComparison.OrdinalIgnoreCase);
+
+    private ObjectResult AdminOnly() => StatusCode(403, new
+    {
+        message = "Chỉ quản trị viên mới có quyền quản lý phòng."
+    });
+
    public RoomController(AppDbContext db)
 {
     _db = db;
@@ -20,15 +30,64 @@ public class RoomController : ControllerBase
 public async Task<IActionResult> GetRooms()
 {
     var rooms = await _db.Rooms
-        .Include(r => r.RoomType)
+        .Select(room => new
+        {
+            id = room.Id,
+            roomNumber = room.RoomNumber,
+            floor = room.Floor,
+            roomTypeId = room.RoomTypeId,
+            status = room.Status,
+            note = room.Note,
+            imageUrl = room.ImageUrl,
+            roomType = room.RoomType == null ? null : new
+            {
+                id = room.RoomType.Id,
+                name = room.RoomType.Name,
+                pricePerNight = room.RoomType.PricePerNight,
+                capacity = room.RoomType.Capacity
+            }
+        })
         .ToListAsync();
 
     return Ok(rooms);
 }
 
+[HttpGet("{id:int}")]
+public async Task<IActionResult> GetRoomById(int id)
+{
+    var room = await _db.Rooms
+        .Include(r => r.RoomType)
+        .FirstOrDefaultAsync(r => r.Id == id);
+
+    if (room == null)
+    {
+        return NotFound(new { message = "Không tìm thấy phòng." });
+    }
+
+    return Ok(new
+    {
+        id = room.Id,
+        roomNumber = room.RoomNumber,
+        floor = room.Floor,
+        roomTypeId = room.RoomTypeId,
+        status = room.Status,
+        note = room.Note,
+        imageUrl = room.ImageUrl,
+        roomType = room.RoomType == null ? null : new
+        {
+            id = room.RoomType.Id,
+            name = room.RoomType.Name,
+            pricePerNight = room.RoomType.PricePerNight,
+            capacity = room.RoomType.Capacity
+        }
+    });
+}
+
 [HttpPost]
 public async Task<IActionResult> CreateRoom(Room room)
 {
+    if (!IsAdmin()) return AdminOnly();
+
     if (string.IsNullOrWhiteSpace(room.RoomNumber))
     {
         return BadRequest(new { message = "Vui lòng nhập số phòng." });
@@ -77,9 +136,76 @@ public async Task<IActionResult> CreateRoom(Room room)
     });
 }
 
+[HttpPut("{id:int}")]
+public async Task<IActionResult> UpdateRoom(int id, Room updatedRoom)
+{
+    if (!IsAdmin()) return AdminOnly();
+
+    var room = await _db.Rooms.FindAsync(id);
+
+    if (room == null)
+    {
+        return NotFound(new { message = "Không tìm thấy phòng." });
+    }
+
+    var roomNumber = updatedRoom.RoomNumber?.Trim();
+    if (string.IsNullOrWhiteSpace(roomNumber))
+    {
+        return BadRequest(new { message = "Vui lòng nhập số phòng." });
+    }
+
+    if (updatedRoom.Floor < 1)
+    {
+        return BadRequest(new { message = "Tầng phải là số nguyên lớn hơn hoặc bằng 1." });
+    }
+
+    if (!Enum.IsDefined(updatedRoom.Status))
+    {
+        return BadRequest(new { message = "Trạng thái phòng không hợp lệ." });
+    }
+
+    var roomNumberExists = await _db.Rooms
+        .AnyAsync(r => r.Id != id && r.RoomNumber == roomNumber);
+
+    if (roomNumberExists)
+    {
+        return BadRequest(new { message = "Số phòng đã tồn tại." });
+    }
+
+    var roomTypeExists = await _db.RoomTypes
+        .AnyAsync(rt => rt.Id == updatedRoom.RoomTypeId);
+
+    if (!roomTypeExists)
+    {
+        return BadRequest(new { message = "Thể loại phòng không tồn tại." });
+    }
+
+    room.RoomNumber = roomNumber;
+    room.Floor = updatedRoom.Floor;
+    room.RoomTypeId = updatedRoom.RoomTypeId;
+    room.Status = updatedRoom.Status;
+    room.Note = updatedRoom.Note;
+    room.ImageUrl = updatedRoom.ImageUrl ?? room.ImageUrl;
+
+    await _db.SaveChangesAsync();
+
+    return Ok(new
+    {
+        id = room.Id,
+        roomNumber = room.RoomNumber,
+        floor = room.Floor,
+        roomTypeId = room.RoomTypeId,
+        status = room.Status,
+        note = room.Note,
+        imageUrl = room.ImageUrl
+    });
+}
+
 [HttpPost("upload-image")]
 public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
 {
+    if (!IsAdmin()) return AdminOnly();
+
     if (image == null || image.Length == 0)
     {
         return BadRequest(new { message = "Vui lòng chọn hình ảnh." });
@@ -130,6 +256,8 @@ public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
 [HttpDelete("{id}")]
 public async Task<IActionResult> DeleteRoom(int id)
     {
+    if (!IsAdmin()) return AdminOnly();
+
         var room = await _db.Rooms.FindAsync(id);
 
         if (room == null)
@@ -169,6 +297,8 @@ _db.Rooms.Remove(room);
     [HttpPut("room-types/{id}")]
     public async Task<IActionResult> UpdateRoomType(int id, RoomType updatedRoomType)
     {
+        if (!IsAdmin()) return AdminOnly();
+
         if (id != updatedRoomType.Id)
         {
             return BadRequest(new { message = "ID thể loại phòng không trùng khớp." });

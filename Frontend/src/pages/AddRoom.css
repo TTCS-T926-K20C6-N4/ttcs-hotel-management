@@ -531,6 +531,23 @@
   background: #fef2f2;
 }
 
+.add-room-change-image {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid #cbd8e2;
+  border-radius: 7px;
+  background: #fff;
+  color: #1c5785;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-room-change-image:hover {
+  background: #f2f7fa;
+}
+
 @media (max-width: 600px) {
   .add-room-image-preview {
     flex-direction: column;

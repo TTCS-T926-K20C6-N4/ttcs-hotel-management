@@ -27,4 +27,6 @@ public class User
     public DateTime? LockoutEnd { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public List<Booking> Bookings { get; set; } = new();
 }

@@ -18,6 +18,10 @@ public class BookingController : ControllerBase
 {
    private readonly AppDbContext _db;
 
+    private int? CurrentUserId => int.TryParse(
+        User.FindFirstValue(ClaimTypes.NameIdentifier),
+        out var userId) ? userId : null;
+
 public BookingController(AppDbContext db)
 {
     _db = db;
@@ -26,6 +30,7 @@ public BookingController(AppDbContext db)
     // GET /api/bookings?status=
     // Danh sách lượt thuê phòng
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetBookings([FromQuery] string? status)
     {
@@ -55,6 +60,7 @@ public BookingController(AppDbContext db)
     // GET /api/bookings/active
     // Danh sách khách đang lưu trú
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpGet("active")]
     public async Task<IActionResult> GetActiveBookings()
     {
@@ -69,6 +75,131 @@ public BookingController(AppDbContext db)
             .ToListAsync();
 
         return Ok(bookings.Select(Mapper.ToDto));
+    }
+
+    [Authorize(Roles = "User")]
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMyBookings()
+    {
+        if (CurrentUserId is not int userId)
+            return Forbid();
+
+        var bookings = await _db.Bookings
+            .Include(booking => booking.Room)
+                .ThenInclude(room => room!.RoomType)
+            .Include(booking => booking.Customer)
+            .Include(booking => booking.Services)
+            .Include(booking => booking.Invoices)
+            .Where(booking => booking.UserId == userId)
+            .OrderByDescending(booking => booking.CheckInDate)
+            .ThenByDescending(booking => booking.Id)
+            .ToListAsync();
+
+        return Ok(bookings.Select(Mapper.ToDto));
+    }
+
+    [Authorize(Roles = "User")]
+    [HttpPut("{id:int}/room")]
+    public async Task<IActionResult> UpdateMyBookedRoom(
+        int id,
+        [FromBody] UpdateBookedRoomRequest request)
+    {
+        if (CurrentUserId is not int userId)
+            return Forbid();
+
+        var booking = await _db.Bookings
+            .Include(item => item.Room)
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+        if (booking?.Room is null)
+            return NotFound(new { message = "Không tìm thấy phòng đã đặt của tài khoản này." });
+
+        if (booking.Status != BookingStatus.Booked)
+            return BadRequest(new { message = "Chỉ có thể cập nhật phòng trước khi nhận phòng." });
+
+        var roomNumber = request.RoomNumber.Trim();
+        if (string.IsNullOrWhiteSpace(roomNumber))
+            return BadRequest(new { message = "Vui lòng nhập số phòng." });
+
+        var duplicateRoomNumber = await _db.Rooms
+            .AnyAsync(room => room.Id != booking.RoomId && room.RoomNumber == roomNumber);
+
+        if (duplicateRoomNumber)
+            return BadRequest(new { message = "Số phòng đã tồn tại." });
+
+        var roomType = await _db.RoomTypes
+            .FirstOrDefaultAsync(item => item.Id == request.RoomTypeId);
+
+        if (roomType is null)
+            return BadRequest(new { message = "Thể loại phòng không tồn tại." });
+
+        if (booking.GuestCount > roomType.Capacity)
+            return BadRequest(new { message = "Thể loại phòng mới không đủ sức chứa cho số khách đã đặt." });
+
+        booking.Room.RoomNumber = roomNumber;
+        booking.Room.Floor = request.Floor;
+        booking.Room.RoomTypeId = roomType.Id;
+        booking.Room.RoomType = roomType;
+        booking.PricePerNight = roomType.PricePerNight;
+        booking.Room.Note = request.Note?.Trim();
+        booking.Room.ImageUrl = request.ImageUrl ?? booking.Room.ImageUrl;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Cập nhật thông tin phòng thành công.",
+            bookingId = booking.Id,
+            roomId = booking.Room.Id,
+            roomNumber = booking.Room.RoomNumber,
+            floor = booking.Room.Floor,
+            roomTypeId = booking.Room.RoomTypeId,
+            note = booking.Room.Note,
+            imageUrl = booking.Room.ImageUrl
+        });
+    }
+
+    [Authorize(Roles = "User")]
+    [HttpPost("{id:int}/room-image")]
+    public async Task<IActionResult> UploadMyBookedRoomImage(
+        int id,
+        [FromForm] IFormFile image)
+    {
+        if (CurrentUserId is not int userId)
+            return Forbid();
+
+        var booking = await _db.Bookings
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+        if (booking is null)
+            return NotFound(new { message = "Không tìm thấy lượt đặt phòng của tài khoản này." });
+
+        if (booking.Status != BookingStatus.Booked)
+            return BadRequest(new { message = "Chỉ có thể cập nhật ảnh trước khi nhận phòng." });
+
+        if (image is null || image.Length == 0)
+            return BadRequest(new { message = "Vui lòng chọn hình ảnh." });
+
+        if (image.Length > 5 * 1024 * 1024)
+            return BadRequest(new { message = "Hình ảnh không được vượt quá 5 MB." });
+
+        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+        if (!new[] { ".jpg", ".jpeg", ".png", ".webp" }.Contains(extension))
+            return BadRequest(new { message = "Chỉ hỗ trợ ảnh JPG, JPEG, PNG hoặc WEBP." });
+
+        var uploadFolder = Path.Combine(
+            Directory.GetCurrentDirectory(), "wwwroot", "uploads", "rooms");
+        Directory.CreateDirectory(uploadFolder);
+
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadFolder, fileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await image.CopyToAsync(stream);
+        }
+
+        return Ok(new { imageUrl = $"/uploads/rooms/{fileName}" });
     }
 
     // =========================================================
@@ -89,6 +220,9 @@ public BookingController(AppDbContext db)
         if (booking is null)
             return NotFound();
 
+        if (!User.IsInRole("Admin") && booking.UserId != CurrentUserId)
+            return Forbid();
+
         return Ok(Mapper.ToDto(booking));
     }
 
@@ -100,6 +234,13 @@ public BookingController(AppDbContext db)
     public async Task<IActionResult> CreateBooking(
         [FromBody] RentalRequest req)
     {
+        var bookingOwnerId = User.IsInRole("Admin")
+            ? (int?)null
+            : CurrentUserId;
+
+        if (!User.IsInRole("Admin") && bookingOwnerId is null)
+            return Forbid();
+
         var room = await _db.Rooms
             .Include(r => r.RoomType)
             .FirstOrDefaultAsync(r => r.Id == req.RoomId);
@@ -184,6 +325,8 @@ public BookingController(AppDbContext db)
 
             CustomerId = customer.Id,
 
+            UserId = bookingOwnerId,
+
             GuestCount =
                 req.GuestCount <= 0
                     ? 1
@@ -200,13 +343,17 @@ public BookingController(AppDbContext db)
             PricePerNight =
                 room.RoomType?.PricePerNight ?? 0,
 
-            Status = BookingStatus.CheckedIn,
+            Status = User.IsInRole("Admin")
+                ? BookingStatus.CheckedIn
+                : BookingStatus.Booked,
 
             Note = req.Note?.Trim()
         };
 
         // Đưa phòng sang trạng thái đang thuê
-        room.Status = RoomStatus.Occupied;
+        room.Status = User.IsInRole("Admin")
+            ? RoomStatus.Occupied
+            : RoomStatus.Reserved;
 
         _db.Bookings.Add(booking);
 
@@ -233,6 +380,7 @@ public BookingController(AppDbContext db)
     // POST /api/bookings/{id}/services
     // Thêm dịch vụ phát sinh
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpPost("{id:int}/services")]
     public async Task<IActionResult> AddService(
         int id,
@@ -284,6 +432,7 @@ public BookingController(AppDbContext db)
     // DELETE /api/bookings/services/{serviceId}
     // Xóa dịch vụ phát sinh
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpDelete("services/{serviceId:int}")]
     public async Task<IActionResult> DeleteService(int serviceId)
     {
@@ -307,6 +456,7 @@ public BookingController(AppDbContext db)
     // POST /api/bookings/{id}/checkout
     // Trả phòng + lập hóa đơn
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpPost("{id:int}/checkout")]
     public async Task<IActionResult> Checkout(
         int id,
@@ -410,6 +560,7 @@ public BookingController(AppDbContext db)
     // DELETE /api/bookings/{id}
     // Hủy lượt thuê
     // =========================================================
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> CancelBooking(int id)
     {

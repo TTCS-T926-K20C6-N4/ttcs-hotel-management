@@ -25,5 +25,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        modelBuilder.Entity<Booking>()
+            .HasOne(booking => booking.User)
+            .WithMany(user => user.Bookings)
+            .HasForeignKey(booking => booking.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

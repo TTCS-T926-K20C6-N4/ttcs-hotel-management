@@ -13,8 +13,12 @@ public static class Mapper
 
             roomId = b.RoomId,
             roomNumber = b.Room?.RoomNumber ?? "",
+            floor = b.Room?.Floor ?? 0,
             roomTypeId = b.Room?.RoomTypeId,
             roomTypeName = b.Room?.RoomType?.Name ?? "",
+            roomImageUrl = b.Room?.ImageUrl,
+            roomNote = b.Room?.Note,
+            roomStatus = b.Room?.Status.ToString(),
 
             customerId = b.CustomerId,
             customerName = b.Customer?.FullName ?? "",

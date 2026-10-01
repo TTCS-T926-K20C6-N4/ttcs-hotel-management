@@ -12,6 +12,10 @@ import MainLayout from './layouts/MainLayout'
 import Home from './pages/Home'
 import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
+import EditRoom from './pages/EditRoom'
+import MyBookings from './pages/MyBookings'
+import EditBookedRoom from './pages/EditBookedRoom'
+import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -119,6 +123,56 @@ function ProtectedRoute() {
   return <Outlet />
 }
 
+function AdminRoute() {
+  const [isAdmin, setIsAdmin] = useState(null)
+
+  useEffect(() => {
+    fetch('http://localhost:5097/api/auth/me', { credentials: 'include' })
+      .then(async (response) => {
+        if (!response.ok) return false
+        const data = await response.json()
+        return data.user?.role?.toLowerCase() === 'admin'
+      })
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false))
+  }, [])
+
+  if (isAdmin === null) {
+    return <div style={{ padding: 24, textAlign: 'center' }}>Đang kiểm tra quyền quản trị...</div>
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/rooms" replace />
+  }
+
+  return <Outlet />
+}
+
+function UserRoute() {
+  const [isUser, setIsUser] = useState(null)
+
+  useEffect(() => {
+    fetch('http://localhost:5097/api/auth/me', { credentials: 'include' })
+      .then(async (response) => {
+        if (!response.ok) return false
+        const data = await response.json()
+        return data.user?.role?.toLowerCase() === 'user'
+      })
+      .then(setIsUser)
+      .catch(() => setIsUser(false))
+  }, [])
+
+  if (isUser === null) {
+    return <div style={{ padding: 24, textAlign: 'center' }}>Đang tải phòng đã đặt...</div>
+  }
+
+  if (!isUser) {
+    return <Navigate to="/rooms" replace />
+  }
+
+  return <Outlet />
+}
+
 
 // ==========================================
 // APP
@@ -177,13 +231,37 @@ function App() {
               element={<RoomList />}
             />
 
+            <Route element={<UserRoute />}>
+              <Route
+                path="/my-bookings"
+                element={<MyBookings />}
+              />
+
+              <Route
+                path="/my-bookings/:bookingId/edit"
+                element={<EditBookedRoom />}
+              />
+            </Route>
+
+            <Route
+              path="/rent-room"
+              element={<RentRoom />}
+            />
+
 
             {/* Thêm phòng */}
 
-            <Route
-              path="/rooms/add"
-              element={<AddRoom />}
-            />
+            <Route element={<AdminRoute />}>
+              <Route
+                path="/rooms/add"
+                element={<AddRoom />}
+              />
+
+              <Route
+                path="/rooms/:id/edit"
+                element={<EditRoom />}
+              />
+            </Route>
 
 
           </Route>

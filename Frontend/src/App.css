@@ -194,3 +194,41 @@
 .content {
   padding: 25px 30px;
 }
+
+@media (max-width: 680px) {
+  .sidebar {
+    width: 64px;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .sidebar-brand > div:last-child,
+  .menu-title,
+  .menu-item span,
+  .logout-menu span {
+    display: none;
+  }
+
+  .sidebar-menu {
+    padding: 8px 6px;
+  }
+
+  .menu-item,
+  .logout-menu {
+    justify-content: center;
+    gap: 0;
+    padding: 12px 4px;
+    text-align: center;
+  }
+
+  .content {
+    padding: 16px 14px;
+  }
+
+  .topbar {
+    padding: 0 14px;
+  }
+}

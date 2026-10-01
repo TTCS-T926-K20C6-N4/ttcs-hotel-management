@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 import './Login.css'
 
@@ -237,6 +238,8 @@ function Login() {
         'Đăng nhập thành công:',
         data.user
       )
+
+      api.setAuthToken(data.token)
 
 
       // Chuyển vào Trang chủ

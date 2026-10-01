@@ -1,10 +1,14 @@
 const API_BASE = 'http://localhost:5097/api'
+const AUTH_TOKEN_KEY = 'hotelAuthToken'
+export const API_ORIGIN = new URL(API_BASE).origin
 
 async function request(path, options = {}) {
+  const token = sessionStorage.getItem(AUTH_TOKEN_KEY)
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -38,6 +42,39 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  setAuthToken(token) {
+    sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+  },
+
+  clearAuthToken() {
+    sessionStorage.removeItem(AUTH_TOKEN_KEY)
+  },
+
+  async getCurrentUser() {
+    return request('/auth/me')
+  },
+
+  async getRooms() {
+    return request('/rooms')
+  },
+
+  async getRoom(id) {
+    return request(`/rooms/${id}`)
+  },
+
+  async updateRoom(id, payload) {
+    return request(`/rooms/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async deleteRoom(id) {
+    return request(`/rooms/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
   async getRoomTypes() {
     return request('/rooms/room-types')
   },
@@ -73,6 +110,40 @@ export const api = {
       : ''
 
     return request(`/bookings${query}`)
+  },
+
+  async getMyBookings() {
+    return request('/bookings/mine')
+  },
+
+  async getBooking(id) {
+    return request(`/bookings/${id}`)
+  },
+
+  async updateBookedRoom(bookingId, payload) {
+    return request(`/bookings/${bookingId}/room`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async uploadBookedRoomImage(bookingId, file) {
+    const formData = new FormData()
+    formData.append('image', file)
+    const token = sessionStorage.getItem(AUTH_TOKEN_KEY)
+    const response = await fetch(`${API_BASE}/bookings/${bookingId}/room-image`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    })
+    const data = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      throw new Error(data?.message || 'Không thể tải ảnh phòng lên.')
+    }
+
+    return data
   },
 
   async getActiveBookings() {
