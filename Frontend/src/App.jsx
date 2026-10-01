@@ -16,6 +16,7 @@ import EditRoom from './pages/EditRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { API_ORIGIN } from './services/api'
+import { Loading } from './components/Feedback'
 
 import './App.css'
 
@@ -101,6 +102,10 @@ function ProtectedRoute() {
   // ========================================
   // CHƯA ĐĂNG NHẬP
   // ========================================
+
+  if (isLoggedIn === null) {
+    return <Loading text="Đang kiểm tra đăng nhập..." />
+  }
 
   if (!isLoggedIn) {
 
