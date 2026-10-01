@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from 'react-router-dom'
 
 function RoomList() {
   const [rooms, setRooms] = useState([]);
@@ -78,6 +79,9 @@ function RoomList() {
                   <button onClick={() => handleDelete(room.id)}>
                     Xóa
                   </button>
+                  <Link to={`/rooms/${room.id}/edit`} style={{ marginLeft: '8px' }}>
+                    Sửa
+                  </Link>
                 </td>
               </tr>
             ))}

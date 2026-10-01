@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_ORIGIN } from '../services/api'
 
 import './Register.css'
 
@@ -108,7 +109,7 @@ function Register() {
     try {
 
       const response = await fetch(
-        'http://localhost:5097/api/auth/register',
+        `${API_ORIGIN}/api/auth/register`,
         {
           method: 'POST',
 

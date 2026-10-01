@@ -1,10 +1,12 @@
 const API_BASE = 'http://localhost:5097/api'
+export const API_ORIGIN = 'http://localhost:5097'
 
 async function request(path, options = {}) {
+  const bodyIsFormData = options.body instanceof FormData
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(bodyIsFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers || {}),
     },
     ...options,
@@ -38,6 +40,14 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  async getRooms() {
+    return request('/rooms')
+  },
+
+  async getRoom(id) {
+    return request(`/rooms/${id}`)
+  },
+
   async getRoomTypes() {
     return request('/rooms/room-types')
   },
@@ -47,6 +57,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     })
+  },
+
+  async updateRoom(id, room, image) {
+    const formData = new FormData()
+    Object.entries(room).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) formData.append(key, String(value))
+    })
+    if (image) formData.append('image', image)
+    return request(`/rooms/${id}`, { method: 'PUT', body: formData })
   },
 
   async getAvailableRooms() {

@@ -12,8 +12,10 @@ import MainLayout from './layouts/MainLayout'
 import Home from './pages/Home'
 import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
+import EditRoom from './pages/EditRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import { API_ORIGIN } from './services/api'
 
 import './App.css'
 
@@ -35,7 +37,7 @@ function ProtectedRoute() {
       try {
 
         const response = await fetch(
-          'http://localhost:5097/api/auth/me',
+          `${API_ORIGIN}/api/auth/me`,
           {
             method: 'GET',
 
@@ -183,6 +185,11 @@ function App() {
             <Route
               path="/rooms/add"
               element={<AddRoom />}
+            />
+
+            <Route
+              path="/rooms/:id/edit"
+              element={<EditRoom />}
             />
 
 

@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { API_ORIGIN } from '../services/api'
 
 function Sidebar() {
   const navigate = useNavigate()
@@ -9,7 +10,7 @@ function Sidebar() {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        'http://localhost:5097/api/auth/logout',
+        `${API_ORIGIN}/api/auth/logout`,
         {
           method: 'POST',
 

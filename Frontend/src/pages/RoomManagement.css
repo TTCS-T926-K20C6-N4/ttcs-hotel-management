@@ -1,0 +1,321 @@
+.room-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  color: #25323a;
+}
+
+.room-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.room-page-header h1 {
+  margin: 0;
+  color: #203a45;
+  font-size: 25px;
+}
+
+.room-page-header p {
+  margin: 6px 0 0;
+  color: #687a7c;
+  font-size: 14px;
+}
+
+.room-primary-action,
+.room-secondary-action,
+.room-edit-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.room-primary-action {
+  background: #146c61;
+  color: #fff;
+}
+
+.room-primary-action:hover:not(:disabled) {
+  background: #10594f;
+}
+
+.room-primary-action:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.room-secondary-action {
+  border-color: #cbd5d2;
+  background: #fff;
+  color: #405451;
+}
+
+.room-edit-action {
+  min-height: 32px;
+  padding: 5px 11px;
+  border-color: #bdd8d2;
+  color: #146c61;
+}
+
+.room-notice,
+.room-form-error,
+.room-empty {
+  padding: 13px 15px;
+  border: 1px solid #d5e2dd;
+  border-radius: 5px;
+  background: #fff;
+  margin-bottom: 16px;
+}
+
+.room-notice {
+  color: #17624e;
+  background: #edf8f2;
+}
+
+.room-form-error {
+  border-color: #efc4bd;
+  background: #fff2ef;
+  color: #9e3427;
+}
+
+.room-empty {
+  color: #687a7c;
+  text-align: center;
+}
+
+.room-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #dce4e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.room-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.room-table th,
+.room-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e8eeeb;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.room-table th {
+  color: #536561;
+  background: #f4f7f5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.room-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.room-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 110px;
+}
+
+.room-identity img,
+.room-image-placeholder {
+  display: grid;
+  width: 46px;
+  height: 42px;
+  flex: 0 0 46px;
+  place-items: center;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #eaf1ed;
+  color: #42665e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.room-status {
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: #edf8f2;
+  color: #17624e;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.status-occupied {
+  background: #fff1e6;
+  color: #95521c;
+}
+
+.status-maintenance {
+  background: #fcecea;
+  color: #9e3427;
+}
+
+.status-reserved {
+  background: #eef2f7;
+  color: #455a70;
+}
+
+.room-note-cell {
+  max-width: 210px;
+  color: #687a7c;
+}
+
+.room-edit-form {
+  max-width: 840px;
+  padding: 22px;
+  border: 1px solid #dce4e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.room-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.room-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #384a47;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.room-field b {
+  color: #b74736;
+}
+
+.room-field input:not([type="file"]),
+.room-field select,
+.room-field textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5d2;
+  border-radius: 4px;
+  background: #fff;
+  color: #25323a;
+  font-size: 14px;
+}
+
+.room-field textarea {
+  resize: vertical;
+}
+
+.room-field input:focus,
+.room-field select:focus,
+.room-field textarea:focus {
+  outline: 2px solid #9ac9bd;
+  outline-offset: 1px;
+}
+
+.room-field small {
+  color: #687a7c;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.room-field-wide {
+  grid-column: 1 / -1;
+}
+
+.room-image-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.room-image-preview,
+.room-image-empty {
+  display: grid;
+  width: 150px;
+  height: 112px;
+  flex: 0 0 150px;
+  place-items: center;
+  border: 1px solid #dce4e1;
+  border-radius: 4px;
+  background: #f4f7f5;
+  color: #687a7c;
+  object-fit: cover;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.room-image-control > div:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.room-image-control input[type="file"] {
+  max-width: 100%;
+  font-size: 13px;
+}
+
+.room-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #e8eeeb;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .room-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .room-edit-form {
+    padding: 16px;
+  }
+
+  .room-edit-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .room-field-wide {
+    grid-column: auto;
+  }
+
+  .room-image-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
