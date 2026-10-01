@@ -42,6 +42,13 @@ export const api = {
     return request('/rooms/room-types')
   },
 
+  async updateRoomType(id, payload) {
+    return request(`/rooms/room-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...payload, id }),
+    })
+  },
+
   async createRoom(payload) {
     return request('/rooms', {
       method: 'POST',
