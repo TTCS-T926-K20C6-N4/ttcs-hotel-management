@@ -25,6 +25,7 @@ public async Task<IActionResult> GetRooms()
 
     return Ok(rooms);
 }
+
 [HttpPost]
 public async Task<IActionResult> CreateRoom(Room room)
 {
@@ -41,8 +42,10 @@ public async Task<IActionResult> CreateRoom(Room room)
         return BadRequest(new { message = "Thể loại phòng không tồn tại." });
     }
 
+    var roomNumber = room.RoomNumber.Trim();
+
     var roomNumberExists = await _db.Rooms
-        .AnyAsync(r => r.RoomNumber == room.RoomNumber);
+        .AnyAsync(r => r.RoomNumber == roomNumber);
 
     if (roomNumberExists)
     {
@@ -51,21 +54,77 @@ public async Task<IActionResult> CreateRoom(Room room)
 
     var newRoom = new Room
     {
-        RoomNumber = room.RoomNumber.Trim(),
+        RoomNumber = roomNumber,
         Floor = room.Floor <= 0 ? 1 : room.Floor,
         RoomTypeId = room.RoomTypeId,
         Status = room.Status,
-        Note = room.Note
+        Note = room.Note,
+        ImageUrl = room.ImageUrl
     };
 
     _db.Rooms.Add(newRoom);
     await _db.SaveChangesAsync();
 
-    await _db.Entry(newRoom)
-        .Reference(r => r.RoomType)
-        .LoadAsync();
+    return Ok(new
+    {
+        id = newRoom.Id,
+        roomNumber = newRoom.RoomNumber,
+        floor = newRoom.Floor,
+        roomTypeId = newRoom.RoomTypeId,
+        status = newRoom.Status,
+        note = newRoom.Note,
+        imageUrl = newRoom.ImageUrl
+    });
+}
 
-    return Ok(newRoom);
+[HttpPost("upload-image")]
+public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
+{
+    if (image == null || image.Length == 0)
+    {
+        return BadRequest(new { message = "Vui lòng chọn hình ảnh." });
+    }
+
+    if (image.Length > 5 * 1024 * 1024)
+    {
+        return BadRequest(new { message = "Hình ảnh không được vượt quá 5 MB." });
+    }
+
+    var allowedExtensions = new[]
+    {
+        ".jpg", ".jpeg", ".png", ".webp"
+    };
+
+    var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+
+    if (!allowedExtensions.Contains(extension))
+    {
+        return BadRequest(new
+        {
+            message = "Chỉ hỗ trợ ảnh JPG, JPEG, PNG hoặc WEBP."
+        });
+    }
+
+    var uploadFolder = Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "wwwroot",
+        "uploads",
+        "rooms"
+    );
+
+    Directory.CreateDirectory(uploadFolder);
+
+    var fileName = $"{Guid.NewGuid():N}{extension}";
+    var filePath = Path.Combine(uploadFolder, fileName);
+
+    await using (var stream = new FileStream(filePath, FileMode.Create))
+    {
+        await image.CopyToAsync(stream);
+    }
+
+    var imageUrl = $"/uploads/rooms/{fileName}";
+
+    return Ok(new { imageUrl });
 }
 
 [HttpDelete("{id}")]

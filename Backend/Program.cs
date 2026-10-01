@@ -133,6 +133,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 
+// Cho phép truy cập file tĩnh trong wwwroot
+// Ví dụ: /uploads/rooms/abc.jpg
+app.UseStaticFiles();
+
 // Phải có trước khi Controller sử dụng HttpContext.Session
 app.UseSession();
 

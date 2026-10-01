@@ -28,7 +28,10 @@ public class Room
     public int RoomTypeId { get; set; }
     public RoomType? RoomType { get; set; }
 
-    public RoomStatus Status { get; set; } = RoomStatus.Available;
+   public RoomStatus Status { get; set; } = RoomStatus.Available;
 
-    public string? Note { get; set; }
+public string? Note { get; set; }
+
+/// <summary>Đường dẫn hình ảnh đại diện của phòng.</summary>
+public string? ImageUrl { get; set; }
 }

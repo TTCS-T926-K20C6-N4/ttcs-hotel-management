@@ -85,7 +85,42 @@ export const api = {
       body: JSON.stringify(payload),
     })
   },
+async uploadRoomImage(file) {
+  const formData = new FormData()
+  formData.append('image', file)
 
+  const response = await fetch(`${API_BASE}/rooms/upload-image`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  })
+
+  let data = null
+  const contentType = response.headers.get('content-type') || ''
+
+  if (contentType.includes('application/json')) {
+    data = await response.json()
+  } else {
+    const text = await response.text()
+    data = text || null
+  }
+
+  if (!response.ok) {
+    let message = 'Không thể tải hình ảnh lên.'
+
+    if (data?.message) {
+      message = data.message
+    } else if (data?.title) {
+      message = data.title
+    } else if (typeof data === 'string' && data.trim()) {
+      message = data
+    }
+
+    throw new Error(message)
+  }
+
+  return data
+},
   async addService(bookingId, payload) {
     return request(`/bookings/${bookingId}/services`, {
       method: 'POST',
