@@ -153,9 +153,12 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-    db.Database.Migrate();
+   db.Database.Migrate();
 
-    if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
+// Tạo dữ liệu mặc định dùng chung cho cả nhóm
+await DbSeeder.SeedAsync(db);
+
+if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
     {
         var admin = new User
         {
