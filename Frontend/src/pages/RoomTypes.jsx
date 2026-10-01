@@ -3,53 +3,71 @@ import { api, formatMoney } from '../services/api'
 import Toast from '../components/Toast'
 import './RoomTypes.css'
 
-// Encore Photo Library (copied from Encore assets)
+// High-resolution Encore image library
 const ENCORE_IMAGE_PRESETS = [
-  { id: '06', url: '/room-types/06.jpg', title: 'Presidential Suite (Grand Piano & Fireplace)' },
   { id: '013', url: '/room-types/013.jpg', title: 'Double Suite Attic Floor (Skyline View)' },
+  { id: '06', url: '/room-types/06.jpg', title: 'Presidential Suite (Grand Piano & Fireplace)' },
   { id: '05', url: '/room-types/05.jpg', title: 'Luxury Art Living Suite' },
   { id: '02', url: '/room-types/02.jpg', title: 'Family Double Room Suite' },
   { id: '032', url: '/room-types/032.jpg', title: 'Luxury Double Room Suite' },
   { id: '041', url: '/room-types/041.jpg', title: 'Deluxe Executive Living Suite' },
 ]
 
-function getRoomTypeImage(item) {
-  if (item?.imageUrl) return item.imageUrl
-
+function getRoomTypeMeta(item) {
   const name = (item?.name || '').toLowerCase()
-  if (name.includes('tổng thống') || name.includes('vip') || name.includes('president')) {
-    return '/room-types/06.jpg' // Image 1 with Grand Piano
-  }
-  if (name.includes('attic') || name.includes('sang trọng') || name.includes('deluxe')) {
-    return '/room-types/013.jpg' // Image 2 with slanted skylight glass
-  }
-  if (name.includes('cao cấp') || name.includes('superior') || name.includes('art')) {
-    return '/room-types/05.jpg' // Image 3 with typographic art wall
-  }
-  if (name.includes('gia đình') || name.includes('family')) {
-    return '/room-types/02.jpg'
-  }
-  if (name.includes('tiêu chuẩn') || name.includes('standard')) {
-    return '/room-types/041.jpg'
+
+  if (name.includes('tổng thống') || name.includes('president') || name.includes('vip')) {
+    return {
+      category: 'VIP HOÀNG GIA',
+      categoryKey: 'vip',
+      bed: '1 Giường King Hoàng Gia',
+      area: '120 m²',
+      defaultImage: '/room-types/06.jpg',
+      gallery: ['/room-types/06.jpg', '/room-types/032.jpg', '/room-types/05.jpg', '/room-types/013.jpg'],
+    }
   }
 
-  // Fallback by ID
-  const presets = ['/room-types/06.jpg', '/room-types/013.jpg', '/room-types/05.jpg', '/room-types/02.jpg', '/room-types/032.jpg', '/room-types/041.jpg']
-  return presets[(item?.id || 0) % presets.length]
-}
-
-function getCategoryInfo(item) {
-  const name = (item?.name || '').toLowerCase()
-  if (name.includes('tổng thống') || name.includes('vip') || name.includes('president')) {
-    return { category: 'VIP Hoàng Gia', categoryKey: 'vip', bed: '1 Giường King Hoàng Gia', area: '120 m²' }
-  }
   if (name.includes('gia đình') || name.includes('family') || item?.capacity >= 4) {
-    return { category: 'Gia đình', categoryKey: 'family', bed: '1 King + 2 Giường Đơn', area: '85 m²' }
+    return {
+      category: 'GIA ĐÌNH',
+      categoryKey: 'family',
+      bed: '1 King + 2 Giường Đơn',
+      area: '85 m²',
+      defaultImage: '/room-types/02.jpg',
+      gallery: ['/room-types/02.jpg', '/room-types/06.jpg', '/room-types/05.jpg', '/room-types/033.jpg'],
+    }
   }
-  if (name.includes('sang trọng') || name.includes('deluxe') || name.includes('cao cấp') || name.includes('superior')) {
-    return { category: 'Sang trọng', categoryKey: 'luxury', bed: '1 Giường Queen Đôi 1m8', area: '55 m²' }
+
+  if (name.includes('attic') || name.includes('sang trọng') || name.includes('deluxe')) {
+    return {
+      category: 'SANG TRỌNG',
+      categoryKey: 'luxury',
+      bed: '1 Giường Queen Đôi 1m8',
+      area: '55 m²',
+      defaultImage: '/room-types/013.jpg',
+      gallery: ['/room-types/013.jpg', '/room-types/032.jpg', '/room-types/03.jpg', '/room-types/031.jpg'],
+    }
   }
-  return { category: 'Cặp đôi', categoryKey: 'couple', bed: '1 Giường Đôi Tiêu Chuẩn', area: '38 m²' }
+
+  if (name.includes('cao cấp') || name.includes('superior') || name.includes('art')) {
+    return {
+      category: 'SANG TRỌNG',
+      categoryKey: 'luxury',
+      bed: '1 Giường Queen 1m8',
+      area: '48 m²',
+      defaultImage: '/room-types/05.jpg',
+      gallery: ['/room-types/05.jpg', '/room-types/032.jpg', '/room-types/03.jpg', '/room-types/031.jpg'],
+    }
+  }
+
+  return {
+    category: 'CẶP ĐÔI',
+    categoryKey: 'couple',
+    bed: '1 Giường Đôi Tiêu Chuẩn',
+    area: '38 m²',
+    defaultImage: '/room-types/041.jpg',
+    gallery: ['/room-types/041.jpg', '/room-types/013.jpg', '/room-types/05.jpg', '/room-types/02.jpg'],
+  }
 }
 
 function RoomTypes() {
@@ -58,20 +76,20 @@ function RoomTypes() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all') // 'all' | 'couple' | 'family' | 'luxury' | 'vip'
   const [sortBy, setSortBy] = useState('default')
-  const [viewMode, setViewMode] = useState('grid') // 'grid' | 'table'
 
   // Modals state
   const [detailModal, setDetailModal] = useState({ open: false, data: null, loading: false })
+  const [activeGalleryImg, setActiveGalleryImg] = useState('')
   const [formModal, setFormModal] = useState({ open: false, isEdit: false, id: null })
   const [deleteModal, setDeleteModal] = useState({ open: false, item: null, loading: false })
 
-  // Form values
+  // Form Data
   const [formData, setFormData] = useState({
     name: '',
     pricePerNight: '',
     capacity: 2,
     description: '',
-    imageUrl: '/room-types/06.jpg',
+    imageUrl: '/room-types/013.jpg',
   })
   const [formError, setFormError] = useState('')
   const [formSubmitting, setFormSubmitting] = useState(false)
@@ -101,18 +119,6 @@ function RoomTypes() {
     loadRoomTypes()
   }, [])
 
-  // Quick Stats
-  const stats = useMemo(() => {
-    const totalTypes = roomTypes.length
-    const totalRooms = roomTypes.reduce((acc, curr) => acc + (curr.totalRooms || 0), 0)
-    const availableRooms = roomTypes.reduce((acc, curr) => acc + (curr.availableRooms || 0), 0)
-    const avgPrice = totalTypes > 0
-      ? roomTypes.reduce((acc, curr) => acc + (Number(curr.pricePerNight) || 0), 0) / totalTypes
-      : 0
-
-    return { totalTypes, totalRooms, availableRooms, avgPrice }
-  }, [roomTypes])
-
   // Filtered & Sorted List
   const filteredRoomTypes = useMemo(() => {
     let result = [...roomTypes]
@@ -120,7 +126,7 @@ function RoomTypes() {
     // Category Filter
     if (categoryFilter !== 'all') {
       result = result.filter((rt) => {
-        const { categoryKey } = getCategoryInfo(rt)
+        const { categoryKey } = getRoomTypeMeta(rt)
         return categoryKey === categoryFilter
       })
     }
@@ -154,15 +160,22 @@ function RoomTypes() {
   }, [roomTypes, categoryFilter, search, sortBy])
 
   // Handle View Detail
-  const handleOpenDetail = async (id) => {
-    setDetailModal({ open: true, data: null, loading: true })
+  const handleOpenDetail = async (item) => {
+    const meta = getRoomTypeMeta(item)
+    const initialImg = item.imageUrl || meta.defaultImage
+    setActiveGalleryImg(initialImg)
+    setDetailModal({ open: true, data: { ...item, meta }, loading: true })
+
     try {
-      const data = await api.getRoomTypeById(id)
-      setDetailModal({ open: true, data, loading: false })
+      const data = await api.getRoomTypeById(item.id)
+      setDetailModal({ open: true, data: { ...data, meta }, loading: false })
+      if (data?.imageUrl) {
+        setActiveGalleryImg(data.imageUrl)
+      }
     } catch (error) {
       console.error('Lỗi khi tải chi tiết thể loại phòng:', error)
       showToast(error.message || 'Không thể tải chi tiết thể loại phòng.', 'error')
-      setDetailModal({ open: false, data: null, loading: false })
+      setDetailModal((prev) => ({ ...prev, loading: false }))
     }
   }
 
@@ -173,19 +186,20 @@ function RoomTypes() {
       pricePerNight: '',
       capacity: 2,
       description: '',
-      imageUrl: '/room-types/06.jpg',
+      imageUrl: '/room-types/013.jpg',
     })
     setFormError('')
     setFormModal({ open: true, isEdit: false, id: null })
   }
 
   const handleOpenEdit = (item) => {
+    const meta = getRoomTypeMeta(item)
     setFormData({
       name: item.name,
       pricePerNight: item.pricePerNight,
       capacity: item.capacity,
       description: item.description || '',
-      imageUrl: item.imageUrl || getRoomTypeImage(item),
+      imageUrl: item.imageUrl || meta.defaultImage,
     })
     setFormError('')
     setFormModal({ open: true, isEdit: true, id: item.id })
@@ -260,7 +274,7 @@ function RoomTypes() {
   }
 
   return (
-    <div className="encore-room-types-page">
+    <div className="encore-page">
       {toast.message && (
         <Toast
           message={toast.message}
@@ -269,302 +283,220 @@ function RoomTypes() {
         />
       )}
 
-      {/* ===== LUXURY ENCORE HERO BANNER ===== */}
-      <div className="encore-hero-banner">
-        <div
-          className="encore-hero-bg"
-          style={{ backgroundImage: `url('/room-types/06.jpg')` }}
-        ></div>
-        <div className="encore-hero-overlay"></div>
+      {/* ===== ENCORE PAGE TITLE BANNER ===== */}
+      <div
+        className="encore-page-title-banner"
+        style={{ backgroundImage: `url('/room-types/06.jpg')` }}
+      >
+        <div className="encore-title-inner">
+          <div className="encore-title-center">
+            <h1>LOẠI PHÒNG &amp; SUITES</h1>
+            <div className="encore-breadcrumbs">
+              <span>TRANG CHỦ</span>
+              <span className="divider">/</span>
+              <strong>LOẠI PHÒNG ENCORE</strong>
+            </div>
+          </div>
 
-        <div className="encore-hero-content">
-          <div>
-            <div className="encore-tagline">✨ ENCORE LUXURY RESORT &amp; HOTEL</div>
-            <h1 className="encore-hero-title">LOẠI PHÒNG &amp; SUITES</h1>
-            <p className="encore-hero-desc">
-              Trải nghiệm không gian nghỉ dưỡng đỉnh cao với nội thất hoàng gia, tiện nghi 5 sao,
-              ban công hướng biển và dịch vụ quản gia phục vụ 24/7.
+          <div className="encore-title-right">
+            <p className="encore-result-count">
+              Hiển thị {filteredRoomTypes.length} trên {roomTypes.length} kết quả
             </p>
-          </div>
-
-          <div className="encore-hero-actions">
-            <button
-              type="button"
-              className="btn-encore-primary"
-              onClick={handleOpenCreate}
-            >
-              ➕ Thêm loại phòng mới
-            </button>
-            <button
-              type="button"
-              className="btn-encore-outline"
-              onClick={loadRoomTypes}
-              title="Làm mới dữ liệu từ máy chủ"
-            >
-              🔄 Làm mới dữ liệu
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== OVERVIEW STATS ===== */}
-      <div className="encore-stats-grid">
-        <div className="encore-stat-card">
-          <div className="encore-stat-icon-wrap gold">👑</div>
-          <div className="encore-stat-text">
-            <span>Tổng loại phòng</span>
-            <strong>{stats.totalTypes} Hạng phòng</strong>
-          </div>
-        </div>
-
-        <div className="encore-stat-card">
-          <div className="encore-stat-icon-wrap blue">💰</div>
-          <div className="encore-stat-text">
-            <span>Đơn giá bình quân</span>
-            <strong style={{ color: '#0284c7' }}>{formatMoney(stats.avgPrice)}</strong>
-          </div>
-        </div>
-
-        <div className="encore-stat-card">
-          <div className="encore-stat-icon-wrap green">🚪</div>
-          <div className="encore-stat-text">
-            <span>Tổng phòng khách sạn</span>
-            <strong>{stats.totalRooms} Phòng</strong>
-          </div>
-        </div>
-
-        <div className="encore-stat-card">
-          <div className="encore-stat-icon-wrap purple">🟢</div>
-          <div className="encore-stat-text">
-            <span>Phòng sẵn sàng đón khách</span>
-            <strong>{stats.availableRooms} / {stats.totalRooms} Trống</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== ENCORE CATEGORY TABS & FILTER BAR ===== */}
-      <div className="encore-filter-wrapper">
-        <div className="encore-category-tabs">
-          <button
-            type="button"
-            className={`category-tab-btn ${categoryFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setCategoryFilter('all')}
-          >
-            🏨 Tất cả loại phòng ({roomTypes.length})
-          </button>
-          <button
-            type="button"
-            className={`category-tab-btn ${categoryFilter === 'couple' ? 'active' : ''}`}
-            onClick={() => setCategoryFilter('couple')}
-          >
-            💑 Cặp đôi
-          </button>
-          <button
-            type="button"
-            className={`category-tab-btn ${categoryFilter === 'family' ? 'active' : ''}`}
-            onClick={() => setCategoryFilter('family')}
-          >
-            👨‍👩‍👧‍👦 Gia đình
-          </button>
-          <button
-            type="button"
-            className={`category-tab-btn ${categoryFilter === 'luxury' ? 'active' : ''}`}
-            onClick={() => setCategoryFilter('luxury')}
-          >
-            💎 Sang trọng (Deluxe / Art)
-          </button>
-          <button
-            type="button"
-            className={`category-tab-btn ${categoryFilter === 'vip' ? 'active' : ''}`}
-            onClick={() => setCategoryFilter('vip')}
-          >
-            👑 VIP Tổng Thống
-          </button>
-        </div>
-
-        <div className="encore-controls-row">
-          <div className="encore-search-box">
-            <span className="search-icon-svg">🔍</span>
-            <input
-              type="text"
-              placeholder="Tìm theo tên hạng phòng, tiện nghi, mô tả..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
-              Hiển thị {filteredRoomTypes.length} kết quả
-            </span>
 
             <select
-              className="encore-select"
+              className="encore-orderby-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="default">Thứ tự mặc định</option>
-              <option value="price-asc">Thứ tự theo giá: Thấp đến Cao</option>
-              <option value="price-desc">Thứ tự theo giá: Cao xuống Thấp</option>
-              <option value="capacity-asc">Sức chứa: Ít đến Nhiều</option>
-              <option value="capacity-desc">Sức chứa: Nhiều đến Ít</option>
+              <option value="price-asc">Thứ tự theo giá: thấp đến cao</option>
+              <option value="price-desc">Thứ tự theo giá: cao xuống thấp</option>
               <option value="name-asc">Tên loại phòng: A - Z</option>
               <option value="name-desc">Tên loại phòng: Z - A</option>
+              <option value="capacity-desc">Sức chứa: nhiều đến ít</option>
             </select>
 
-            <div className="encore-view-toggles">
-              <button
-                type="button"
-                className={`encore-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Dạng lưới thẻ phong cách Encore"
-              >
-                ⊞ Lưới
-              </button>
-              <button
-                type="button"
-                className={`encore-view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                onClick={() => setViewMode('table')}
-                title="Dạng bảng dữ liệu"
-              >
-                ☰ Bảng
-              </button>
-            </div>
+            <button
+              type="button"
+              className="btn-add-roomtype-encore"
+              onClick={handleOpenCreate}
+            >
+              ➕ Thêm loại phòng
+            </button>
           </div>
         </div>
       </div>
 
-      {/* ===== MAIN CONTENT ===== */}
-      {loading ? (
-        <div className="encore-loading-box">
-          <div className="loading-spinner"></div>
-          <p style={{ color: '#64748b', fontWeight: 600 }}>Đang tải danh sách phòng nghỉ dưỡng Encore...</p>
-        </div>
-      ) : filteredRoomTypes.length === 0 ? (
-        <div className="encore-empty-box">
-          <div style={{ fontSize: '48px', marginBottom: '14px' }}>🏛️</div>
-          <h3 style={{ margin: '0 0 8px', fontSize: '20px', color: '#0f172a' }}>
-            Không tìm thấy loại phòng nào phù hợp
-          </h3>
-          <p style={{ color: '#64748b', marginBottom: '18px' }}>
-            Thử thay đổi từ khóa tìm kiếm hoặc bấm nút bên dưới để đặt lại bộ lọc.
-          </p>
+      {/* ===== FILTER TABS & SEARCH BAR ===== */}
+      <div className="encore-nav-bar">
+        <div className="encore-category-nav">
           <button
             type="button"
-            className="btn-encore-primary"
+            className={`encore-cat-item ${categoryFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setCategoryFilter('all')}
+          >
+            TẤT CẢ ({roomTypes.length})
+          </button>
+          <button
+            type="button"
+            className={`encore-cat-item ${categoryFilter === 'couple' ? 'active' : ''}`}
+            onClick={() => setCategoryFilter('couple')}
+          >
+            CẶP ĐÔI
+          </button>
+          <button
+            type="button"
+            className={`encore-cat-item ${categoryFilter === 'family' ? 'active' : ''}`}
+            onClick={() => setCategoryFilter('family')}
+          >
+            GIA ĐÌNH
+          </button>
+          <button
+            type="button"
+            className={`encore-cat-item ${categoryFilter === 'luxury' ? 'active' : ''}`}
+            onClick={() => setCategoryFilter('luxury')}
+          >
+            SANG TRỌNG
+          </button>
+          <button
+            type="button"
+            className={`encore-cat-item ${categoryFilter === 'vip' ? 'active' : ''}`}
+            onClick={() => setCategoryFilter('vip')}
+          >
+            VIP HOÀNG GIA
+          </button>
+        </div>
+
+        <div className="encore-search-input-wrap">
+          <span className="encore-search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Tìm kiếm hạng phòng..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ===== 3-COLUMN ENCORE PRODUCT GRID (EXACTLY LIKE SCREENSHOT) ===== */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
+          <p>Đang tải danh sách thể loại phòng Encore...</p>
+        </div>
+      ) : filteredRoomTypes.length === 0 ? (
+        <div className="encore-empty-results">
+          <h3>Không tìm thấy loại phòng nào</h3>
+          <p>Hãy thử từ khóa khác hoặc bấm nút bên dưới để xem tất cả.</p>
+          <button
+            type="button"
+            className="btn-add-roomtype-encore"
+            style={{ marginTop: '12px' }}
             onClick={() => {
               setSearch('')
               setCategoryFilter('all')
             }}
           >
-            🔄 Xóa bộ lọc tìm kiếm
+            Xem tất cả hạng phòng
           </button>
         </div>
-      ) : viewMode === 'grid' ? (
-        /* ===== ENCORE 3-COLUMN CARDS GRID ===== */
-        <div className="encore-cards-grid">
+      ) : (
+        <div className="encore-products-grid">
           {filteredRoomTypes.map((item) => {
-            const imgUrl = getRoomTypeImage(item)
-            const meta = getCategoryInfo(item)
-            const availablePercent =
-              item.totalRooms > 0
-                ? Math.round((item.availableRooms / item.totalRooms) * 100)
-                : 0
+            const meta = getRoomTypeMeta(item)
+            const mainImg = item.imageUrl || meta.defaultImage
 
             return (
-              <div key={item.id} className="encore-card">
-                <div className="encore-card-media">
+              <div key={item.id} className="encore-product-item">
+                {/* Photo box with 900x543 ratio */}
+                <div
+                  className="encore-box-image"
+                  onClick={() => handleOpenDetail(item)}
+                >
                   <img
-                    src={imgUrl}
+                    src={mainImg}
                     alt={item.name}
-                    className="encore-card-img"
                     loading="lazy"
                   />
-                  <div className="encore-card-media-overlay"></div>
 
-                  <span className="encore-cat-badge">{meta.category}</span>
+                  {/* Availability badge */}
+                  <div className="encore-image-badges">
+                    <span
+                      className={`status-badge-pill ${
+                        item.availableRooms > 0 ? 'available' : 'occupied'
+                      }`}
+                    >
+                      {item.availableRooms > 0
+                        ? `Còn ${item.availableRooms} phòng trống`
+                        : 'Hết phòng'}
+                    </span>
+                  </div>
 
-                  <span
-                    className={`encore-avail-badge ${
-                      item.availableRooms > 0 ? 'available' : 'occupied'
-                    }`}
-                  >
-                    {item.availableRooms > 0
-                      ? `🟢 Còn ${item.availableRooms} phòng trống`
-                      : '🔴 Hết phòng trống'}
-                  </span>
-
-                  <div className="encore-card-price-overlay">
-                    <span className="encore-price-num">{formatMoney(item.pricePerNight)}</span>
-                    <span className="encore-price-suffix">/ đêm</span>
+                  {/* Hover Quick Action */}
+                  <div className="encore-image-hover-actions">
+                    <button
+                      type="button"
+                      className="btn-hover-quick view"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleOpenDetail(item)
+                      }}
+                    >
+                      XEM CHI TIẾT
+                    </button>
                   </div>
                 </div>
 
-                <div className="encore-card-body">
-                  <h3 className="encore-card-title">{item.name}</h3>
+                {/* Text Content (Matching screenshot typography & spacing) */}
+                <div className="encore-box-text">
+                  <div className="encore-product-category">{meta.category}</div>
+                  <h3
+                    className="encore-product-name"
+                    onClick={() => handleOpenDetail(item)}
+                  >
+                    {item.name}
+                  </h3>
+                  <div className="encore-product-price">
+                    {formatMoney(item.pricePerNight)}
+                  </div>
 
-                  <div className="encore-specs-row">
-                    <span className="encore-spec-item">
-                      👥 <strong>{item.capacity} Khách</strong>
-                    </span>
-                    <span className="encore-spec-item">
+                  {/* Specs row */}
+                  <div className="encore-product-meta-row">
+                    <div className="encore-meta-spec">
+                      👥 <strong>{item.capacity} khách</strong>
+                    </div>
+                    <div className="encore-meta-spec">
                       🛏️ <strong>{meta.bed}</strong>
-                    </span>
-                    <span className="encore-spec-item">
-                      📐 <strong>{meta.area}</strong>
-                    </span>
-                    <span className="encore-spec-item">
-                      🚪 <strong>{item.totalRooms} Phòng</strong>
-                    </span>
-                  </div>
-
-                  <p className="encore-card-desc">
-                    {item.description ||
-                      'Không gian phòng lưu trú cao cấp trang bị điều hòa, ban công view thành phố, bồn tắm thư giãn và dịch vụ ẩm thực tại phòng.'}
-                  </p>
-
-                  <div className="encore-occupancy-wrap">
-                    <div className="encore-occupancy-header">
-                      <span>Tình trạng phòng ({item.availableRooms}/{item.totalRooms} trống)</span>
-                      <span>{availablePercent}%</span>
                     </div>
-                    <div className="encore-occupancy-bar">
-                      <div
-                        className="occupancy-green"
-                        style={{ width: `${availablePercent}%` }}
-                      ></div>
-                      <div
-                        className="occupancy-red"
-                        style={{ width: `${100 - availablePercent}%` }}
-                      ></div>
+                    <div className="encore-meta-spec">
+                      🚪 <strong>{item.totalRooms} phòng</strong>
                     </div>
                   </div>
 
-                  <div className="encore-card-footer">
+                  {/* Admin text actions */}
+                  <div className="encore-card-admin-row">
                     <button
                       type="button"
-                      className="btn-card-view-detail"
-                      onClick={() => handleOpenDetail(item.id)}
+                      className="btn-encore-text-action"
+                      onClick={() => handleOpenDetail(item)}
                     >
-                      🔍 Xem danh sách {item.totalRooms} phòng
+                      🔍 Xem chi tiết
                     </button>
-
-                    <div className="card-admin-btns">
+                    <div>
                       <button
                         type="button"
-                        className="btn-icon-action edit"
+                        className="btn-encore-text-action"
                         onClick={() => handleOpenEdit(item)}
-                        title="Chỉnh sửa thông tin thể loại phòng"
+                        title="Chỉnh sửa loại phòng"
                       >
-                        ✏️
+                        ✏️ Sửa
                       </button>
                       <button
                         type="button"
-                        className="btn-icon-action delete"
+                        className="btn-encore-text-action delete"
                         onClick={() => handleOpenDelete(item)}
-                        title="Xóa thể loại phòng"
+                        title="Xóa loại phòng"
                       >
-                        🗑️
+                        🗑️ Xóa
                       </button>
                     </div>
                   </div>
@@ -573,225 +505,168 @@ function RoomTypes() {
             )
           })}
         </div>
-      ) : (
-        /* ===== ENCORE TABLE VIEW ===== */
-        <div className="encore-table-card">
-          <div className="encore-table-scroll">
-            <table className="encore-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }}>ID</th>
-                  <th>Hình ảnh &amp; Thể loại phòng</th>
-                  <th>Phân loại</th>
-                  <th>Sức chứa</th>
-                  <th>Đơn giá / đêm</th>
-                  <th>Số lượng phòng</th>
-                  <th>Phòng trống</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRoomTypes.map((item) => {
-                  const imgUrl = getRoomTypeImage(item)
-                  const meta = getCategoryInfo(item)
-                  return (
-                    <tr key={item.id}>
-                      <td style={{ fontWeight: 700, color: '#64748b' }}>#{item.id}</td>
-                      <td>
-                        <div className="table-room-meta">
-                          <img
-                            src={imgUrl}
-                            alt={item.name}
-                            className="table-room-thumb"
-                          />
-                          <div>
-                            <div className="table-room-title">{item.name}</div>
-                            <small style={{ color: '#64748b' }}>{meta.bed} • {meta.area}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="encore-cat-badge" style={{ position: 'static' }}>
-                          {meta.category}
-                        </span>
-                      </td>
-                      <td>
-                        <strong>👥 {item.capacity} người</strong>
-                      </td>
-                      <td>
-                        <span className="table-price-val">{formatMoney(item.pricePerNight)}</span>
-                        <span style={{ fontSize: '12px', color: '#64748b' }}> / đêm</span>
-                      </td>
-                      <td>
-                        <strong>{item.totalRooms} phòng</strong>
-                      </td>
-                      <td>
-                        <span
-                          className={`encore-avail-badge ${
-                            item.availableRooms > 0 ? 'available' : 'occupied'
-                          }`}
-                          style={{ position: 'static' }}
-                        >
-                          {item.availableRooms} Trống
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button
-                            type="button"
-                            className="btn-card-view-detail"
-                            style={{ padding: '6px 10px', fontSize: '12px' }}
-                            onClick={() => handleOpenDetail(item.id)}
-                          >
-                            🔍 Xem
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-icon-action edit"
-                            onClick={() => handleOpenEdit(item)}
-                            title="Sửa"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-icon-action delete"
-                            onClick={() => handleOpenDelete(item)}
-                            title="Xóa"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
 
-      {/* ===== DETAIL MODAL (ENCORE STYLE) ===== */}
-      {detailModal.open && (
+      {/* ===== LUXURY DETAIL MODAL (MATCHING LUXURY DOUBLE ROOM SUITE ENCORE) ===== */}
+      {detailModal.open && detailModal.data && (
         <div
-          className="encore-modal-backdrop"
+          className="encore-modal-overlay"
           onClick={() => setDetailModal({ open: false, data: null, loading: false })}
         >
-          <div className="encore-modal-card wide" onClick={(e) => e.stopPropagation()}>
-            <div className="encore-modal-header">
-              <h3>Chi Tiết Thể Loại Phòng: {detailModal.data?.name || 'Đang tải...'}</h3>
-              <button
-                type="button"
-                className="encore-modal-close"
-                onClick={() => setDetailModal({ open: false, data: null, loading: false })}
-              >
-                ✕
-              </button>
-            </div>
+          <div
+            className="encore-detail-modal-box"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="encore-modal-close-icon"
+              onClick={() => setDetailModal({ open: false, data: null, loading: false })}
+              aria-label="Đóng"
+            >
+              ✕
+            </button>
 
-            <div className="encore-modal-body">
-              {detailModal.loading ? (
-                <div className="encore-loading-box" style={{ padding: '40px' }}>
-                  <div className="loading-spinner"></div>
-                  <p>Đang tải danh sách phòng...</p>
-                </div>
-              ) : detailModal.data ? (
-                <>
+            <div className="encore-detail-inner">
+              {/* Left Column: Gallery */}
+              <div>
+                <div className="detail-gallery-main">
                   <img
-                    src={getRoomTypeImage(detailModal.data)}
+                    src={activeGalleryImg || detailModal.data.imageUrl || detailModal.data.meta.defaultImage}
                     alt={detailModal.data.name}
-                    className="detail-banner-img"
                   />
+                </div>
 
-                  <div className="detail-overview-grid">
-                    <div className="detail-item">
-                      <span>Đơn giá niêm yết</span>
-                      <strong style={{ color: '#0284c7', fontSize: '18px' }}>
-                        {formatMoney(detailModal.data.pricePerNight)} / đêm
-                      </strong>
+                <div className="detail-gallery-thumbs">
+                  {detailModal.data.meta.gallery.map((thumbUrl, idx) => (
+                    <div
+                      key={idx}
+                      className={`gallery-thumb-item ${activeGalleryImg === thumbUrl ? 'active' : ''}`}
+                      onClick={() => setActiveGalleryImg(thumbUrl)}
+                    >
+                      <img src={thumbUrl} alt={`Thumbnail ${idx + 1}`} />
                     </div>
-                    <div className="detail-item">
-                      <span>Sức chứa tối đa</span>
-                      <strong>👥 {detailModal.data.capacity} người lớn</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Tình trạng phòng</span>
-                      <strong>
-                        {detailModal.data.availableRooms} trống / {detailModal.data.totalRooms} tổng
-                      </strong>
-                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Information & Specs */}
+              <div className="detail-info-col">
+                <span className="detail-cat-tag">
+                  {detailModal.data.meta.category}
+                </span>
+
+                <h2 className="detail-title">{detailModal.data.name}</h2>
+
+                <div className="detail-price-text">
+                  {formatMoney(detailModal.data.pricePerNight)}
+                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 500 }}>
+                    {' '}
+                    / đêm
+                  </span>
+                </div>
+
+                <div className="detail-divider"></div>
+
+                <p className="detail-short-desc">
+                  {detailModal.data.description ||
+                    'Không gian nghỉ dưỡng sang trọng với tầm nhìn khoáng đạt, thiết kế hoàng gia và trang thiết bị hiện đại bậc nhất. Dịch vụ ẩm thực phòng và chăm sóc khách hàng 24/7.'}
+                </p>
+
+                <div className="detail-specs-box">
+                  <div>
+                    <span>SỨC CHỨA TỐI ĐA</span>
+                    <strong>👥 {detailModal.data.capacity} người lớn</strong>
                   </div>
-
-                  <div className="detail-desc-box">
-                    <h4>Mô tả tiện nghi &amp; dịch vụ phòng:</h4>
-                    <p>{detailModal.data.description || 'Chưa có thông tin mô tả chi tiết.'}</p>
+                  <div>
+                    <span>LOẠI GIƯỜNG</span>
+                    <strong>🛏️ {detailModal.data.meta.bed}</strong>
                   </div>
+                  <div>
+                    <span>DIỆN TÍCH PHÒNG</span>
+                    <strong>📐 {detailModal.data.meta.area}</strong>
+                  </div>
+                  <div>
+                    <span>TỔNG SỐ PHÒNG</span>
+                    <strong>
+                      🚪 {detailModal.data.totalRooms} phòng (
+                      {detailModal.data.availableRooms} phòng trống)
+                    </strong>
+                  </div>
+                </div>
 
-                  <h4 className="rooms-subtable-header">
-                    Danh sách phòng cụ thể ({detailModal.data.rooms?.length || 0} phòng):
-                  </h4>
+                {/* Subtable: Rooms in Hotel */}
+                <h4 style={{ margin: '14px 0 8px', fontSize: '14px', textTransform: 'uppercase', color: '#1c1c1c' }}>
+                  Danh Sách Phòng Khách Sạn:
+                </h4>
 
-                  {(!detailModal.data.rooms || detailModal.data.rooms.length === 0) ? (
-                    <p style={{ color: '#64748b', fontStyle: 'italic', margin: '14px 0' }}>
-                      Chưa có phòng nào được gán cho thể loại này. Hãy tạo phòng mới trong mục &quot;Thêm phòng&quot;.
-                    </p>
-                  ) : (
-                    <div className="encore-table-scroll">
-                      <table className="encore-table">
-                        <thead>
-                          <tr>
-                            <th>Số phòng</th>
-                            <th>Tầng</th>
-                            <th>Trạng thái</th>
-                            <th>Ghi chú</th>
+                {detailModal.loading ? (
+                  <p style={{ color: '#64748b', fontSize: '13px' }}>Đang tải danh sách phòng...</p>
+                ) : !detailModal.data.rooms || detailModal.data.rooms.length === 0 ? (
+                  <p style={{ color: '#64748b', fontStyle: 'italic', fontSize: '13px', margin: 0 }}>
+                    Chưa có phòng nào được gán cho thể loại này trong hệ thống.
+                  </p>
+                ) : (
+                  <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                    <table className="detail-rooms-table">
+                      <thead>
+                        <tr>
+                          <th>Số phòng</th>
+                          <th>Tầng</th>
+                          <th>Trạng thái</th>
+                          <th>Ghi chú</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailModal.data.rooms.map((room) => (
+                          <tr key={room.id}>
+                            <td>
+                              <strong>Phòng {room.roomNumber}</strong>
+                            </td>
+                            <td>Tầng {room.floor}</td>
+                            <td>
+                              <span
+                                className={`status-pill ${
+                                  room.status === 0
+                                    ? 'available'
+                                    : room.status === 1
+                                    ? 'occupied'
+                                    : room.status === 3
+                                    ? 'reserved'
+                                    : 'maintenance'
+                                }`}
+                              >
+                                {room.statusName}
+                              </span>
+                            </td>
+                            <td style={{ color: '#64748b' }}>{room.note || '—'}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {detailModal.data.rooms.map((room) => (
-                            <tr key={room.id}>
-                              <td>
-                                <strong style={{ color: '#0f172a', fontSize: '15px' }}>
-                                  Phòng {room.roomNumber}
-                                </strong>
-                              </td>
-                              <td>Tầng {room.floor}</td>
-                              <td>
-                                <span
-                                  className={`status-pill ${
-                                    room.status === 0
-                                      ? 'available'
-                                      : room.status === 1
-                                      ? 'occupied'
-                                      : room.status === 3
-                                      ? 'reserved'
-                                      : 'maintenance'
-                                  }`}
-                                >
-                                  {room.statusName}
-                                </span>
-                              </td>
-                              <td style={{ color: '#64748b', fontSize: '13px' }}>
-                                {room.note || '—'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
-            <div className="encore-modal-footer">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setDetailModal({ open: false, data: null, loading: false })}
-              >
-                Đóng
-              </button>
+                <div className="encore-modal-footer" style={{ marginTop: 'auto' }}>
+                  <button
+                    type="button"
+                    className="btn-encore-secondary"
+                    onClick={() => {
+                      const item = detailModal.data
+                      setDetailModal({ open: false, data: null, loading: false })
+                      handleOpenEdit(item)
+                    }}
+                  >
+                    ✏️ Sửa loại phòng này
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-add-roomtype-encore"
+                    onClick={() => setDetailModal({ open: false, data: null, loading: false })}
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -800,110 +675,102 @@ function RoomTypes() {
       {/* ===== CREATE / EDIT MODAL ===== */}
       {formModal.open && (
         <div
-          className="encore-modal-backdrop"
+          className="encore-modal-overlay"
           onClick={() => !formSubmitting && setFormModal({ open: false, isEdit: false, id: null })}
         >
-          <div className="encore-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="encore-form-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>{formModal.isEdit ? 'Chỉnh Sửa Thể Loại Phòng' : 'Thêm Thể Loại Phòng Mới'}</h3>
+
+            {formError && <div className="modal-alert-encore">⚠️ {formError}</div>}
+
             <form onSubmit={handleSubmitForm}>
-              <div className="encore-modal-header">
-                <h3>{formModal.isEdit ? 'Chỉnh Sửa Thể Loại Phòng' : 'Thêm Thể Loại Phòng Mới'}</h3>
-                <button
-                  type="button"
-                  className="encore-modal-close"
-                  onClick={() => !formSubmitting && setFormModal({ open: false, isEdit: false, id: null })}
-                >
-                  ✕
-                </button>
+              <div className="form-group-encore">
+                <label>
+                  Tên thể loại phòng <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ví dụ: Double Suite Attic Floor, Family Double Room Suite..."
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  autoFocus
+                />
               </div>
 
-              <div className="encore-modal-body">
-                {formError && <div className="modal-alert-error">⚠️ {formError}</div>}
-
-                <div className="form-group">
+              <div className="form-row-encore">
+                <div className="form-group-encore">
                   <label>
-                    Tên thể loại phòng <span className="required">*</span>
+                    Đơn giá mỗi đêm (VNĐ) <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
-                    type="text"
-                    placeholder="Ví dụ: Double Suite Attic Floor, Family Double Room..."
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    type="number"
+                    min="0"
+                    step="50000"
+                    placeholder="Ví dụ: 1500000"
+                    value={formData.pricePerNight}
+                    onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
                     required
-                    autoFocus
                   />
-                  <span className="form-hint">Tên định danh hiển thị trên trang web Encore.</span>
+                  <span className="form-hint-encore">
+                    {formData.pricePerNight
+                      ? `Xem trước: ${formatMoney(formData.pricePerNight)}`
+                      : 'Nhập số tiền VNĐ'}
+                  </span>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>
-                      Đơn giá mỗi đêm (VNĐ) <span className="required">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="50000"
-                      placeholder="Ví dụ: 1500000"
-                      value={formData.pricePerNight}
-                      onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
-                      required
-                    />
-                    <span className="form-hint">
-                      {formData.pricePerNight
-                        ? `Xem trước: ${formatMoney(formData.pricePerNight)} / đêm`
-                        : 'Nhập số tiền VNĐ'}
-                    </span>
-                  </div>
-
-                  <div className="form-group">
-                    <label>
-                      Sức chứa tối đa (Khách) <span className="required">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      placeholder="Ví dụ: 2"
-                      value={formData.capacity}
-                      onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                      required
-                    />
-                    <span className="form-hint">Số khách lưu trú tối đa</span>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Chọn ảnh đại diện phong cách Encore</label>
-                  <div className="image-presets-picker">
-                    {ENCORE_IMAGE_PRESETS.map((preset) => (
-                      <div
-                        key={preset.id}
-                        className={`preset-thumb ${formData.imageUrl === preset.url ? 'active' : ''}`}
-                        onClick={() => setFormData({ ...formData, imageUrl: preset.url })}
-                        title={preset.title}
-                      >
-                        <img src={preset.url} alt={preset.title} />
-                      </div>
-                    ))}
-                  </div>
-                  <span className="form-hint">Chọn 1 trong các ảnh khách sạn 5 sao cao cấp ở trên.</span>
-                </div>
-
-                <div className="form-group">
-                  <label>Mô tả tiện ích &amp; nội thất</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Mô tả giường, ban công, bồn tắm nằm, tivi thông minh, máy lạnh, wifi..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                <div className="form-group-encore">
+                  <label>
+                    Sức chứa tối đa (Khách) <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Ví dụ: 2"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                    required
                   />
                 </div>
+              </div>
+
+              <div className="form-group-encore">
+                <label>Chọn ảnh đại diện phong cách Encore</label>
+                <div className="preset-thumbs-grid">
+                  {ENCORE_IMAGE_PRESETS.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className={`preset-thumb-item ${formData.imageUrl === preset.url ? 'active' : ''}`}
+                      onClick={() => setFormData({ ...formData, imageUrl: preset.url })}
+                      title={preset.title}
+                    >
+                      <img src={preset.url} alt={preset.title} />
+                    </div>
+                  ))}
+                </div>
+                <span className="form-hint-encore">
+                  Nhấp chọn 1 trong 6 hình ảnh phòng nghỉ dưỡng cao cấp Encore ở trên.
+                </span>
+              </div>
+
+              <div className="form-group-encore">
+                <label>Mô tả tiện ích &amp; nội thất</label>
+                <textarea
+                  rows={3}
+                  placeholder="Mô tả nội thất, tầm nhìn, bồn tắm thư giãn, trang thiết bị..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
               </div>
 
               <div className="encore-modal-footer">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn-encore-secondary"
                   onClick={() => setFormModal({ open: false, isEdit: false, id: null })}
                   disabled={formSubmitting}
                 >
@@ -911,7 +778,7 @@ function RoomTypes() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-encore-primary"
+                  className="btn-add-roomtype-encore"
                   disabled={formSubmitting}
                 >
                   {formSubmitting
@@ -926,45 +793,38 @@ function RoomTypes() {
         </div>
       )}
 
-      {/* ===== DELETE MODAL ===== */}
+      {/* ===== DELETE CONFIRM MODAL ===== */}
       {deleteModal.open && deleteModal.item && (
         <div
-          className="encore-modal-backdrop"
+          className="encore-modal-overlay"
           onClick={() => !deleteModal.loading && setDeleteModal({ open: false, item: null, loading: false })}
         >
-          <div className="encore-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="encore-modal-header">
-              <h3>Xác Nhận Xóa Thể Loại Phòng</h3>
-              <button
-                type="button"
-                className="encore-modal-close"
-                onClick={() => !deleteModal.loading && setDeleteModal({ open: false, item: null, loading: false })}
-              >
-                ✕
-              </button>
-            </div>
+          <div
+            className="encore-form-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Xác Nhận Xóa Thể Loại Phòng</h3>
 
-            <div className="encore-modal-body">
-              <p style={{ margin: '0 0 14px', fontSize: '15px', color: '#1e293b' }}>
-                Bạn có chắc chắn muốn xóa thể loại phòng: <strong>{deleteModal.item.name}</strong> không?
+            <p style={{ margin: '0 0 16px', fontSize: '15px', color: '#1c1c1c' }}>
+              Bạn có chắc chắn muốn xóa thể loại phòng: <strong>{deleteModal.item.name}</strong> không?
+            </p>
+
+            {deleteModal.item.totalRooms > 0 ? (
+              <div className="modal-alert-encore warning">
+                ⚠️ <strong>Không thể xóa:</strong> Thể loại phòng này đang có{' '}
+                <strong>{deleteModal.item.totalRooms} phòng</strong> trong khách sạn. Hãy chuyển các
+                phòng này sang loại phòng khác trước khi xóa.
+              </div>
+            ) : (
+              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748b' }}>
+                Hành động này sẽ xóa vĩnh viễn thể loại phòng khỏi hệ thống và không thể hoàn tác.
               </p>
-
-              {deleteModal.item.totalRooms > 0 ? (
-                <div className="modal-alert-error">
-                  ⚠️ <strong>Cảnh báo an toàn:</strong> Thể loại phòng này hiện đang có{' '}
-                  <strong>{deleteModal.item.totalRooms} phòng</strong> trong hệ thống. Để bảo vệ dữ liệu, hệ thống không cho phép xóa loại phòng đang có phòng liên kết.
-                </div>
-              ) : (
-                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                  Hành động này sẽ xóa vĩnh viễn thể loại phòng khỏi hệ thống và không thể hoàn tác.
-                </p>
-              )}
-            </div>
+            )}
 
             <div className="encore-modal-footer">
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-encore-secondary"
                 onClick={() => setDeleteModal({ open: false, item: null, loading: false })}
                 disabled={deleteModal.loading}
               >
@@ -972,7 +832,7 @@ function RoomTypes() {
               </button>
               <button
                 type="button"
-                className="btn-danger-modal"
+                className="btn-encore-danger"
                 onClick={handleConfirmDelete}
                 disabled={deleteModal.loading || deleteModal.item.totalRooms > 0}
               >
