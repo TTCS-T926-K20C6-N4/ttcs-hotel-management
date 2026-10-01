@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_ORIGIN } from '../services/api'
 
 import './Login.css'
 
@@ -49,7 +48,7 @@ function Login() {
       try {
 
         const response = await fetch(
-          `${API_ORIGIN}/api/auth/me`,
+          'http://localhost:5097/api/auth/me',
           {
             method: 'GET',
 
@@ -179,7 +178,7 @@ function Login() {
       // ======================================
 
       const response = await fetch(
-        `${API_ORIGIN}/api/auth/login`,
+        'http://localhost:5097/api/auth/login',
         {
           method: 'POST',
 
