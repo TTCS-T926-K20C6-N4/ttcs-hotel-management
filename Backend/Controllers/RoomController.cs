@@ -25,6 +25,48 @@ public async Task<IActionResult> GetRooms()
 
     return Ok(rooms);
 }
+[HttpPost]
+public async Task<IActionResult> CreateRoom(Room room)
+{
+    if (string.IsNullOrWhiteSpace(room.RoomNumber))
+    {
+        return BadRequest(new { message = "Vui lòng nhập số phòng." });
+    }
+
+    var roomTypeExists = await _db.RoomTypes
+        .AnyAsync(rt => rt.Id == room.RoomTypeId);
+
+    if (!roomTypeExists)
+    {
+        return BadRequest(new { message = "Thể loại phòng không tồn tại." });
+    }
+
+    var roomNumberExists = await _db.Rooms
+        .AnyAsync(r => r.RoomNumber == room.RoomNumber);
+
+    if (roomNumberExists)
+    {
+        return BadRequest(new { message = "Số phòng đã tồn tại." });
+    }
+
+    var newRoom = new Room
+    {
+        RoomNumber = room.RoomNumber.Trim(),
+        Floor = room.Floor <= 0 ? 1 : room.Floor,
+        RoomTypeId = room.RoomTypeId,
+        Status = room.Status,
+        Note = room.Note
+    };
+
+    _db.Rooms.Add(newRoom);
+    await _db.SaveChangesAsync();
+
+    await _db.Entry(newRoom)
+        .Reference(r => r.RoomType)
+        .LoadAsync();
+
+    return Ok(newRoom);
+}
 
 [HttpDelete("{id}")]
 public async Task<IActionResult> DeleteRoom(int id)
