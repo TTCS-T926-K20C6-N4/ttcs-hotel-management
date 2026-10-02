@@ -184,6 +184,69 @@ if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
             "Đã tạo tài khoản Admin test."
         );
     }
+
+    if (!db.RoomTypes.Any())
+    {
+        var standard = new RoomType
+        {
+            Name = "Phòng Tiêu Chuẩn (Standard)",
+            PricePerNight = 350000m,
+            Capacity = 2,
+            Description = "Phòng tiêu chuẩn tiện nghi cơ bản, giường đôi 1m6, máy lạnh, wifi tốc độ cao, phòng tắm riêng khép kín."
+        };
+
+        var superior = new RoomType
+        {
+            Name = "Phòng Cao Cấp (Superior)",
+            PricePerNight = 550000m,
+            Capacity = 2,
+            Description = "Thiết kế hiện đại, ban công thoáng mát ngắm phố, giường Queen 1m8, smart TV, minibar, bữa sáng miễn phí."
+        };
+
+        var deluxe = new RoomType
+        {
+            Name = "Phòng Sang Trọng (Deluxe)",
+            PricePerNight = 850000m,
+            Capacity = 3,
+            Description = "Không gian rộng rãi 35m2, cửa sổ kính lớn view thành phố, bồn tắm nằm cao cấp, sofa thư giãn, trang thiết bị nhập khẩu."
+        };
+
+        var suite = new RoomType
+        {
+            Name = "Phòng Gia Đình (Family Suite)",
+            PricePerNight = 1200000m,
+            Capacity = 4,
+            Description = "2 phòng ngủ liên thông (1 giường King + 2 giường đơn), khu vực tiếp khách riêng, thích hợp cho gia đình có trẻ nhỏ."
+        };
+
+        var vip = new RoomType
+        {
+            Name = "Phòng Tổng Thống (Presidential VIP)",
+            PricePerNight = 2500000m,
+            Capacity = 4,
+            Description = "Căn hộ tầng cao nhất, tầm nhìn panorama 360 độ, nội thất phong cách hoàng gia sang trọng, quầy bar và bàn làm việc riêng."
+        };
+
+        db.RoomTypes.AddRange(standard, superior, deluxe, suite, vip);
+        db.SaveChanges();
+
+        if (!db.Rooms.Any())
+        {
+            db.Rooms.AddRange(
+                new Room { RoomNumber = "101", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Available, Note = "Gần thang máy" },
+                new Room { RoomNumber = "102", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Occupied, Note = "Khách thuê dài hạn" },
+                new Room { RoomNumber = "201", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Available, Note = "Hướng Đông Nam mát mẻ" },
+                new Room { RoomNumber = "202", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Occupied, Note = "Đặt qua Agoda" },
+                new Room { RoomNumber = "301", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Available, Note = "Tầng cao view đẹp" },
+                new Room { RoomNumber = "302", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Reserved, Note = "Check-in chiều nay" },
+                new Room { RoomNumber = "401", Floor = 4, RoomTypeId = suite.Id, Status = RoomStatus.Available, Note = "Phòng gia đình tiện nghi" },
+                new Room { RoomNumber = "501", Floor = 5, RoomTypeId = vip.Id, Status = RoomStatus.Available, Note = "Penthouse VIP sang trọng bậc nhất" }
+            );
+            db.SaveChanges();
+        }
+
+        Console.WriteLine("Đã seed dữ liệu mẫu thể loại phòng và phòng thành công.");
+    }
 }
 
 // =====================================

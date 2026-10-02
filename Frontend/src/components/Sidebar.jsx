@@ -14,6 +14,9 @@ function Sidebar() {
       .catch(() => setRole(''))
   }, [])
 
+  // Trạng thái hiển thị hộp xác nhận đăng xuất
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
   // ==========================================
   // ĐĂNG XUẤT
   // ==========================================
@@ -24,8 +27,7 @@ function Sidebar() {
         {
           method: 'POST',
 
-          // QUAN TRỌNG:
-          // gửi cookie Session sang Backend
+          // Gửi cookie Session sang Backend
           credentials: 'include'
         }
       )
@@ -35,6 +37,8 @@ function Sidebar() {
       }
 
       api.clearAuthToken()
+      // Đóng hộp xác nhận
+      setShowLogoutConfirm(false)
 
       // Backend đã HttpContext.Session.Clear()
       // Chuyển về trang đăng nhập
@@ -63,6 +67,9 @@ function Sidebar() {
             <div className="menu-title">QUẢN TRỊ</div>
             <NavLink to="/" className="menu-item">
               🏠 <span>Sơ đồ phòng</span>
+            </NavLink>
+            <NavLink to="/room-map" className="menu-item">
+              🗺️ <span>Bản đồ phòng</span>
             </NavLink>
             <NavLink to="/rooms" className="menu-item">
               🛏️ <span>Danh sách phòng</span>
@@ -104,15 +111,61 @@ function Sidebar() {
           </>
         )}
 
+        {/* ================================
+            NÚT ĐĂNG XUẤT
+        ================================= */}
         <button
           type="button"
           className="logout-menu"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
         >
           🚪 <span>Đăng xuất</span>
         </button>
 
       </nav>
+
+      {/* ================================
+          HỘP XÁC NHẬN ĐĂNG XUẤT
+      ================================= */}
+      {showLogoutConfirm && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal">
+
+            <div className="logout-modal-icon">
+              🚪
+            </div>
+
+            <h3>Xác nhận đăng xuất</h3>
+
+            <p>
+              Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?
+            </p>
+
+            <div className="logout-modal-actions">
+
+              {/* KHÔNG */}
+              <button
+                type="button"
+                className="logout-cancel-btn"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Không
+              </button>
+
+              {/* ĐỒNG Ý */}
+              <button
+                type="button"
+                className="logout-confirm-btn"
+                onClick={handleLogout}
+              >
+                Đồng ý
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </aside>
   )
 }

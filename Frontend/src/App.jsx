@@ -11,14 +11,15 @@ import MainLayout from './layouts/MainLayout'
 
 import Home from './pages/Home'
 import RoomList from './pages/RoomList'
+import RoomMap from './pages/RoomMap'
 import AddRoom from './pages/AddRoom'
 import EditRoom from './pages/EditRoom'
 import MyBookings from './pages/MyBookings'
 import EditBookedRoom from './pages/EditBookedRoom'
+import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import RoomTypes from './pages/RoomTypes'
 
 import './App.css'
 
@@ -223,6 +224,10 @@ function App() {
               path="/"
               element={<Home />}
             />
+            <Route
+  path="/room-map"
+  element={<RoomMap />}
+/>
 
 
             {/* Danh sách phòng */}
@@ -264,10 +269,12 @@ function App() {
               />
             </Route>
 
-            <Route
-              path="/room-types"
-              element={<RoomTypes />}
-            />
+            <Route element={<AdminRoute />}>
+              <Route
+                path="/room-types"
+                element={<RoomTypes />}
+              />
+            </Route>
 
 
           </Route>

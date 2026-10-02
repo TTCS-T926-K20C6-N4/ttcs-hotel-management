@@ -75,14 +75,32 @@ export const api = {
     })
   },
 
-  async getRoomTypes() {
-    return request('/rooms/room-types')
+  async getRoomTypes(search = '') {
+    const query = search ? `?search=${encodeURIComponent(search)}` : ''
+    return request(`/rooms/room-types${query}`)
+  },
+
+  async getRoomTypeById(id) {
+    return request(`/rooms/room-types/${id}`)
+  },
+
+  async createRoomType(payload) {
+    return request('/rooms/room-types', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
   },
 
   async updateRoomType(id, payload) {
     return request(`/rooms/room-types/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ ...payload, id }),
+    })
+  },
+
+  async deleteRoomType(id) {
+    return request(`/rooms/room-types/${id}`, {
+      method: 'DELETE',
     })
   },
 
