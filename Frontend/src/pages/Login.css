@@ -1,3 +1,16 @@
+/* =====================================================
+   HOTEL MANAGER - LOGIN PAGE
+   Chỉ thay đổi giao diện - KHÔNG ảnh hưởng chức năng
+===================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+/* =========================
+   TOÀN TRANG
+========================= */
+
 .login-page {
   width: 100%;
   min-height: 100vh;
@@ -6,129 +19,350 @@
   justify-content: center;
   align-items: center;
 
-  padding: 20px;
+  padding: 35px 20px;
 
-  background: #f4f7fb;
+  /* Giữ ảnh nền đang truyền từ Login.jsx */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
-  font-family: Arial, sans-serif;
+  position: relative;
+  overflow: hidden;
+
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
+
+/* Lớp phủ giúp ảnh nền mờ, dịu giống mẫu */
+.login-page::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(15, 45, 85, 0.30),
+      rgba(40, 90, 145, 0.16),
+      rgba(12, 42, 78, 0.30)
+    );
+
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+
+  z-index: 0;
+}
+
+/* Ánh sáng sau card */
+.login-page::after {
+  content: "";
+
+  position: absolute;
+
+  width: 720px;
+  height: 720px;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.20) 0%,
+      rgba(255, 255, 255, 0.08) 38%,
+      transparent 70%
+    );
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+
+/* =========================
+   KHUNG ĐĂNG NHẬP
+========================= */
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
 
-  padding: 40px;
+  padding: 46px 48px 52px;
 
-  background: #ffffff;
+  position: relative;
+  z-index: 2;
 
-  border-radius: 16px;
+  overflow: hidden;
 
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.97),
+      rgba(246, 250, 255, 0.94)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
+  border-radius: 30px;
+
+  box-shadow:
+    0 35px 80px rgba(5, 30, 65, 0.30),
+    0 15px 35px rgba(5, 30, 65, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  animation: loginAppear 0.55s ease;
 }
 
-/* LOGO */
+/* Ánh sáng bên trong card */
+.login-card::before {
+  content: "";
+
+  position: absolute;
+
+  width: 280px;
+  height: 280px;
+
+  top: -150px;
+  right: -100px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(96, 165, 250, 0.18),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+/* Sóng xanh trang trí dưới card */
+.login-card::after {
+  content: "";
+
+  position: absolute;
+
+  left: -8%;
+  bottom: -55px;
+
+  width: 116%;
+  height: 105px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(191, 219, 254, 0.62),
+      rgba(96, 165, 250, 0.32)
+    );
+
+  border-radius: 50% 45% 0 0 / 70% 60% 0 0;
+
+  transform: rotate(-2deg);
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+
+/* =========================
+   LOGO
+========================= */
 
 .login-logo {
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
 
-  margin: 0 auto 12px;
+  margin: 0 auto 17px;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
-  background: #2563eb;
+  position: relative;
 
-  color: white;
+  background:
+    linear-gradient(
+      145deg,
+      #38a3ff 0%,
+      #2878f5 48%,
+      #155bea 100%
+    );
 
-  font-size: 32px;
-  font-weight: bold;
+  color: #ffffff;
 
-  border-radius: 14px;
+  font-size: 35px;
+  font-weight: 800;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.55);
+
+  box-shadow:
+    0 14px 30px rgba(37, 99, 235, 0.38),
+    0 5px 12px rgba(37, 99, 235, 0.20),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
+
+.login-logo:hover {
+  transform: translateY(-3px) scale(1.02);
+
+  box-shadow:
+    0 18px 35px rgba(37, 99, 235, 0.43),
+    0 6px 15px rgba(37, 99, 235, 0.24);
+}
+
+
+/* =========================
+   HOTEL MANAGER
+========================= */
 
 .hotel-name {
+  margin: 0 0 29px;
+
   text-align: center;
 
-  color: #1e3a5f;
+  color: #294d7c;
 
-  font-size: 17px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 800;
 
-  margin-bottom: 30px;
+  letter-spacing: 1px;
 }
 
-/* TITLE */
+
+/* =========================
+   TIÊU ĐỀ
+========================= */
 
 .login-card h1 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 
   text-align: center;
 
-  color: #1f2937;
+  color: #14213d;
 
-  font-size: 28px;
+  font-size: 35px;
+  font-weight: 800;
+
+  letter-spacing: -0.8px;
+
+  line-height: 1.15;
 }
 
 .login-subtitle {
-  margin-bottom: 30px;
+  margin: 0 auto 34px;
+
+  max-width: 340px;
 
   text-align: center;
 
-  color: #6b7280;
+  color: #68778c;
 
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
-/* FORM */
+
+/* =========================
+   FORM
+========================= */
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 23px;
+
+  position: relative;
+  z-index: 2;
 }
 
 .form-group label {
   display: block;
 
-  margin-bottom: 8px;
+  margin: 0 0 9px 2px;
 
-  color: #374151;
+  color: #172b4d;
 
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
 }
+
+
+/* =========================
+   INPUT
+========================= */
 
 .form-group input {
   width: 100%;
-  height: 48px;
+  height: 57px;
 
-  padding: 0 14px;
+  padding: 0 18px;
 
-  border: 1px solid #d1d5db;
-
-  border-radius: 8px;
+  border: 1.5px solid #cbdcf5;
+  border-radius: 13px;
 
   outline: none;
 
-  font-size: 15px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(239, 246, 255, 0.96),
+      rgba(244, 248, 255, 0.94)
+    );
 
-  transition: 0.2s;
+  color: #152238;
+
+  font-size: 16px;
+
+  box-shadow:
+    inset 0 1px 2px rgba(15, 23, 42, 0.03),
+    0 2px 5px rgba(37, 99, 235, 0.02);
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.form-group input:hover {
+  border-color: #9fc5f8;
 }
 
 .form-group input:focus {
-  border-color: #2563eb;
+  border-color: #60a5fa;
 
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.11),
+    0 8px 18px rgba(37, 99, 235, 0.07);
 }
 
-/* PASSWORD */
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+
+/* =========================
+   PASSWORD
+========================= */
 
 .password-wrapper {
   position: relative;
 }
 
 .password-wrapper input {
-  padding-right: 50px;
+  padding-right: 72px;
 }
 
 .eye-button {
@@ -139,91 +373,416 @@
 
   transform: translateY(-50%);
 
+  min-width: 50px;
+
+  padding: 7px 9px;
+
   border: none;
+  border-radius: 8px;
+
   background: transparent;
 
-  font-size: 18px;
+  color: #475569;
+
+  font-size: 15px;
+  font-weight: 600;
 
   cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
 }
 
-/* VALIDATION */
+.eye-button:hover {
+  color: #2563eb;
+
+  background: rgba(37, 99, 235, 0.08);
+}
+
+
+/* =========================
+   VALIDATION
+========================= */
 
 .form-group input.input-error {
-  border-color: #dc2626;
+  border-color: #ef4444;
+
+  background: #fffafa;
+
+  box-shadow:
+    0 0 0 3px rgba(239, 68, 68, 0.08);
 }
 
 .error-message {
   display: block;
 
-  margin-top: 6px;
+  margin-top: 7px;
 
   color: #dc2626;
 
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
-/* FORGOT PASSWORD */
+
+/* =========================
+   QUÊN MẬT KHẨU
+========================= */
 
 .forgot-password {
-  margin-top: -5px;
-  margin-bottom: 22px;
+  margin-top: -6px;
+  margin-bottom: 27px;
+
+  position: relative;
+  z-index: 2;
 
   text-align: right;
 }
 
 .forgot-password a {
-  color: #2563eb;
+  color: #1769ff;
 
   font-size: 14px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.forgot-password a:hover {
+  color: #124ec9;
+
+  text-decoration: underline;
+}
+
+
+/* =========================
+   BUTTON ĐĂNG NHẬP
+========================= */
+
+.login-button {
+  width: 100%;
+  height: 58px;
+
+  position: relative;
+  z-index: 2;
+
+  border: none;
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      110deg,
+      #32a2ff 0%,
+      #2478f5 42%,
+      #1559ef 100%
+    );
+
+  color: #ffffff;
+
+  font-size: 17px;
+  font-weight: 750;
+
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 13px 25px rgba(37, 99, 235, 0.32),
+    0 5px 10px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.05);
+
+  box-shadow:
+    0 17px 30px rgba(37, 99, 235, 0.40),
+    0 7px 14px rgba(37, 99, 235, 0.18);
+}
+
+.login-button:active {
+  transform: translateY(0);
+
+  box-shadow:
+    0 8px 17px rgba(37, 99, 235, 0.30);
+}
+
+.login-button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* =========================
+   PHẦN ĐĂNG KÝ
+
+   CSS này sẽ làm đẹp nếu Login.jsx có
+   className="register-text"
+========================= */
+
+.register-text {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  margin-top: 30px;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+.register-text::before,
+.register-text::after {
+  content: "";
+
+  flex: 1;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #cbd5e1
+    );
+}
+
+.register-text::after {
+  background:
+    linear-gradient(
+      90deg,
+      #cbd5e1,
+      transparent
+    );
+}
+
+.register-text a {
+  color: #1769ff;
+
+  font-weight: 700;
 
   text-decoration: none;
 }
 
-.forgot-password a:hover {
+.register-text a:hover {
   text-decoration: underline;
 }
 
-/* BUTTON */
 
-.login-button {
-  width: 100%;
-  height: 50px;
+/* =========================
+   HIỆU ỨNG XUẤT HIỆN
+========================= */
 
-  border: none;
+@keyframes loginAppear {
+  from {
+    opacity: 0;
 
-  border-radius: 8px;
+    transform:
+      translateY(22px)
+      scale(0.97);
+  }
 
-  background: #2563eb;
+  to {
+    opacity: 1;
 
-  color: white;
-
-  font-size: 16px;
-  font-weight: bold;
-
-  cursor: pointer;
-
-  transition: 0.2s;
+    transform:
+      translateY(0)
+      scale(1);
+  }
 }
 
-.login-button:hover {
-  background: #1d4ed8;
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 768px) {
+
+  .login-page {
+    padding: 22px;
+  }
+
+  .login-card {
+    max-width: 455px;
+
+    padding: 40px 36px 45px;
+  }
+
+  .login-card h1 {
+    font-size: 31px;
+  }
+
 }
 
-/* RESPONSIVE */
+
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 480px) {
 
   .login-page {
-    padding: 15px;
+    padding: 14px;
   }
 
-  .login-card {
-    padding: 30px 20px;
+ .login-card {
+  width: 100%;
+
+  /* 500px -> 450px */
+  max-width: 450px;
+
+  /* 46px 48px 52px -> nhỏ lại */
+  padding: 38px 40px 42px;
+
+  position: relative;
+  z-index: 2;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.97),
+      rgba(246, 250, 255, 0.94)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 26px;
+
+  box-shadow:
+    0 35px 80px rgba(5, 30, 65, 0.30),
+    0 15px 35px rgba(5, 30, 65, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  animation: loginAppear 0.55s ease;
+}
+  .login-logo {
+    width: 64px;
+    height: 64px;
+
+    border-radius: 17px;
+
+    font-size: 30px;
+  }
+
+  .hotel-name {
+    margin-bottom: 23px;
+
+    font-size: 16px;
   }
 
   .login-card h1 {
-    font-size: 25px;
+    font-size: 28px;
   }
 
+  .login-subtitle {
+    margin-bottom: 27px;
+
+    font-size: 13.5px;
+  }
+
+  .form-group {
+    margin-bottom: 19px;
+  }
+
+  .form-group input {
+    height: 53px;
+
+    font-size: 15px;
+  }
+
+  .login-button {
+    height: 54px;
+
+    font-size: 16px;
+  }
+
+}
+
+
+/* =========================
+   MÀN HÌNH THẤP
+========================= */
+
+@media (max-height: 750px) and (min-width: 481px) {
+
+  .login-page {
+    padding: 18px;
+  }
+
+  .login-card {
+    padding:
+      28px
+      38px
+      32px;
+  }
+
+  .login-logo {
+    width: 58px;
+    height: 58px;
+
+    margin-bottom: 8px;
+
+    border-radius: 15px;
+
+    font-size: 27px;
+  }
+
+  .hotel-name {
+    margin-bottom: 17px;
+
+    font-size: 15px;
+  }
+
+  .login-card h1 {
+    font-size: 27px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 19px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group input {
+    height: 47px;
+  }
+
+  .forgot-password {
+    margin-bottom: 17px;
+  }
+
+  .login-button {
+    height: 48px;
+  }
+
+  .register-text {
+    margin-top: 20px;
+  }
 }
