@@ -53,8 +53,8 @@ function Sidebar() {
       <nav className="sidebar-menu">
 
         <div className="menu-title">QUẢN LÝ PHÒNG</div>
-
-        <NavLink to="/" className="menu-item">
+        
+<NavLink to="/room-map" className="menu-item">
           🏠 <span>Sơ đồ phòng</span>
         </NavLink>
 
