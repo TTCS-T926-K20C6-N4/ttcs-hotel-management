@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
+import hotelBg from "../assets/hotel-bg.jpg";
 import './Login.css'
 
 
@@ -278,8 +278,9 @@ function Login() {
     return (
 
       <div
-        className="login-page"
-      >
+  className="login-page"
+  style={{ backgroundImage: `url(${hotelBg})` }}
+>
 
         <div
           className="login-card"
@@ -305,7 +306,10 @@ function Login() {
 
   return (
 
-    <div className="login-page">
+    <div
+  className="login-page"
+  style={{ backgroundImage: `url(${hotelBg})` }}
+>
 
       <div className="login-card">
 
