@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 
 function Sidebar() {
   const navigate = useNavigate()
+
+  // Trạng thái hiển thị hộp xác nhận đăng xuất
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   // ==========================================
   // ĐĂNG XUẤT
@@ -13,8 +17,7 @@ function Sidebar() {
         {
           method: 'POST',
 
-          // QUAN TRỌNG:
-          // gửi cookie Session sang Backend
+          // Gửi cookie Session sang Backend
           credentials: 'include'
         }
       )
@@ -22,6 +25,9 @@ function Sidebar() {
       if (!response.ok) {
         throw new Error('Đăng xuất thất bại')
       }
+
+      // Đóng hộp xác nhận
+      setShowLogoutConfirm(false)
 
       // Backend đã HttpContext.Session.Clear()
       // Chuyển về trang đăng nhập
@@ -96,15 +102,61 @@ function Sidebar() {
           🔒 <span>Đổi mật khẩu</span>
         </NavLink>
 
+        {/* ================================
+            NÚT ĐĂNG XUẤT
+        ================================= */}
         <button
           type="button"
           className="logout-menu"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
         >
           🚪 <span>Đăng xuất</span>
         </button>
 
       </nav>
+
+      {/* ================================
+          HỘP XÁC NHẬN ĐĂNG XUẤT
+      ================================= */}
+      {showLogoutConfirm && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal">
+
+            <div className="logout-modal-icon">
+              🚪
+            </div>
+
+            <h3>Xác nhận đăng xuất</h3>
+
+            <p>
+              Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?
+            </p>
+
+            <div className="logout-modal-actions">
+
+              {/* KHÔNG */}
+              <button
+                type="button"
+                className="logout-cancel-btn"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Không
+              </button>
+
+              {/* ĐỒNG Ý */}
+              <button
+                type="button"
+                className="logout-confirm-btn"
+                onClick={handleLogout}
+              >
+                Đồng ý
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </aside>
   )
 }

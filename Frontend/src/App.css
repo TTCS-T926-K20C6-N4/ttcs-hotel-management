@@ -194,3 +194,94 @@
 .content {
   padding: 25px 30px;
 }
+/* ==========================================
+   MODAL XÁC NHẬN ĐĂNG XUẤT
+========================================== */
+
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+}
+
+.logout-modal {
+  width: 400px;
+  max-width: calc(100% - 32px);
+
+  background: #ffffff;
+  border-radius: 16px;
+
+  padding: 28px;
+
+  text-align: center;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.logout-modal-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.logout-modal h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  color: #222;
+}
+
+.logout-modal p {
+  margin: 0 0 24px;
+
+  color: #666;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.logout-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.logout-cancel-btn,
+.logout-confirm-btn {
+  min-width: 110px;
+
+  padding: 10px 20px;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* Nút KHÔNG */
+
+.logout-cancel-btn {
+  background: #e9ecef;
+  color: #333;
+}
+
+.logout-cancel-btn:hover {
+  background: #dee2e6;
+}
+
+/* Nút ĐỒNG Ý */
+
+.logout-confirm-btn {
+  background: #dc3545;
+  color: #ffffff;
+}
+
+.logout-confirm-btn:hover {
+  background: #bb2d3b;
+}
