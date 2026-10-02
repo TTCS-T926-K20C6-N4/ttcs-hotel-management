@@ -143,13 +143,19 @@ function EditBookedRoom() {
   return (
     <main className="booked-room-edit-page">
       <header className="booked-room-edit-header">
-        <div>
-          <Link to="/my-bookings" className="booked-room-back">← Phòng bạn đã đặt</Link>
-          <p className="booked-room-edit-kicker">ĐẶT PHÒNG {booking.code}</p>
-          <h1>Cập nhật phòng {booking.roomNumber}</h1>
-          <p>Điều chỉnh thông tin phòng trong lượt đặt của bạn.</p>
+        <div className="booked-room-heading-copy">
+          <Link to="/my-bookings" className="booked-room-back">
+            <span aria-hidden="true">←</span> Tất cả đặt phòng
+          </Link>
+          <div className="booked-room-title-line">
+            <div>
+              <p className="booked-room-edit-kicker">LƯỢT ĐẶT {booking.code}</p>
+              <h1>Cập nhật phòng {booking.roomNumber}</h1>
+              <p>Thông tin phòng trong kỳ lưu trú của bạn.</p>
+            </div>
+            <span className="booked-room-edit-status"><i aria-hidden="true" /> Đã đặt · Chưa nhận phòng</span>
+          </div>
         </div>
-        <span className="booked-room-edit-status"><i aria-hidden="true" /> Đã đặt · Chưa nhận phòng</span>
       </header>
 
       {error && <div className="booked-room-edit-error" role="alert">{error}</div>}
@@ -160,13 +166,19 @@ function EditBookedRoom() {
             {preview ? <img src={preview} alt={`Ảnh phòng ${form.roomNumber}`} /> : <div className="booked-room-image-empty"><span aria-hidden="true">⌂</span><strong>Chưa có ảnh phòng</strong></div>}
           </div>
           <div className="booked-room-visual-caption">
-            <span>ẢNH ĐẠI DIỆN</span>
-            <strong>Phòng {form.roomNumber}</strong>
+            <div className="booked-room-visual-caption-heading">
+              <div>
+                <span>ẢNH PHÒNG</span>
+                <strong>Phòng {form.roomNumber}</strong>
+              </div>
+              <span className="booked-room-image-count">01</span>
+            </div>
+            <p className="booked-room-visual-type">{selectedType?.name || booking.roomTypeName} <span>·</span> Tầng {form.floor}</p>
             <label className="booked-room-image-button" htmlFor="booked-room-image">
-              <span aria-hidden="true">＋</span> {imageFile ? 'Chọn ảnh khác' : 'Tải ảnh lên'}
+              <span aria-hidden="true">↥</span> {imageFile ? 'Chọn ảnh khác' : 'Thay ảnh phòng'}
             </label>
             <input id="booked-room-image" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={selectImage} disabled={saving} />
-            <small>JPG, PNG hoặc WEBP · tối đa 5 MB</small>
+            <small>{imageFile ? imageFile.name : 'JPG, PNG hoặc WEBP · tối đa 5 MB'}</small>
           </div>
         </aside>
 
