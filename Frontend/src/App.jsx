@@ -11,6 +11,7 @@ import MainLayout from './layouts/MainLayout'
 
 import Home from './pages/Home'
 import RoomList from './pages/RoomList'
+import RoomMap from './pages/RoomMap'
 import AddRoom from './pages/AddRoom'
 import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
@@ -170,6 +171,10 @@ function App() {
               path="/"
               element={<Home />}
             />
+            <Route
+  path="/room-map"
+  element={<RoomMap />}
+/>
 
 
             {/* Danh sách phòng */}
