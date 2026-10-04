@@ -183,12 +183,27 @@ async uploadRoomImage(file) {
       body: JSON.stringify(payload),
     })
   },
+  
 
-  async cancelBooking(bookingId) {
-    return request(`/bookings/${bookingId}`, {
-      method: 'DELETE',
-    })
-  },
+ async cancelBooking(bookingId) {
+  return request(`/bookings/${bookingId}`, {
+    method: 'DELETE',
+  })
+},
+
+async changePassword(payload) {
+  return request('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+},
+
+  async changePassword(payload) {
+  return request('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+},
 }
 
 export function formatMoney(value) {

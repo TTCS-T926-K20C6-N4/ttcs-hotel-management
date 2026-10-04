@@ -21,90 +21,84 @@ public class AuthController : ControllerBase
         _context = context;
         _tokenService = tokenService;
     }
-// ==========================================
-// POST: /api/auth/register
-// ĐĂNG KÝ TÀI KHOẢN
-// ==========================================
-[HttpPost("register")]
-public async Task<IActionResult> Register(
-    [FromBody] RegisterRequest request)
-{
-    // Kiểm tra dữ liệu
-    if (request == null ||
-        string.IsNullOrWhiteSpace(request.FullName) ||
-        string.IsNullOrWhiteSpace(request.Email) ||
-        string.IsNullOrWhiteSpace(request.Password) ||
-        string.IsNullOrWhiteSpace(request.ConfirmPassword))
+
+    // ==========================================
+    // POST: /api/auth/register
+    // ĐĂNG KÝ TÀI KHOẢN
+    // ==========================================
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterRequest request)
     {
-        return BadRequest(new
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.FullName) ||
+            string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.Password) ||
+            string.IsNullOrWhiteSpace(request.ConfirmPassword))
         {
-            message = "Vui lòng nhập đầy đủ thông tin."
-        });
-    }
-
-    // Kiểm tra xác nhận mật khẩu
-    if (request.Password != request.ConfirmPassword)
-    {
-        return BadRequest(new
-        {
-            message = "Mật khẩu xác nhận không khớp."
-        });
-    }
-
-    // Kiểm tra độ dài mật khẩu
-    if (request.Password.Length < 6)
-    {
-        return BadRequest(new
-        {
-            message = "Mật khẩu phải có ít nhất 6 ký tự."
-        });
-    }
-
-    // Chuẩn hóa email
-    var email = request.Email.Trim().ToLower();
-
-    // Kiểm tra email đã tồn tại chưa
-    var emailExists = await _context.Users
-        .AnyAsync(u => u.Email.ToLower() == email);
-
-    if (emailExists)
-    {
-        return Conflict(new
-        {
-            message = "Email này đã được đăng ký."
-        });
-    }
-
-    // Hash mật khẩu
-    var passwordHash =
-        BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-    // Tạo tài khoản
-    var user = new Backend.Models.User
-    {
-        FullName = request.FullName.Trim(),
-        Email = email,
-        PasswordHash = passwordHash,
-        Role = "User",
-        IsActive = true
-    };
-
-    // Lưu SQL Server
-    _context.Users.Add(user);
-    await _context.SaveChangesAsync();
-
-    return Ok(new
-    {
-        message = "Đăng ký tài khoản thành công.",
-        user = new
-        {
-            user.Id,
-            user.FullName,
-            user.Email,
-            user.Role
+            return BadRequest(new
+            {
+                message = "Vui lòng nhập đầy đủ thông tin."
+            });
         }
-    });
-}
+
+        if (request.Password != request.ConfirmPassword)
+        {
+            return BadRequest(new
+            {
+                message = "Mật khẩu xác nhận không khớp."
+            });
+        }
+
+        if (request.Password.Length < 6)
+        {
+            return BadRequest(new
+            {
+                message = "Mật khẩu phải có ít nhất 6 ký tự."
+            });
+        }
+
+        var email = request.Email.Trim().ToLower();
+
+        var emailExists = await _context.Users
+            .AnyAsync(u => u.Email.ToLower() == email);
+
+        if (emailExists)
+        {
+            return Conflict(new
+            {
+                message = "Email này đã được đăng ký."
+            });
+        }
+
+        var passwordHash =
+            BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        var user = new Backend.Models.User
+        {
+            FullName = request.FullName.Trim(),
+            Email = email,
+            PasswordHash = passwordHash,
+            Role = "User",
+            IsActive = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Đăng ký tài khoản thành công.",
+            user = new
+            {
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Role
+            }
+        });
+    }
+
     // ==========================================
     // POST: /api/auth/login
     // ĐĂNG NHẬP
@@ -113,7 +107,6 @@ public async Task<IActionResult> Register(
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request)
     {
-        // Kiểm tra dữ liệu
         if (request == null ||
             string.IsNullOrWhiteSpace(request.Email) ||
             string.IsNullOrWhiteSpace(request.Password))
@@ -124,10 +117,8 @@ public async Task<IActionResult> Register(
             });
         }
 
-        // Chuẩn hóa email
         var email = request.Email.Trim().ToLower();
 
-        // Tìm tài khoản
         var user = await _context.Users
             .FirstOrDefaultAsync(
                 u => u.Email.ToLower() == email
@@ -141,7 +132,6 @@ public async Task<IActionResult> Register(
             });
         }
 
-        // Kiểm tra tài khoản còn hoạt động
         if (!user.IsActive)
         {
             return StatusCode(403, new
@@ -150,9 +140,6 @@ public async Task<IActionResult> Register(
             });
         }
 
-        // ==========================================
-        // KIỂM TRA MẬT KHẨU
-        // ==========================================
         var passwordCorrect =
             BCrypt.Net.BCrypt.Verify(
                 request.Password,
@@ -161,18 +148,13 @@ public async Task<IActionResult> Register(
 
         if (!passwordCorrect)
         {
-            // Không đếm số lần sai
-            // Không khóa tài khoản
             return Unauthorized(new
             {
                 message = "Email hoặc mật khẩu không chính xác."
             });
         }
 
-        // ==========================================
-        // ĐĂNG NHẬP ĐÚNG -> TẠO SESSION
-        // ==========================================
-
+        // Tạo Session
         HttpContext.Session.SetString(
             "IsLoggedIn",
             "true"
@@ -198,14 +180,9 @@ public async Task<IActionResult> Register(
             user.Role ?? ""
         );
 
-        // ==========================================
-        // TẠO JWT
-        // ==========================================
+        // Tạo JWT
         var token = _tokenService.CreateToken(user);
 
-        // ==========================================
-        // TRẢ KẾT QUẢ
-        // ==========================================
         return Ok(new
         {
             message = "Đăng nhập thành công.",
@@ -264,6 +241,116 @@ public async Task<IActionResult> Register(
                 fullName,
                 role
             }
+        });
+    }
+
+    // ==========================================
+    // POST: /api/auth/change-password
+    // ĐỔI MẬT KHẨU
+    // ==========================================
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request)
+    {
+        // Kiểm tra người dùng đã đăng nhập chưa
+        var isLoggedIn =
+            HttpContext.Session.GetString("IsLoggedIn");
+
+        var userId =
+            HttpContext.Session.GetInt32("UserId");
+
+        if (isLoggedIn != "true" || userId == null)
+        {
+            return Unauthorized(new
+            {
+                message = "Bạn chưa đăng nhập."
+            });
+        }
+
+        // Kiểm tra dữ liệu
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+            string.IsNullOrWhiteSpace(request.NewPassword) ||
+            string.IsNullOrWhiteSpace(request.ConfirmPassword))
+        {
+            return BadRequest(new
+            {
+                message = "Vui lòng nhập đầy đủ thông tin."
+            });
+        }
+
+        // Mật khẩu mới tối thiểu 6 ký tự
+        if (request.NewPassword.Length < 6)
+        {
+            return BadRequest(new
+            {
+                message = "Mật khẩu mới phải có ít nhất 6 ký tự."
+            });
+        }
+
+        // Kiểm tra xác nhận mật khẩu
+        if (request.NewPassword != request.ConfirmPassword)
+        {
+            return BadRequest(new
+            {
+                message = "Xác nhận mật khẩu mới không khớp."
+            });
+        }
+
+        // Tìm tài khoản đang đăng nhập
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+        if (user == null)
+        {
+            return NotFound(new
+            {
+                message = "Không tìm thấy tài khoản."
+            });
+        }
+
+        // Kiểm tra mật khẩu hiện tại
+        var currentPasswordCorrect =
+            BCrypt.Net.BCrypt.Verify(
+                request.CurrentPassword,
+                user.PasswordHash
+            );
+
+        if (!currentPasswordCorrect)
+        {
+            return BadRequest(new
+            {
+                message = "Mật khẩu hiện tại không chính xác."
+            });
+        }
+
+        // Không cho dùng lại mật khẩu hiện tại
+        var sameAsCurrentPassword =
+            BCrypt.Net.BCrypt.Verify(
+                request.NewPassword,
+                user.PasswordHash
+            );
+
+        if (sameAsCurrentPassword)
+        {
+            return BadRequest(new
+            {
+                message = "Mật khẩu mới phải khác mật khẩu hiện tại."
+            });
+        }
+
+        // Hash mật khẩu mới
+        user.PasswordHash =
+            BCrypt.Net.BCrypt.HashPassword(
+                request.NewPassword
+            );
+
+        // Lưu xuống database
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Đổi mật khẩu thành công."
         });
     }
 

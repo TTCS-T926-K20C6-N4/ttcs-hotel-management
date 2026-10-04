@@ -18,6 +18,7 @@ import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ChangePassword from './pages/ChangePassword'
 
 import './App.css'
 
@@ -212,6 +213,10 @@ function App() {
               path="/rent-room"
               element={<RentRoom />}
             />
+            <Route
+  path="/change-password"
+  element={<ChangePassword />}
+/>
 
 
           </Route>
