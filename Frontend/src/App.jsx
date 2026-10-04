@@ -13,6 +13,7 @@ import Home from './pages/Home'
 import RoomList from './pages/RoomList'
 import RoomMap from './pages/RoomMap'
 import AddRoom from './pages/AddRoom'
+import EditRoom from './pages/EditRoom'
 import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
 import Login from './pages/Login'
@@ -190,6 +191,11 @@ function App() {
             <Route
               path="/rooms/add"
               element={<AddRoom />}
+            />
+
+            <Route
+              path="/rooms/:id/edit"
+              element={<EditRoom />}
             />
 
             {/* Thể loại phòng */}

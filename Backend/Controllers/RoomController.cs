@@ -18,7 +18,7 @@ public class RoomController : ControllerBase
 }
 
 [HttpGet]
-public async Task<IActionResult> GetRooms()
+public async Task<IActionResult> GetRooms(CancellationToken cancellationToken)
 {
     var rooms = await _db.Rooms
         .AsNoTracking()
@@ -39,9 +39,42 @@ public async Task<IActionResult> GetRooms()
             note = r.Note,
             imageUrl = r.ImageUrl
         })
-        .ToListAsync();
+        .ToListAsync(cancellationToken);
 
     return Ok(rooms);
+}
+
+[HttpGet("{id:int}")]
+public async Task<IActionResult> GetRoomById(int id, CancellationToken cancellationToken)
+{
+    var room = await _db.Rooms
+        .AsNoTracking()
+        .Where(r => r.Id == id)
+        .Select(r => new
+        {
+            id = r.Id,
+            roomNumber = r.RoomNumber,
+            floor = r.Floor,
+            roomTypeId = r.RoomTypeId,
+            roomType = r.RoomType == null ? null : new
+            {
+                id = r.RoomType.Id,
+                name = r.RoomType.Name,
+                pricePerNight = r.RoomType.PricePerNight,
+                capacity = r.RoomType.Capacity
+            },
+            status = r.Status,
+            note = r.Note,
+            imageUrl = r.ImageUrl
+        })
+        .FirstOrDefaultAsync(cancellationToken);
+
+    if (room == null)
+    {
+        return NotFound(new { message = "Không tìm thấy phòng." });
+    }
+
+    return Ok(room);
 }
 
 [HttpPost]
@@ -143,6 +176,61 @@ public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
     var imageUrl = $"/uploads/rooms/{fileName}";
 
     return Ok(new { imageUrl });
+}
+
+[HttpPut("{id:int}")]
+public async Task<IActionResult> UpdateRoom(
+    int id,
+    [FromBody] UpdateRoomRequest request,
+    CancellationToken cancellationToken)
+{
+    var room = await _db.Rooms.FindAsync([id], cancellationToken);
+    if (room == null)
+    {
+        return NotFound(new { message = "Không tìm thấy phòng cần cập nhật." });
+    }
+
+    var roomNumber = request.RoomNumber.Trim();
+    if (string.IsNullOrWhiteSpace(roomNumber))
+    {
+        return BadRequest(new { message = "Vui lòng nhập số phòng." });
+    }
+
+    var roomNumberExists = await _db.Rooms
+        .AnyAsync(
+            r => r.Id != id && r.RoomNumber.ToLower() == roomNumber.ToLower(),
+            cancellationToken);
+    if (roomNumberExists)
+    {
+        return BadRequest(new { message = "Số phòng đã tồn tại." });
+    }
+
+    var roomTypeExists = await _db.RoomTypes
+        .AnyAsync(rt => rt.Id == request.RoomTypeId, cancellationToken);
+    if (!roomTypeExists)
+    {
+        return BadRequest(new { message = "Thể loại phòng không tồn tại." });
+    }
+
+    room.RoomNumber = roomNumber;
+    room.Floor = request.Floor;
+    room.RoomTypeId = request.RoomTypeId;
+    room.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+    room.ImageUrl = request.ImageUrl;
+
+    await _db.SaveChangesAsync(cancellationToken);
+
+    return Ok(new
+    {
+        id = room.Id,
+        roomNumber = room.RoomNumber,
+        floor = room.Floor,
+        roomTypeId = room.RoomTypeId,
+        status = room.Status,
+        note = room.Note,
+        imageUrl = room.ImageUrl,
+        message = "Cập nhật thông tin phòng thành công."
+    });
 }
 
 [HttpDelete("{id}")]

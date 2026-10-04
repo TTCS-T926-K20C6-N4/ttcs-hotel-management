@@ -7,3 +7,20 @@ Content-Type: application/json
   "email": "admin@hotel.com",
   "password": "Admin@123"
 }
+
+@roomId = 1
+
+### Get a room for the edit form
+GET {{Backend_HostAddress}}/api/rooms/{{roomId}}
+
+### Update a room's editable details
+PUT {{Backend_HostAddress}}/api/rooms/{{roomId}}
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "floor": 1,
+  "roomTypeId": 1,
+  "note": "Phòng có ban công nhìn ra thành phố.",
+  "imageUrl": null
+}
