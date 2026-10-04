@@ -81,6 +81,17 @@ export const api = {
     })
   },
 
+  async getRoomById(id) {
+    return request(`/rooms/${id}`)
+  },
+
+  async updateRoom(id, payload) {
+    return request(`/rooms/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
+  },
+
   async getAvailableRooms() {
     const rooms = await request('/rooms')
 

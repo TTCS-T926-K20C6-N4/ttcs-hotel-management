@@ -1,90 +1,97 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import Toast from "../components/Toast";
+import { getRoomStatusInfo, ROOM_STATUS } from "../services/roomStatus";
 import "./RoomList.css";
 
+const API_ORIGIN = "http://localhost:5097";
+
+function getImageSource(imageUrl) {
+  if (!imageUrl) return "";
+  return imageUrl.startsWith("/") ? `${API_ORIGIN}${imageUrl}` : imageUrl;
+}
+
 function RoomList() {
+  const location = useLocation();
   const [rooms, setRooms] = useState([]);
   const [activeBookings, setActiveBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const loadData = async () => {
-  try {
-    setLoading(true);
-    setError("");
-
-    // Danh sách phòng là dữ liệu chính
-    const roomsResponse = await fetch(
-      "http://localhost:5097/api/rooms",
-      {
-        credentials: "include",
-      }
-    );
-
-    if (!roomsResponse.ok) {
-      throw new Error("Không thể tải danh sách phòng.");
-    }
-
-    const roomsData = await roomsResponse.json();
-    setRooms(roomsData);
-
-    // Booking là dữ liệu bổ sung.
-    // Nếu API booking bị 401 thì vẫn hiển thị danh sách phòng.
-    try {
-      const token = localStorage.getItem("token");
-
-      const headers = {};
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const bookingsResponse = await fetch(
-        "http://localhost:5097/api/bookings/active",
-        {
-          credentials: "include",
-          headers,
+  const [toast, setToast] = useState(() =>
+    location.state?.roomUpdated
+      ? {
+          type: "success",
+          message: `Đã cập nhật thông tin phòng ${location.state.roomUpdated}.`,
         }
-      );
+      : null,
+  );
 
-      if (bookingsResponse.ok) {
-        const bookingsData = await bookingsResponse.json();
-        setActiveBookings(bookingsData);
-      } else {
-        console.warn(
-          `Không thể tải booking (${bookingsResponse.status}).`
+  const loadData = async (isRetry = false) => {
+    try {
+      if (isRetry) {
+        setLoading(true);
+        setError("");
+      }
+
+      const roomsResponse = await fetch("http://localhost:5097/api/rooms", {
+        credentials: "include",
+      });
+
+      if (!roomsResponse.ok) {
+        throw new Error("Không thể tải danh sách phòng.");
+      }
+
+      const roomsData = await roomsResponse.json();
+      setRooms(roomsData);
+
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {};
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const bookingsResponse = await fetch(
+          "http://localhost:5097/api/bookings/active",
+          {
+            credentials: "include",
+            headers,
+          },
         );
+
+        if (bookingsResponse.ok) {
+          setActiveBookings(await bookingsResponse.json());
+        } else {
+          console.warn(`Không thể tải booking (${bookingsResponse.status}).`);
+          setActiveBookings([]);
+        }
+      } catch (bookingError) {
+        console.warn("Lỗi khi tải booking:", bookingError);
         setActiveBookings([]);
       }
-    } catch (bookingError) {
-      console.warn("Lỗi khi tải booking:", bookingError);
-      setActiveBookings([]);
+    } catch (loadError) {
+      console.error("Lỗi khi tải danh sách phòng:", loadError);
+      setError("Không thể tải danh sách phòng.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Lỗi khi tải danh sách phòng:", error);
-    setError("Không thể tải danh sách phòng.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const findActiveBooking = (roomId) => {
-    return activeBookings.find(
-      (booking) => Number(booking.roomId) === Number(roomId)
+  const findActiveBooking = (roomId) =>
+    activeBookings.find(
+      (booking) => Number(booking.roomId) === Number(roomId),
     );
-  };
 
   const formatDateTime = (value) => {
     if (!value) return "--";
 
     const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "--";
-    }
+    if (Number.isNaN(date.getTime())) return "--";
 
     return date.toLocaleString("vi-VN", {
       hour: "2-digit",
@@ -97,60 +104,25 @@ function RoomList() {
 
   const getRoomInfo = (room) => {
     const booking = findActiveBooking(room.id);
-
-    switch (room.status) {
-      case 0:
-        return {
-          className: "available",
-          statusText: "Phòng trống",
-          booking: null,
-        };
-
-      case 1:
-        return {
-          className: "occupied",
-          statusText: "Đã có người thuê",
-          booking,
-        };
-
-      case 2:
-        return {
-          className: "maintenance",
-          statusText: "Bảo trì",
-          booking: null,
-        };
-
-      case 3:
-        return {
-          className: "reserved",
-          statusText: "Đã đặt trước",
-          booking: null,
-        };
-
-      default:
-        return {
-          className: "other",
-          statusText: "Không xác định",
-          booking: null,
-        };
-    }
+    const statusInfo = getRoomStatusInfo(room.status);
+    return {
+      ...statusInfo,
+      statusText: statusInfo.label,
+      booking: Number(room.status) === ROOM_STATUS.Occupied ? booking : null,
+    };
   };
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
-      "Bạn có chắc chắn muốn xóa phòng này không?"
+      "Bạn có chắc chắn muốn xóa phòng này không?",
     );
-
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:5097/api/rooms/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
+      const response = await fetch(`http://localhost:5097/api/rooms/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -159,12 +131,11 @@ function RoomList() {
       }
 
       alert(data.message || "Xóa phòng thành công.");
-
       setRooms((currentRooms) =>
-        currentRooms.filter((room) => room.id !== id)
+        currentRooms.filter((room) => room.id !== id),
       );
-    } catch (error) {
-      console.error("Lỗi khi xóa phòng:", error);
+    } catch (deleteError) {
+      console.error("Lỗi khi xóa phòng:", deleteError);
       alert("Không thể kết nối đến máy chủ.");
     }
   };
@@ -172,7 +143,7 @@ function RoomList() {
   if (loading) {
     return (
       <div className="room-list-page">
-        <p>Đang tải danh sách phòng...</p>
+        <div className="room-list-message">Đang tải danh sách phòng...</div>
       </div>
     );
   }
@@ -180,62 +151,130 @@ function RoomList() {
   if (error) {
     return (
       <div className="room-list-page">
-        <p>{error}</p>
+        <div className="room-list-message room-list-message-error">
+          <p>{error}</p>
+          <button type="button" onClick={() => loadData(true)}>Thử tải lại</button>
+        </div>
       </div>
     );
   }
 
+  const availableRooms = rooms.filter(
+    (room) => Number(room.status) === ROOM_STATUS.Available,
+  ).length;
+
   return (
     <div className="room-list-page">
+      <Toast
+        message={toast?.message}
+        type={toast?.type}
+        onClose={() => setToast(null)}
+      />
+
       <div className="room-list-header">
-        <h1>Danh sách phòng</h1>
-        <p>Theo dõi trạng thái các phòng trong khách sạn</p>
+        <div>
+          <div className="room-list-eyebrow">TỔNG QUAN KHÁCH SẠN</div>
+          <h1>Danh sách phòng</h1>
+          <p>Theo dõi trạng thái và thông tin các phòng trong khách sạn.</p>
+        </div>
+        <Link to="/rooms/add" className="room-add-button">
+          <span aria-hidden="true">＋</span> Thêm phòng
+        </Link>
+      </div>
+
+      <div className="room-list-summary">
+        <div className="room-summary-icon" aria-hidden="true">▦</div>
+        <div>
+          <span>Tổng số phòng</span>
+          <strong>{rooms.length}</strong>
+        </div>
+        <div className="room-summary-divider" />
+        <div className="room-summary-icon room-summary-available" aria-hidden="true">✓</div>
+        <div>
+          <span>Sẵn sàng cho thuê</span>
+          <strong>{availableRooms}</strong>
+        </div>
       </div>
 
       {rooms.length === 0 ? (
         <div className="room-empty">
-          Chưa có phòng.
+          <div className="room-empty-icon" aria-hidden="true">⌂</div>
+          <h2>Chưa có phòng nào</h2>
+          <p>Thêm phòng đầu tiên để bắt đầu quản lý khách sạn.</p>
+          <Link to="/rooms/add" className="room-add-button">Thêm phòng ngay</Link>
         </div>
       ) : (
         <div className="room-grid">
           {rooms.map((room) => {
             const info = getRoomInfo(room);
+            const imageSource = getImageSource(room.imageUrl);
 
             return (
-              <div
-                className={`room-card ${info.className}`}
-                key={room.id}
-              >
-                <h3>Phòng {room.roomNumber}</h3>
+              <article className={`room-list-card ${info.className}`} key={room.id}>
+                <div className="room-list-card-cover">
+                  {imageSource ? (
+                    <img src={imageSource} alt={`Phòng ${room.roomNumber}`} />
+                  ) : (
+                    <div className="room-list-card-placeholder" aria-hidden="true">
+                      <span>⌂</span>
+                      <small>HOTEL MANAGER</small>
+                    </div>
+                  )}
+                  <span className="room-list-card-status">{info.statusText}</span>
+                </div>
 
-                <p className="room-card-status">
-                  {info.statusText}
-                </p>
+                <div className="room-list-card-content">
+                  <div className="room-list-card-title">
+                    <div>
+                      <span className="room-list-card-kicker">PHÒNG</span>
+                      <h2>{room.roomNumber}</h2>
+                    </div>
+                    <span className="room-list-card-floor">Tầng {room.floor ?? "--"}</span>
+                  </div>
 
-                <p>
-                  <strong>Giờ vào:</strong>{" "}
-                  {info.booking
-                    ? formatDateTime(info.booking.checkInDate)
-                    : "--"}
-                </p>
+                  <div className="room-list-card-type">
+                    <span aria-hidden="true">◇</span>
+                    {room.roomType?.name || "Chưa phân loại"}
+                  </div>
 
-                <p>
-                  <strong>Giờ ra:</strong>{" "}
-                  {info.booking
-                    ? formatDateTime(
-                        info.booking.actualCheckOutDate ||
-                          info.booking.expectedCheckOutDate
-                      )
-                    : "--"}
-                </p>
+                  <div className="room-list-card-booking">
+                    <div>
+                      <span>Giờ vào</span>
+                      <strong>
+                        {info.booking
+                          ? formatDateTime(info.booking.checkInDate)
+                          : "--"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Giờ ra</span>
+                      <strong>
+                        {info.booking
+                          ? formatDateTime(
+                              info.booking.actualCheckOutDate ||
+                                info.booking.expectedCheckOutDate,
+                            )
+                          : "--"}
+                      </strong>
+                    </div>
+                  </div>
 
-                <button
-                  className="room-delete-button"
-                  onClick={() => handleDelete(room.id)}
-                >
-                  Xóa
-                </button>
-              </div>
+                  {room.note && <p className="room-list-card-note">{room.note}</p>}
+
+                  <div className="room-list-card-actions">
+                    <Link to={`/rooms/${room.id}/edit`} className="room-edit-button">
+                      <span aria-hidden="true">↻</span> Cập nhật
+                    </Link>
+                    <button
+                      type="button"
+                      className="room-delete-button"
+                      onClick={() => handleDelete(room.id)}
+                    >
+                      Xóa phòng
+                    </button>
+                  </div>
+                </div>
+              </article>
             );
           })}
         </div>

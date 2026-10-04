@@ -1,30 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getRoomStatusInfo, ROOM_STATUS } from '../services/roomStatus'
 import './RoomMap.css'
 
 const API_URL = 'http://localhost:5097/api/rooms'
-
-const STATUS_INFO = {
-  0: {
-    label: 'Phòng trống',
-    className: 'available',
-    icon: '✓',
-  },
-  1: {
-    label: 'Đã đặt',
-    className: 'reserved',
-    icon: '◷',
-  },
-  2: {
-    label: 'Đang thuê',
-    className: 'occupied',
-    icon: '●',
-  },
-  3: {
-    label: 'Bảo trì',
-    className: 'maintenance',
-    icon: '⚙',
-  },
-}
 
 function RoomMap() {
   const [rooms, setRooms] = useState([])
@@ -34,10 +12,6 @@ function RoomMap() {
   const [floor, setFloor] = useState('all')
   const [status, setStatus] = useState('all')
   const [selectedRoom, setSelectedRoom] = useState(null)
-
-  useEffect(() => {
-    loadRooms()
-  }, [])
 
   const loadRooms = async () => {
     try {
@@ -61,6 +35,10 @@ function RoomMap() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadRooms()
+  }, [])
 
   const floors = useMemo(() => {
     return [...new Set(rooms.map((room) => room.floor))]
@@ -146,23 +124,23 @@ function RoomMap() {
           <div className="summary-icon">✓</div>
           <div>
             <span>Phòng trống</span>
-            <strong>{countStatus(0)}</strong>
+            <strong>{countStatus(ROOM_STATUS.Available)}</strong>
           </div>
         </div>
 
         <div className="summary-card summary-reserved">
           <div className="summary-icon">◷</div>
           <div>
-            <span>Đã đặt</span>
-            <strong>{countStatus(1)}</strong>
+            <span>Đã đặt trước</span>
+            <strong>{countStatus(ROOM_STATUS.Reserved)}</strong>
           </div>
         </div>
 
         <div className="summary-card summary-occupied">
           <div className="summary-icon">●</div>
           <div>
-            <span>Đang thuê</span>
-            <strong>{countStatus(2)}</strong>
+            <span>Đang có khách</span>
+            <strong>{countStatus(ROOM_STATUS.Occupied)}</strong>
           </div>
         </div>
 
@@ -170,7 +148,7 @@ function RoomMap() {
           <div className="summary-icon">⚙</div>
           <div>
             <span>Bảo trì</span>
-            <strong>{countStatus(3)}</strong>
+            <strong>{countStatus(ROOM_STATUS.Maintenance)}</strong>
           </div>
         </div>
       </div>
@@ -199,17 +177,17 @@ function RoomMap() {
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="all">Tất cả trạng thái</option>
           <option value="0">Phòng trống</option>
-          <option value="1">Đã đặt</option>
-          <option value="2">Đang thuê</option>
-          <option value="3">Bảo trì</option>
+          <option value={ROOM_STATUS.Occupied}>Đang có khách</option>
+          <option value={ROOM_STATUS.Maintenance}>Bảo trì</option>
+          <option value={ROOM_STATUS.Reserved}>Đã đặt trước</option>
         </select>
       </div>
 
       <div className="room-map-legend">
         <span><i className="legend-dot available-dot" /> Phòng trống</span>
-        <span><i className="legend-dot reserved-dot" /> Đã đặt</span>
-        <span><i className="legend-dot occupied-dot" /> Đang thuê</span>
+        <span><i className="legend-dot occupied-dot" /> Đang có khách</span>
         <span><i className="legend-dot maintenance-dot" /> Bảo trì</span>
+        <span><i className="legend-dot reserved-dot" /> Đã đặt trước</span>
       </div>
 
       {error && <div className="room-map-error">{error}</div>}
@@ -249,7 +227,7 @@ function RoomMap() {
                   )
                   .map((room) => {
                     const info =
-                      STATUS_INFO[Number(room.status)] || STATUS_INFO[0]
+                      getRoomStatusInfo(room.status)
 
                     return (
                       <article
@@ -353,13 +331,11 @@ function RoomMap() {
 
         <span
           className={`room-status ${
-            STATUS_INFO[Number(selectedRoom.status)]?.className ||
-            'available'
+            getRoomStatusInfo(selectedRoom.status).className
           }`}
         >
           <i />
-          {STATUS_INFO[Number(selectedRoom.status)]?.label ||
-            'Không xác định'}
+          {getRoomStatusInfo(selectedRoom.status).label}
         </span>
       </div>
 
