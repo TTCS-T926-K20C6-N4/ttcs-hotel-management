@@ -45,8 +45,7 @@ function Sidebar() {
         <div className="brand-icon">H</div>
 
         <div>
-          <h2>HOTEL MANAGER</h2>
-          <span>Quản lý khách sạn</span>
+          <h2>QUẢN LÝ KHÁCH SẠN</h2>
         </div>
       </div>
 

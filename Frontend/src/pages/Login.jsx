@@ -322,8 +322,8 @@ function Login() {
 
 
         <div className="hotel-name">
-          HOTEL MANAGER
-        </div>
+  QUẢN LÝ KHÁCH SẠN
+</div>
 
 
         {/* TIÊU ĐỀ */}
