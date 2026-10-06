@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, formatMoney } from '../services/api'
 import { EmptyState, ErrorBox, Loading } from '../components/Feedback'
 import Toast from '../components/Toast'
+import './RentRoom.css'
 
 // Chuyển Date thành định dạng dùng cho input datetime-local
 function toDateTimeLocal(date = new Date()) {
@@ -369,7 +370,7 @@ function RentRoom() {
   }
 
   return (
-    <div>
+    <div className="rent-room-page">
       <div className="page-header">
         <div>
           <h1>Cho thuê phòng</h1>
