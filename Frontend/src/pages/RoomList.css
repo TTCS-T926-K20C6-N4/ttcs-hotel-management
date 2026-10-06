@@ -434,3 +434,36 @@
     flex: 1;
   }
 }
+/* =========================
+   NÚT CHO THUÊ PHÒNG
+========================= */
+
+.room-rent-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #16a34a;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.room-rent-button:hover {
+  background: #15803d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
