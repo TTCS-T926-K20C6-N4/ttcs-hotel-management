@@ -143,6 +143,11 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/", () => Results.Redirect("http://localhost:5173/"));
+}
+
 app.MapControllers();
 
 // =====================================

@@ -1,9 +1,20 @@
+import hotelBackground from '../assets/hotel-bg.jpg'
+import './Home.css'
+
 function Home() {
   return (
-    <div>
-      <h1>Hệ thống quản lý phòng cho thuê</h1>
-      <p>Trang chủ hệ thống</p>
-    </div>
+    <section
+      className="home-hero"
+      style={{ '--home-background': `url(${hotelBackground})` }}
+    >
+      <div className="home-hero-content">
+        <p className="home-hero-eyebrow">ENCORE HOTEL &amp; RESORT</p>
+        <h1>Quản lý khách sạn, thật gọn gàng.</h1>
+        <p className="home-hero-subtitle">
+          Hệ thống quản lý phòng cho thuê
+        </p>
+      </div>
+    </section>
   )
 }
 

@@ -51,6 +51,46 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  async getCurrentUser() {
+    return request('/auth/me')
+  },
+
+  async updateProfile(payload) {
+    return request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async uploadProfileAvatar(file) {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const token = localStorage.getItem('token')
+    const headers = {}
+    if (token) headers.Authorization = `Bearer ${token}`
+
+    const response = await fetch(`${API_BASE}/auth/profile/avatar`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: formData,
+    })
+
+    const data = await response.json().catch(() => null)
+    if (!response.ok) {
+      throw new Error(data?.message || 'Không thể tải ảnh đại diện lên.')
+    }
+
+    return data
+  },
+
+  async deleteProfileAvatar() {
+    return request('/auth/profile/avatar', {
+      method: 'DELETE',
+    })
+  },
+
   // ==========================================
   // THỂ LOẠI PHÒNG
   // ==========================================

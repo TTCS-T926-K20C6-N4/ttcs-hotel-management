@@ -4,6 +4,7 @@ using Backend.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Backend.Controllers;
 
@@ -204,12 +205,13 @@ public class AuthController : ControllerBase
     // KIỂM TRA SESSION
     // ==========================================
     [HttpGet("me")]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         var isLoggedIn =
             HttpContext.Session.GetString("IsLoggedIn");
+        var userId = HttpContext.Session.GetInt32("UserId");
 
-        if (isLoggedIn != "true")
+        if (isLoggedIn != "true" || userId == null)
         {
             return Unauthorized(new
             {
@@ -218,30 +220,209 @@ public class AuthController : ControllerBase
             });
         }
 
-        var userId =
-            HttpContext.Session.GetInt32("UserId");
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId.Value);
 
-        var email =
-            HttpContext.Session.GetString("UserEmail");
-
-        var fullName =
-            HttpContext.Session.GetString("UserName");
-
-        var role =
-            HttpContext.Session.GetString("UserRole");
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
 
         return Ok(new
         {
             isLoggedIn = true,
-
             user = new
             {
-                id = userId,
-                email,
-                fullName,
-                role
+                user.Id,
+                email = user.Email,
+                fullName = user.FullName,
+                user.Role,
+                user.DateOfBirth,
+                user.Phone,
+                avatarUrl = ToAbsoluteAvatarUrl(user.AvatarUrl)
             }
         });
+    }
+
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(
+        [FromBody] UpdateProfileRequest request)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true" || userId == null)
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
+        var phone = Regex.Replace(request.Phone.Trim(), @"[\s.-]", "");
+        if (!Regex.IsMatch(phone, @"^(0|\+84)(3|5|7|8|9)\d{8}$"))
+        {
+            return BadRequest(new
+            {
+                message = "Số điện thoại chưa đúng định dạng Việt Nam."
+            });
+        }
+
+        if (request.DateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return BadRequest(new
+            {
+                message = "Ngày sinh không thể ở tương lai."
+            });
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
+
+        user.FullName = request.FullName.Trim();
+        user.DateOfBirth = request.DateOfBirth;
+        user.Phone = phone;
+
+        await _context.SaveChangesAsync();
+        HttpContext.Session.SetString("UserName", user.FullName);
+
+        return Ok(new
+        {
+            message = "Cập nhật thông tin cá nhân thành công.",
+            user = new
+            {
+                user.Id,
+                email = user.Email,
+                fullName = user.FullName,
+                user.DateOfBirth,
+                user.Phone,
+                avatarUrl = ToAbsoluteAvatarUrl(user.AvatarUrl)
+            }
+        });
+    }
+
+    [HttpPost("profile/avatar")]
+    [RequestSizeLimit(2 * 1024 * 1024)]
+    public async Task<IActionResult> UploadProfileAvatar(
+        [FromForm] IFormFile? image,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true" || userId == null)
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
+        if (image == null || image.Length == 0)
+        {
+            return BadRequest(new { message = "Vui lòng chọn ảnh đại diện." });
+        }
+
+        if (image.Length > 1024 * 1024)
+        {
+            return BadRequest(new { message = "Ảnh đại diện không được vượt quá 1 MB." });
+        }
+
+        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+        var allowedTypes = new Dictionary<string, string>
+        {
+            [".jpg"] = "image/jpeg",
+            [".jpeg"] = "image/jpeg",
+            [".png"] = "image/png",
+            [".webp"] = "image/webp"
+        };
+
+        if (!allowedTypes.TryGetValue(extension, out var contentType) ||
+            image.ContentType != contentType)
+        {
+            return BadRequest(new
+            {
+                message = "Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP."
+            });
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
+
+        var uploadFolder = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "uploads",
+            "avatars");
+        Directory.CreateDirectory(uploadFolder);
+
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadFolder, fileName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await image.CopyToAsync(stream, cancellationToken);
+        }
+
+        user.AvatarUrl = $"/uploads/avatars/{fileName}";
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return Ok(new
+        {
+            message = "Cập nhật ảnh đại diện thành công.",
+            avatarUrl = ToAbsoluteAvatarUrl(user.AvatarUrl)
+        });
+    }
+
+    [HttpDelete("profile/avatar")]
+    public async Task<IActionResult> RemoveProfileAvatar(
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true" || userId == null)
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
+
+        var previousFileName = Path.GetFileName(user.AvatarUrl);
+        user.AvatarUrl = null;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(previousFileName))
+        {
+            var previousFilePath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "avatars",
+                previousFileName);
+
+            if (System.IO.File.Exists(previousFilePath))
+            {
+                System.IO.File.Delete(previousFilePath);
+            }
+        }
+
+        return Ok(new { message = "Đã xóa ảnh đại diện." });
+    }
+
+    private string? ToAbsoluteAvatarUrl(string? avatarUrl)
+    {
+        if (string.IsNullOrWhiteSpace(avatarUrl))
+        {
+            return null;
+        }
+
+        return $"{Request.Scheme}://{Request.Host}{avatarUrl}";
     }
 
     // ==========================================
