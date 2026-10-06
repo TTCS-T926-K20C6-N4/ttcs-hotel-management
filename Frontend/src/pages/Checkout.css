@@ -1,0 +1,452 @@
+.checkout-page {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  color: #172033;
+}
+
+.checkout-page-header {
+  margin-bottom: 22px;
+}
+
+.checkout-page-header h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.2;
+}
+
+.checkout-page-header p {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(290px, 0.8fr) minmax(0, 1.5fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.checkout-panel,
+.checkout-empty {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(15, 35, 63, 0.045);
+}
+
+.checkout-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.checkout-panel-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.checkout-panel-heading p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.checkout-count,
+.checkout-service-count {
+  display: inline-grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.checkout-booking-list {
+  display: grid;
+  gap: 9px;
+}
+
+.checkout-booking-option {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.checkout-booking-option:hover {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.checkout-booking-option.is-selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.checkout-room-number {
+  display: grid;
+  min-height: 46px;
+  place-items: center;
+  border-radius: 9px;
+  background: #eaf2ff;
+  color: #1d4ed8;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.checkout-booking-main {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.checkout-booking-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkout-booking-main > span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkout-booking-total {
+  grid-column: 2;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkout-detail-heading {
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.checkout-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+
+.checkout-detail-heading h2 {
+  font-size: 22px;
+}
+
+.checkout-status {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.checkout-page .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 18px;
+}
+
+.checkout-page .detail-item {
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.checkout-page .detail-item .label {
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.checkout-page .detail-item .value {
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.checkout-services {
+  margin: 0 0 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.checkout-services > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 15px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.checkout-services[open] > summary {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.checkout-services > :not(summary) {
+  margin-right: 15px;
+  margin-left: 15px;
+}
+
+.checkout-no-services {
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.checkout-service-form {
+  padding: 0 0 14px;
+}
+
+.checkout-page .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.checkout-page .form-group {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.checkout-page .form-group label {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.checkout-page .form-group input,
+.checkout-summary input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+}
+
+.checkout-page input:focus {
+  border-color: #3b82f6;
+  outline: 3px solid rgba(59, 130, 246, 0.14);
+}
+
+.checkout-service-submit {
+  align-self: end;
+}
+
+.checkout-service-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.checkout-service-presets button {
+  padding: 6px 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #1d4ed8;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.checkout-service-presets button:hover {
+  background: #eff6ff;
+}
+
+.checkout-primary-button,
+.checkout-secondary-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.checkout-primary-button {
+  border: 1px solid #1d4ed8;
+  background: #2563eb;
+  color: #fff;
+}
+
+.checkout-primary-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.checkout-secondary-button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.checkout-secondary-button:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.checkout-primary-button:disabled,
+.checkout-secondary-button:disabled,
+.checkout-service-presets button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkout-summary {
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.checkout-page .summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.checkout-page .summary-row + .summary-row {
+  border-top: 1px solid #e8edf3;
+}
+
+.checkout-page .summary-row strong {
+  color: #172033;
+}
+
+.checkout-page .summary-row input {
+  width: 150px;
+  min-height: 34px;
+  text-align: right;
+}
+
+.checkout-page .summary-row.grand {
+  margin-top: 5px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.checkout-page .summary-row.grand span:last-child {
+  color: #1d4ed8;
+  font-size: 18px;
+}
+
+.checkout-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.checkout-empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.checkout-empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.checkout-empty h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.checkout-empty p {
+  margin: 8px 0 18px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.checkout-vacancy-note {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border: 1px solid #a7f3d0;
+  border-radius: 9px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+@media (max-width: 950px) {
+  .checkout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .checkout-panel,
+  .checkout-empty {
+    padding: 16px;
+  }
+
+  .checkout-page .detail-grid,
+  .checkout-page .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkout-booking-option {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .checkout-page .summary-row input {
+    width: 120px;
+  }
+}
