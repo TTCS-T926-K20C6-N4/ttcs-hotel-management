@@ -1,13 +1,22 @@
 const API_BASE = 'http://localhost:5097/api'
 
 async function request(path, options = {}) {
+  const token = localStorage.getItem('token')
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  }
+
+  // Tự động gửi JWT cho các API có [Authorize]
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
     ...options,
+    credentials: 'include',
+    headers,
   })
 
   let data = null
@@ -31,6 +40,10 @@ async function request(path, options = {}) {
       message = data
     }
 
+    if (response.status === 401) {
+      message = 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.'
+    }
+
     throw new Error(message)
   }
 
@@ -38,8 +51,15 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // ==========================================
+  // THỂ LOẠI PHÒNG
+  // ==========================================
+
   async getRoomTypes(search = '') {
-    const query = search ? `?search=${encodeURIComponent(search)}` : ''
+    const query = search
+      ? `?search=${encodeURIComponent(search)}`
+      : ''
+
     return request(`/rooms/room-types${query}`)
   },
 
@@ -57,7 +77,10 @@ export const api = {
   async updateRoomType(id, payload) {
     return request(`/rooms/room-types/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        id,
+      }),
     })
   },
 
@@ -67,12 +90,9 @@ export const api = {
     })
   },
 
-  async updateRoomType(id, payload) {
-    return request(`/rooms/room-types/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ ...payload, id }),
-    })
-  },
+  // ==========================================
+  // PHÒNG
+  // ==========================================
 
   async createRoom(payload) {
     return request('/rooms', {
@@ -92,23 +112,49 @@ export const api = {
     })
   },
 
+  // ==========================================
+  // PHÒNG TRỐNG
+  // ==========================================
+
   async getAvailableRooms() {
     const rooms = await request('/rooms')
 
-    return Array.isArray(rooms)
-      ? rooms.filter(
-          (room) =>
-            room.status === 'Available' ||
-            room.status === 0
-        )
-      : []
+    if (!Array.isArray(rooms)) {
+      return []
+    }
+
+    return rooms
+      .filter(
+        (room) =>
+          room.status === 'Available' ||
+          Number(room.status) === 0
+      )
+      .map((room) => ({
+        ...room,
+
+        roomTypeName:
+          room.roomType?.name || 'Chưa phân loại',
+
+        pricePerNight:
+          Number(room.roomType?.pricePerNight) || 0,
+
+        capacity:
+          Number(room.roomType?.capacity) || 0,
+      }))
   },
 
-  // Backend hiện chưa có GET /api/customers.
-  // Tạm trả [] để màn hình thuê phòng vẫn chạy và cho nhập khách mới.
+  // ==========================================
+  // KHÁCH HÀNG
+  // ==========================================
+
+  // Backend hiện chưa có GET /api/customers
   async getCustomers() {
     return []
   },
+
+  // ==========================================
+  // BOOKING / CHO THUÊ PHÒNG
+  // ==========================================
 
   async getBookings(status = '') {
     const query = status
@@ -128,83 +174,126 @@ export const api = {
       body: JSON.stringify(payload),
     })
   },
-async uploadRoomImage(file) {
-  const formData = new FormData()
-  formData.append('image', file)
 
-  const response = await fetch(`${API_BASE}/rooms/upload-image`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  })
+  // ==========================================
+  // UPLOAD ẢNH PHÒNG
+  // ==========================================
 
-  let data = null
-  const contentType = response.headers.get('content-type') || ''
+  async uploadRoomImage(file) {
+    const formData = new FormData()
+    formData.append('image', file)
 
-  if (contentType.includes('application/json')) {
-    data = await response.json()
-  } else {
-    const text = await response.text()
-    data = text || null
-  }
+    const token = localStorage.getItem('token')
 
-  if (!response.ok) {
-    let message = 'Không thể tải hình ảnh lên.'
+    const headers = {}
 
-    if (data?.message) {
-      message = data.message
-    } else if (data?.title) {
-      message = data.title
-    } else if (typeof data === 'string' && data.trim()) {
-      message = data
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
     }
 
-    throw new Error(message)
-  }
+    const response = await fetch(
+      `${API_BASE}/rooms/upload-image`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: formData,
+      }
+    )
 
-  return data
-},
+    let data = null
+    const contentType =
+      response.headers.get('content-type') || ''
+
+    if (contentType.includes('application/json')) {
+      data = await response.json()
+    } else {
+      const text = await response.text()
+      data = text || null
+    }
+
+    if (!response.ok) {
+      let message = 'Không thể tải hình ảnh lên.'
+
+      if (data?.message) {
+        message = data.message
+      } else if (data?.title) {
+        message = data.title
+      } else if (
+        typeof data === 'string' &&
+        data.trim()
+      ) {
+        message = data
+      }
+
+      throw new Error(message)
+    }
+
+    return data
+  },
+
+  // ==========================================
+  // DỊCH VỤ PHÒNG
+  // ==========================================
+
   async addService(bookingId, payload) {
-    return request(`/bookings/${bookingId}/services`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+    return request(
+      `/bookings/${bookingId}/services`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }
+    )
   },
 
   async removeService(serviceId) {
-    return request(`/bookings/services/${serviceId}`, {
+    return request(
+      `/bookings/services/${serviceId}`,
+      {
+        method: 'DELETE',
+      }
+    )
+  },
+
+  // ==========================================
+  // TRẢ PHÒNG
+  // ==========================================
+
+  async checkout(bookingId, payload) {
+    return request(
+      `/bookings/${bookingId}/checkout`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }
+    )
+  },
+
+  // ==========================================
+  // HỦY BOOKING
+  // ==========================================
+
+  async cancelBooking(bookingId) {
+    return request(`/bookings/${bookingId}`, {
       method: 'DELETE',
     })
   },
 
-  async checkout(bookingId, payload) {
-    return request(`/bookings/${bookingId}/checkout`, {
+  // ==========================================
+  // ĐỔI MẬT KHẨU
+  // ==========================================
+
+  async changePassword(payload) {
+    return request('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
   },
-  
-
- async cancelBooking(bookingId) {
-  return request(`/bookings/${bookingId}`, {
-    method: 'DELETE',
-  })
-},
-
-async changePassword(payload) {
-  return request('/auth/change-password', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-},
-
-  async changePassword(payload) {
-  return request('/auth/change-password', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-},
 }
+
+// ==========================================
+// FORMAT TIỀN
+// ==========================================
 
 export function formatMoney(value) {
   const amount = Number(value)
@@ -219,6 +308,10 @@ export function formatMoney(value) {
   }).format(amount)
 }
 
+// ==========================================
+// FORMAT NGÀY
+// ==========================================
+
 export function formatDate(value) {
   if (!value) return ''
 
@@ -231,18 +324,31 @@ export function formatDate(value) {
   return new Intl.DateTimeFormat('vi-VN').format(date)
 }
 
+// ==========================================
+// FORMAT DATE CHO INPUT
+// ==========================================
+
 export function toInputDate(value) {
   if (!value) return ''
 
-  const date = value instanceof Date ? value : new Date(value)
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value)
 
   if (Number.isNaN(date.getTime())) {
     return ''
   }
 
   const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, '0')
+
+  const day = String(
+    date.getDate()
+  ).padStart(2, '0')
 
   return `${year}-${month}-${day}`
 }

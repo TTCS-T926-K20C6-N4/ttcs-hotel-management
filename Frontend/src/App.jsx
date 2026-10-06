@@ -210,14 +210,18 @@ function App() {
             {/* Thuê phòng */}
 
             <Route
-              path="/rent-room"
-              element={<RentRoom />}
-            />
-            <Route
+  path="/rent-room"
+  element={<RentRoom />}
+/>
+
+<Route
+  path="/rent-room/:roomId"
+  element={<RentRoom />}
+/>
+<Route
   path="/change-password"
   element={<ChangePassword />}
 />
-
 
           </Route>
 
