@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, formatDate, formatMoney } from '../services/api'
-import { EmptyState, ErrorBox, Loading, StatusBadge } from '../components/Feedback'
+import { ErrorBox, Loading } from '../components/Feedback'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
+import './Checkout.css'
 
 const SERVICE_PRESETS = [
   { name: 'Ăn sáng', price: 50000 },
@@ -14,6 +15,7 @@ const SERVICE_PRESETS = [
 ]
 
 function Checkout() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const presetBookingId = searchParams.get('bookingId')
 
@@ -24,7 +26,6 @@ function Checkout() {
 
   const [selectedId, setSelectedId] = useState(null)
   const [discount, setDiscount] = useState(0)
-  const [checkoutNote, setCheckoutNote] = useState('')
   const [saving, setSaving] = useState(false)
 
   const [serviceForm, setServiceForm] = useState({ name: '', price: '', quantity: 1 })
@@ -132,13 +133,31 @@ function Checkout() {
     try {
       const result = await api.checkout(selected.id, {
         discount: Number(discount) || 0,
-        note: checkoutNote.trim() || null,
       })
-      setInvoice(result.invoice || null)
+      const invoiceData = result.invoice ?? (
+        Array.isArray(result.invoices)
+          ? [...result.invoices]
+            .filter((item) => Number(item.bookingId) === Number(selected.id))
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+          : null
+      )
+
+      setInvoice(invoiceData
+        ? {
+            ...invoiceData,
+            roomNumber: result.roomNumber || selected.roomNumber,
+            customerName: result.customerName || selected.customerName,
+            nights: result.nights ?? selected.nights,
+          }
+        : null)
       setConfirmCheckout(false)
       setDiscount(0)
-      setCheckoutNote('')
-      setToast({ type: 'success', message: `Đã trả phòng ${result.roomNumber} và lập hoá đơn.` })
+      setToast({
+        type: invoiceData ? 'success' : 'error',
+        message: invoiceData
+          ? `Đã trả phòng ${selected.roomNumber} và lập hoá đơn.`
+          : `Đã trả phòng ${selected.roomNumber}, nhưng không nhận được thông tin hoá đơn.`,
+      })
       await load()
     } catch (err) {
       setToast({ type: 'error', message: err.message })
@@ -148,81 +167,70 @@ function Checkout() {
     }
   }
 
-  if (loading) return <Loading text="Đang tải danh sách khách đang ở..." />
+  if (loading) return <Loading message="Đang tải danh sách khách đang ở..." />
   if (error) return <ErrorBox message={error} onRetry={load} />
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="checkout-page">
+      <div className="checkout-page-header">
         <div>
           <h1>Trả phòng</h1>
-          <p>Thanh toán, thêm dịch vụ phát sinh và trả phòng cho khách</p>
+          <p>Chọn khách đang ở, kiểm tra chi phí và xác nhận trả phòng.</p>
         </div>
       </div>
 
       {bookings.length === 0 ? (
-        <EmptyState
-          icon="🛏️"
-          title="Hiện không có khách nào đang lưu trú"
-          description="Khi bạn cho thuê phòng, khách sẽ xuất hiện ở đây để trả phòng."
-        />
+        <section className="checkout-empty">
+          <div className="checkout-empty-icon" aria-hidden="true">✓</div>
+          <h2>Không có khách cần trả phòng</h2>
+          <p>Tất cả lượt thuê đang lưu trú đã được xử lý.</p>
+          <button type="button" className="checkout-secondary-button" onClick={() => navigate('/rooms')}>
+            Xem danh sách phòng
+          </button>
+        </section>
       ) : (
-        <div className="grid-2">
-          {/* ===== DANH SÁCH KHÁCH ĐANG Ở ===== */}
-          <div className="card">
-            <h2 className="card-title">Khách đang lưu trú ({bookings.length})</h2>
-
-            <div className="table-wrap">
-              <table className="data-table" style={{ minWidth: 420 }}>
-                <thead>
-                  <tr>
-                    <th>Phòng</th>
-                    <th>Khách hàng</th>
-                    <th>Nhận phòng</th>
-                    <th className="text-right">Tạm tính</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((b) => (
-                    <tr
-                      key={b.id}
-                      onClick={() => setSelectedId(b.id)}
-                      style={{
-                        cursor: 'pointer',
-                        background: b.id === selectedId ? '#eff6ff' : undefined,
-                      }}
-                    >
-                      <td>
-                        <strong>{b.roomNumber}</strong>
-                        <div className="text-muted">{b.roomTypeName}</div>
-                      </td>
-                      <td>
-                        {b.customerName}
-                        <div className="text-muted">{b.customerPhone}</div>
-                      </td>
-                      <td>
-                        {formatDate(b.checkInDate)}
-                        <div className="text-muted">{b.nights} ngày</div>
-                      </td>
-                      <td className="text-right money">
-                        {formatMoney(b.roomAmount + b.serviceAmount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="checkout-layout">
+          <section className="checkout-panel checkout-stays">
+            <div className="checkout-panel-heading">
+              <div>
+                <h2>Khách đang lưu trú</h2>
+                <p>Chọn lượt thuê cần trả phòng</p>
+              </div>
+              <span className="checkout-count">{bookings.length}</span>
             </div>
-          </div>
 
-          {/* ===== CHI TIẾT THANH TOÁN ===== */}
+            <div className="checkout-booking-list">
+              {bookings.map((booking) => (
+                <button
+                  type="button"
+                  key={booking.id}
+                  className={`checkout-booking-option${booking.id === selectedId ? ' is-selected' : ''}`}
+                  onClick={() => setSelectedId(booking.id)}
+                  aria-pressed={booking.id === selectedId}
+                >
+                  <span className="checkout-room-number">{booking.roomNumber}</span>
+                  <span className="checkout-booking-main">
+                    <strong>{booking.customerName}</strong>
+                    <span>{booking.roomTypeName} · nhận {formatDate(booking.checkInDate)}</span>
+                  </span>
+                  <span className="checkout-booking-total">
+                    {formatMoney(Number(booking.roomAmount) + Number(booking.serviceAmount))}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           {selected && (
-            <div className="card">
-              <h2 className="card-title">
-                <span>
-                  Phiếu thuê {selected.code} — phòng {selected.roomNumber}
-                </span>
-                <StatusBadge status={selected.status} text={selected.statusText} />
-              </h2>
+            <section className="checkout-panel checkout-detail">
+              <div className="checkout-panel-heading checkout-detail-heading">
+                <div>
+                  <span className="checkout-eyebrow">PHIẾU THUÊ {selected.code}</span>
+                  <h2>Phòng {selected.roomNumber}</h2>
+                  <p>{selected.customerName} · {selected.customerPhone}</p>
+                </div>
+                <span className="checkout-status">{selected.statusText || 'Đang ở'}</span>
+              </div>
 
               <div className="detail-grid">
                 <div className="detail-item">
@@ -251,16 +259,17 @@ function Checkout() {
                 </div>
               </div>
 
-              {/* ===== DỊCH VỤ PHÁT SINH ===== */}
-              <h3 className="card-title" style={{ marginTop: 8 }}>
-                Dịch vụ phát sinh
-              </h3>
+              <details className="checkout-services">
+                <summary>
+                  <span>Dịch vụ phát sinh</span>
+                  <span className="checkout-service-count">{selected.services.length}</span>
+                </summary>
 
-              {selected.services.length === 0 ? (
-                <p className="text-muted">Chưa có dịch vụ nào.</p>
-              ) : (
-                <div className="table-wrap" style={{ marginBottom: 14 }}>
-                  <table className="data-table" style={{ minWidth: 360 }}>
+                {selected.services.length === 0 ? (
+                  <p className="checkout-no-services">Chưa ghi nhận dịch vụ phát sinh.</p>
+                ) : (
+                  <div className="table-wrap" style={{ marginBottom: 14 }}>
+                    <table className="data-table" style={{ minWidth: 360 }}>
                     <thead>
                       <tr>
                         <th>Dịch vụ</th>
@@ -276,7 +285,9 @@ function Checkout() {
                           <td>{s.name}</td>
                           <td className="text-right">{formatMoney(s.price)}</td>
                           <td className="text-center">{s.quantity}</td>
-                          <td className="text-right money">{formatMoney(s.amount)}</td>
+                          <td className="text-right money">
+                            {formatMoney(Number(s.price) * Number(s.quantity))}
+                          </td>
                           <td className="text-right">
                             <button
                               type="button"
@@ -291,73 +302,84 @@ function Checkout() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
-                </div>
-              )}
+                    </table>
+                  </div>
+                )}
 
-              {serviceError && <div className="alert alert-error">{serviceError}</div>}
+                {serviceError && <div className="alert alert-error">{serviceError}</div>}
 
-              <form onSubmit={handleAddService}>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Dịch vụ</label>
-                    <input
-                      value={serviceForm.name}
-                      onChange={(e) => setServiceForm((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="Tên dịch vụ"
-                      list="service-presets"
-                    />
-                    <datalist id="service-presets">
-                      {SERVICE_PRESETS.map((s) => (
-                        <option key={s.name} value={s.name} />
-                      ))}
-                    </datalist>
+                <form className="checkout-service-form" onSubmit={handleAddService}>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="checkout-service-name">Dịch vụ</label>
+                      <input
+                        id="checkout-service-name"
+                        value={serviceForm.name}
+                        onChange={(e) => setServiceForm((p) => ({ ...p, name: e.target.value }))}
+                        placeholder="Tên dịch vụ"
+                        list="service-presets"
+                        disabled={saving}
+                      />
+                      <datalist id="service-presets">
+                        {SERVICE_PRESETS.map((s) => (
+                          <option key={s.name} value={s.name} />
+                        ))}
+                      </datalist>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="checkout-service-price">Đơn giá</label>
+                      <input
+                        id="checkout-service-price"
+                        type="number"
+                        min="0"
+                        value={serviceForm.price}
+                        onChange={(e) => setServiceForm((p) => ({ ...p, price: e.target.value }))}
+                        disabled={saving}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="checkout-service-quantity">Số lượng</label>
+                      <input
+                        id="checkout-service-quantity"
+                        type="number"
+                        min="1"
+                        value={serviceForm.quantity}
+                        onChange={(e) => setServiceForm((p) => ({ ...p, quantity: e.target.value }))}
+                        disabled={saving}
+                      />
+                    </div>
+
+                    <div className="form-group checkout-service-submit">
+                      <label aria-hidden="true">&nbsp;</label>
+                      <button type="submit" className="checkout-secondary-button" disabled={saving}>
+                        {saving ? 'Đang thêm...' : 'Thêm dịch vụ'}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Đơn giá</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={serviceForm.price}
-                      onChange={(e) => setServiceForm((p) => ({ ...p, price: e.target.value }))}
-                    />
+                  <div className="checkout-service-presets">
+                    {SERVICE_PRESETS.map((service) => (
+                      <button
+                        type="button"
+                        key={service.name}
+                        onClick={() => setServiceForm({
+                          name: service.name,
+                          price: String(service.price),
+                          quantity: 1,
+                        })}
+                        disabled={saving}
+                      >
+                        {service.name}
+                      </button>
+                    ))}
                   </div>
-
-                  <div className="form-group">
-                    <label>Số lượng</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={serviceForm.quantity}
-                      onChange={(e) => setServiceForm((p) => ({ ...p, quantity: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ justifyContent: 'flex-end' }}>
-                    <label>&nbsp;</label>
-                    <button type="submit" className="btn btn-ghost" disabled={saving}>
-                      ➕ Thêm dịch vụ
-                    </button>
-                  </div>
-                </div>
-
-                <div className="page-actions" style={{ marginTop: 10 }}>
-                  {SERVICE_PRESETS.map((s) => (
-                    <button
-                      type="button"
-                      key={s.name}
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => setServiceForm({ name: s.name, price: String(s.price), quantity: 1 })}
-                    >
-                      {s.name} · {formatMoney(s.price)}
-                    </button>
-                  ))}
-                </div>
-              </form>
+                </form>
+              </details>
 
               {/* ===== TỔNG KẾT ===== */}
-              <div className="summary-box">
+              <div className="summary-box checkout-summary">
                 <div className="summary-row">
                   <span>Tiền phòng ({selected.nights} ngày)</span>
                   <strong>{formatMoney(totals.room)}</strong>
@@ -370,11 +392,12 @@ function Checkout() {
                 <div className="summary-row">
                   <span>Giảm giá</span>
                   <input
+                    aria-label="Giảm giá"
                     type="number"
                     min="0"
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
-                    style={{ maxWidth: 160, textAlign: 'right' }}
+                    disabled={saving}
                   />
                 </div>
 
@@ -384,26 +407,17 @@ function Checkout() {
                 </div>
               </div>
 
-              <div className="form-group full" style={{ marginTop: 14 }}>
-                <label>Ghi chú thanh toán</label>
-                <input
-                  value={checkoutNote}
-                  onChange={(e) => setCheckoutNote(e.target.value)}
-                  placeholder="Ví dụ: khách thanh toán tiền mặt"
-                />
-              </div>
-
               <div className="form-actions">
                 <button
                   type="button"
-                  className="btn btn-success"
+                  className="checkout-primary-button"
                   onClick={() => setConfirmCheckout(true)}
                   disabled={saving}
                 >
-                  ↩️ Xác nhận trả phòng &amp; thanh toán
+                  {saving ? 'Đang xử lý...' : 'Xác nhận trả phòng'}
                 </button>
               </div>
-            </div>
+            </section>
           )}
         </div>
       )}
@@ -416,10 +430,10 @@ function Checkout() {
           onClose={() => setConfirmCheckout(false)}
           footer={
             <>
-              <button type="button" className="btn btn-ghost" onClick={() => setConfirmCheckout(false)}>
+              <button type="button" className="checkout-secondary-button" onClick={() => setConfirmCheckout(false)}>
                 Huỷ
               </button>
-              <button type="button" className="btn btn-success" onClick={handleCheckout} disabled={saving}>
+              <button type="button" className="checkout-primary-button" onClick={handleCheckout} disabled={saving}>
                 {saving ? 'Đang xử lý...' : 'Trả phòng & lập hoá đơn'}
               </button>
             </>
@@ -455,13 +469,24 @@ function Checkout() {
       {invoice && (
         <Modal
           title="Hoá đơn thanh toán"
-          onClose={() => setInvoice(null)}
+          onClose={() => navigate('/rooms', {
+            state: { roomCheckedOut: invoice.roomNumber },
+          })}
           footer={
-            <button type="button" className="btn" onClick={() => setInvoice(null)}>
-              Đóng
+            <button
+              type="button"
+              className="checkout-primary-button"
+              onClick={() => navigate('/rooms', {
+                state: { roomCheckedOut: invoice.roomNumber },
+              })}
+            >
+              Xong — xem phòng trống
             </button>
           }
         >
+          <p className="checkout-vacancy-note">
+            Trả phòng hoàn tất. Phòng {invoice.roomNumber} hiện đã được chuyển về trạng thái trống.
+          </p>
           <div className="detail-grid">
             <div className="detail-item">
               <div className="label">Mã hoá đơn</div>

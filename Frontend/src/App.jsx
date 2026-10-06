@@ -16,6 +16,7 @@ import AddRoom from './pages/AddRoom'
 import EditRoom from './pages/EditRoom'
 import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
+import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
@@ -217,6 +218,10 @@ function App() {
 <Route
   path="/rent-room/:roomId"
   element={<RentRoom />}
+/>
+<Route
+  path="/checkout"
+  element={<Checkout />}
 />
 <Route
   path="/change-password"

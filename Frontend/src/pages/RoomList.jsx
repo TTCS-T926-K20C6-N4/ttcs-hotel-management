@@ -20,17 +20,22 @@ function RoomList() {
   const [error, setError] = useState("");
 
   const [toast, setToast] = useState(() =>
-    location.state?.roomUpdated
+    location.state?.roomCheckedOut
       ? {
           type: "success",
-          message: `Đã cập nhật thông tin phòng ${location.state.roomUpdated}.`,
+          message: `Đã trả phòng ${location.state.roomCheckedOut}. Phòng hiện đã trống.`,
         }
-      : location.state?.roomRented
+      : location.state?.roomUpdated
         ? {
             type: "success",
-            message: `Đã cho thuê phòng ${location.state.roomRented} thành công.`,
+            message: `Đã cập nhật thông tin phòng ${location.state.roomUpdated}.`,
           }
-        : null,
+        : location.state?.roomRented
+          ? {
+              type: "success",
+              message: `Đã cho thuê phòng ${location.state.roomRented} thành công.`,
+            }
+          : null,
   );
 
   const loadData = async (isRetry = false) => {
@@ -448,6 +453,15 @@ function RoomList() {
                         className="room-rent-button"
                       >
                         Cho thuê
+                      </Link>
+                    )}
+
+                    {info.booking && (
+                      <Link
+                        to={`/checkout?bookingId=${info.booking.id}`}
+                        className="room-edit-button"
+                      >
+                        Trả phòng
                       </Link>
                     )}
 
