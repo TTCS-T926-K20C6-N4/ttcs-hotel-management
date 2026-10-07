@@ -20,6 +20,7 @@ import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
+import RoomStatus from './pages/RoomStatus'
 
 import './App.css'
 
@@ -206,7 +207,10 @@ function App() {
               path="/room-types"
               element={<RoomTypes />}
             />
-
+<Route
+  path="/room-status"
+  element={<RoomStatus />}
+/>
 
             {/* Thuê phòng */}
 

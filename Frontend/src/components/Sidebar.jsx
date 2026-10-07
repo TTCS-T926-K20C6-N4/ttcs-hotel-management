@@ -83,7 +83,7 @@ function Sidebar() {
 
         <div className="menu-title">THỐNG KÊ</div>
 
-        <NavLink to="/statistics" className="menu-item">
+        <NavLink to="/room-status" className="menu-item">
           📊 <span>Trạng thái phòng</span>
         </NavLink>
 

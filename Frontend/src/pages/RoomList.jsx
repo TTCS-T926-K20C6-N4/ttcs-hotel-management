@@ -15,6 +15,7 @@ function RoomList() {
   const location = useLocation();
 
   const [rooms, setRooms] = useState([]);
+  const [statusCounts, setStatusCounts] = useState([]);
   const [activeBookings, setActiveBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -61,7 +62,22 @@ function RoomList() {
 
       const roomsData = await roomsResponse.json();
       setRooms(roomsData);
+// ============================
+// LẤY SỐ LƯỢNG PHÒNG THEO TRẠNG THÁI
+// ============================
+const statusResponse = await fetch(
+  "http://localhost:5097/api/rooms/status-count",
+  {
+    credentials: "include",
+  }
+);
 
+if (!statusResponse.ok) {
+  throw new Error("Không thể tải số lượng phòng theo trạng thái.");
+}
+
+const statusData = await statusResponse.json();
+setStatusCounts(statusData);
       // ============================
       // LẤY BOOKING ĐANG HOẠT ĐỘNG
       // ============================
@@ -283,17 +299,12 @@ function RoomList() {
 
         <div className="room-summary-divider" />
 
-        <div
-          className="room-summary-icon room-summary-available"
-          aria-hidden="true"
-        >
-          ✓
-        </div>
-
-        <div>
-          <span>Sẵn sàng cho thuê</span>
-          <strong>{availableRooms}</strong>
-        </div>
+{statusCounts.map((item) => (
+  <div key={item.status} className="room-status-count">
+    <span>{item.statusName}</span>
+    <strong>{item.count}</strong>
+  </div>
+))}
 
       </div>
 
