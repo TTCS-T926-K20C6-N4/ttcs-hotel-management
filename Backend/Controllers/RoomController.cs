@@ -43,7 +43,31 @@ public async Task<IActionResult> GetRooms(CancellationToken cancellationToken)
 
     return Ok(rooms);
 }
+[HttpGet("status-count")]
+public async Task<IActionResult> GetRoomStatusCount()
+{
+    var counts = await _db.Rooms
+        .GroupBy(r => r.Status)
+        .Select(g => new
+        {
+            status = g.Key,
+            count = g.Count()
+        })
+        .ToListAsync();
 
+    var result = Enum.GetValues<RoomStatus>()
+        .Select(status => new
+        {
+            status = (int)status,
+            statusName = status.ToString(),
+            count = counts
+                .Where(x => x.status == status)
+                .Select(x => x.count)
+                .FirstOrDefault()
+        });
+
+    return Ok(result);
+}
 [HttpGet("{id:int}")]
 public async Task<IActionResult> GetRoomById(int id, CancellationToken cancellationToken)
 {
