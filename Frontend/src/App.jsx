@@ -20,6 +20,7 @@ import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
+import Profile from './pages/Profile'
 
 import './App.css'
 
@@ -226,6 +227,10 @@ function App() {
 <Route
   path="/change-password"
   element={<ChangePassword />}
+/>
+<Route
+  path="/profile"
+  element={<Profile />}
 />
 
           </Route>
