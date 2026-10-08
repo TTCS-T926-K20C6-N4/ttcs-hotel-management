@@ -467,3 +467,27 @@
   color: #ffffff;
   transform: translateY(-1px);
 }
+/* THỐNG KÊ TRẠNG THÁI PHÒNG - SPRINT 2 */
+
+.room-status-count {
+  display: flex;
+  flex: 1;
+  min-width: 110px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.room-status-count span {
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.room-status-count strong {
+  color: #172033;
+  font-size: 20px;
+  font-weight: 700;
+}

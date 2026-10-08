@@ -299,12 +299,21 @@ setStatusCounts(statusData);
 
         <div className="room-summary-divider" />
 
-{statusCounts.map((item) => (
-  <div key={item.status} className="room-status-count">
-    <span>{item.statusName}</span>
-    <strong>{item.count}</strong>
-  </div>
-))}
+{statusCounts.map((item) => {
+  const statusLabels = {
+    Available: "Phòng trống",
+    Occupied: "Đang thuê",
+    Maintenance: "Bảo trì",
+    Reserved: "Đã đặt trước",
+  };
+
+  return (
+    <div key={item.status} className="room-status-count">
+      <span>{statusLabels[item.statusName] ?? item.statusName}</span>
+      <strong>{item.count}</strong>
+    </div>
+  );
+})}
 
       </div>
 
