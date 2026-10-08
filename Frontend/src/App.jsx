@@ -20,7 +20,11 @@ import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
+<<<<<<< HEAD
 import RoomStatus from './pages/RoomStatus'
+=======
+import Profile from './pages/Profile'
+>>>>>>> origin/giangsu
 
 import './App.css'
 
@@ -230,6 +234,10 @@ function App() {
 <Route
   path="/change-password"
   element={<ChangePassword />}
+/>
+<Route
+  path="/profile"
+  element={<Profile />}
 />
 
           </Route>

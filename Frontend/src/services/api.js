@@ -289,6 +289,49 @@ export const api = {
       body: JSON.stringify(payload),
     })
   },
+
+  async getCurrentUser() {
+    const current = await request('/auth/me')
+    return current.user || current
+  },
+
+  async updateProfile(payload) {
+    return request('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async uploadProfileImage(file) {
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const response = await fetch(
+      `${API_BASE}/auth/profile/avatar`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: formData,
+      }
+    )
+
+    let data = null
+    const contentType = response.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      data = await response.json()
+    } else {
+      data = await response.text()
+    }
+
+    if (!response.ok) {
+      const message = data?.message || data?.title || data || 'Không thể tải ảnh đại diện.'
+      throw new Error(message)
+    }
+    return data
+  },
 }
 
 // ==========================================

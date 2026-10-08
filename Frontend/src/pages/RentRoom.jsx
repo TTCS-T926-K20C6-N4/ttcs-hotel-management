@@ -238,11 +238,11 @@ function RentRoom() {
       return
     }
 
-    const phoneRegex = /^[0-9]{9,11}$/
+    const phoneRegex = /^0[35789][0-9]{8}$/
 
     if (!phoneRegex.test(form.customerPhone.trim())) {
       setFormError(
-        'Số điện thoại phải gồm từ 9 đến 11 chữ số.'
+        'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.'
       )
       return
     }
@@ -600,6 +600,8 @@ function RentRoom() {
                   </label>
 
                   <input
+                    type="tel"
+                    inputMode="numeric"
                     value={form.customerPhone}
                     onChange={(event) =>
                       update(
@@ -608,6 +610,7 @@ function RentRoom() {
                       )
                     }
                     placeholder="0912345678"
+                    maxLength={10}
                     disabled={Boolean(
                       form.customerId
                     )}
