@@ -1,139 +1,90 @@
+
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, formatMoney } from '../services/api'
 import { EmptyState, ErrorBox, Loading } from '../components/Feedback'
-import Toast from '../components/Toast'
+import './RentRoom.css'
 
-// Chuyển Date thành định dạng dùng cho input datetime-local
+// Chuyển thời gian sang định dạng datetime-local
 function toDateTimeLocal(date = new Date()) {
   const pad = (value) => String(value).padStart(2, '0')
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate()
-  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-function createEmptyForm() {
+// Tạo form ban đầu
+function createEmptyForm(roomId = '') {
   return {
-    roomId: '',
-    customerId: '',
+    roomId: String(roomId),
     customerName: '',
     customerPhone: '',
-    customerEmail: '',
     customerIdCard: '',
-    customerAddress: '',
-    guestCount: 1,
-    checkInDate: toDateTimeLocal(new Date()),
+    checkInDate: toDateTimeLocal(),
     expectedCheckOutDate: '',
-    note: '',
   }
 }
 
 function RentRoom() {
   const { roomId } = useParams()
-  const navigate = useNavigate()
-
-  // Vẫn hỗ trợ đường dẫn cũ: /rent-room?roomId=1
   const [searchParams] = useSearchParams()
   const presetRoomId = searchParams.get('roomId')
+  const initialRoomId = roomId || presetRoomId || ''
+  const navigate = useNavigate()
 
   const [rooms, setRooms] = useState([])
-  const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [toast, setToast] = useState(null)
-
-  const [form, setForm] = useState(() => createEmptyForm())
-  const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
-  const [customerSearch, setCustomerSearch] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  // =========================
-  // LOAD DỮ LIỆU
-  // =========================
+  const [form, setForm] = useState(() =>
+    createEmptyForm(initialRoomId)
+  )
+
+  // ================= LOAD PHÒNG =================
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
 
     try {
-      const [availableRooms, customerList] = await Promise.all([
-        api.getAvailableRooms(),
-        api.getCustomers(),
-      ])
+      const availableRooms = await api.getAvailableRooms()
 
-      setRooms(availableRooms)
-      setCustomers(customerList)
+      const roomList = Array.isArray(availableRooms)
+        ? availableRooms
+        : []
 
-      // Ưu tiên ID trên URL: /rent-room/3
-      const selectedRoomId = roomId || presetRoomId
+      setRooms(roomList)
 
-      if (selectedRoomId) {
-        const exists = availableRooms.some(
-          (room) => String(room.id) === String(selectedRoomId)
-        )
-
-        if (exists) {
-          setForm((prev) => ({
-            ...prev,
-            roomId: String(selectedRoomId),
-          }))
-        }
-      }
+      setForm((previous) => ({
+        ...previous,
+        roomId: initialRoomId
+          ? String(initialRoomId)
+          : previous.roomId,
+      }))
     } catch (err) {
-      setError(err.message || 'Không thể tải dữ liệu.')
+      setError(
+        err.message || 'Không thể tải danh sách phòng trống.'
+      )
     } finally {
       setLoading(false)
     }
-  }, [roomId, presetRoomId])
+  }, [initialRoomId])
 
   useEffect(() => {
     load()
   }, [load])
 
-  useEffect(() => {
-    if (!toast) return undefined
+  // ================= PHÒNG ĐANG CHỌN =================
 
-    const timer = setTimeout(() => {
-      setToast(null)
-    }, 3500)
+  const selectedRoom = useMemo(() => {
+    return rooms.find(
+      (room) => String(room.id) === String(form.roomId)
+    )
+  }, [rooms, form.roomId])
 
-    return () => clearTimeout(timer)
-  }, [toast])
+  // ================= TÍNH TIỀN =================
 
-  // =========================
-  // PHÒNG ĐANG CHỌN
-  // =========================
-  const selectedRoom = useMemo(
-    () =>
-      rooms.find(
-        (room) => String(room.id) === String(form.roomId)
-      ),
-    [rooms, form.roomId]
-  )
-
-  // =========================
-  // TÌM KHÁCH HÀNG
-  // =========================
-  const matchedCustomers = useMemo(() => {
-    const key = customerSearch.trim().toLowerCase()
-
-    if (!key) {
-      return customers.slice(0, 6)
-    }
-
-    return customers
-      .filter(
-        (customer) =>
-          customer.fullName.toLowerCase().includes(key) ||
-          customer.phone.includes(key) ||
-          (customer.idCard || '').includes(key)
-      )
-      .slice(0, 6)
-  }, [customers, customerSearch])
-
-  // =========================
-  // TÍNH THỜI GIAN + TIỀN
-  // =========================
   const estimate = useMemo(() => {
     if (
       !selectedRoom ||
@@ -146,24 +97,20 @@ function RentRoom() {
     const start = new Date(form.checkInDate)
     const end = new Date(form.expectedCheckOutDate)
 
-    const difference = end.getTime() - start.getTime()
+    const duration = end.getTime() - start.getTime()
 
-    if (
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime()) ||
-      difference <= 0
-    ) {
+    if (!Number.isFinite(duration) || duration <= 0) {
       return null
     }
 
-    const totalHours = difference / (1000 * 60 * 60)
+    const totalHours = duration / (1000 * 60 * 60)
 
-    // Giá phòng hiện tại đang tính theo ngày.
-    // Có thời gian thuê nhỏ hơn 1 ngày vẫn tính tối thiểu 1 ngày.
+    // Tính theo ngày, tối thiểu một ngày
     const days = Math.max(1, Math.ceil(totalHours / 24))
 
-    const total =
-      days * Number(selectedRoom.pricePerNight || 0)
+    const price = Number(selectedRoom.pricePerNight || 0)
+
+    const total = days * price
 
     return {
       totalHours,
@@ -176,81 +123,53 @@ function RentRoom() {
     form.expectedCheckOutDate,
   ])
 
+  // ================= CẬP NHẬT FORM =================
+
   function update(field, value) {
-    setForm((prev) => ({
-      ...prev,
+    setForm((previous) => ({
+      ...previous,
       [field]: value,
     }))
 
     setFormError('')
   }
 
-  // =========================
-  // CHỌN KHÁCH CŨ
-  // =========================
-  function pickCustomer(customer) {
-    setForm((prev) => ({
-      ...prev,
-      customerId: String(customer.id),
-      customerName: customer.fullName,
-      customerPhone: customer.phone,
-      customerEmail: customer.email || '',
-      customerIdCard: customer.idCard || '',
-      customerAddress: customer.address || '',
-    }))
+  // ================= XÁC NHẬN THUÊ =================
 
-    setCustomerSearch('')
-    setFormError('')
-  }
-
-  function clearCustomer() {
-    setForm((prev) => ({
-      ...prev,
-      customerId: '',
-      customerName: '',
-      customerPhone: '',
-      customerEmail: '',
-      customerIdCard: '',
-      customerAddress: '',
-    }))
-  }
-
-  // =========================
-  // LƯU PHIẾU THUÊ
-  // =========================
   async function handleSubmit(event) {
     event.preventDefault()
     setFormError('')
 
-    if (!form.roomId) {
-      setFormError('Vui lòng chọn phòng cho thuê.')
+    if (!selectedRoom) {
+      setFormError('Vui lòng chọn phòng còn trống.')
       return
     }
 
-    if (!form.customerName.trim()) {
+    const customerName = form.customerName.trim()
+    const customerPhone = form.customerPhone.trim()
+    const customerIdCard = form.customerIdCard.trim()
+
+    if (!customerName) {
       setFormError('Vui lòng nhập tên khách hàng.')
       return
     }
 
-    if (!form.customerPhone.trim()) {
-      setFormError('Vui lòng nhập số điện thoại khách hàng.')
-      return
-    }
+    const phoneRegex = /^0[35789][0-9]{8}$/
 
-    const phoneRegex = /^[0-9]{9,11}$/
-
-    if (!phoneRegex.test(form.customerPhone.trim())) {
+    if (!phoneRegex.test(customerPhone)) {
       setFormError(
-        'Số điện thoại phải gồm từ 9 đến 11 chữ số.'
+        'Số điện thoại phải có 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.'
       )
       return
     }
 
     if (
-      !form.guestCount ||
-      Number(form.guestCount) <= 0
+      customerIdCard &&
+      !/^(\d{9}|\d{12})$/.test(customerIdCard)
     ) {
-      setFormError('Số người ở phải lớn hơn 0.')
+      setFormError(
+        'CMND/CCCD phải gồm 9 hoặc 12 chữ số.'
+      )
       return
     }
 
@@ -260,9 +179,7 @@ function RentRoom() {
     }
 
     if (!form.expectedCheckOutDate) {
-      setFormError(
-        'Vui lòng chọn thời gian trả phòng dự kiến.'
-      )
+      setFormError('Vui lòng chọn thời gian trả phòng.')
       return
     }
 
@@ -273,7 +190,7 @@ function RentRoom() {
       Number.isNaN(checkIn.getTime()) ||
       Number.isNaN(checkOut.getTime())
     ) {
-      setFormError('Thời gian thuê phòng không hợp lệ.')
+      setFormError('Thời gian thuê không hợp lệ.')
       return
     }
 
@@ -284,33 +201,24 @@ function RentRoom() {
       return
     }
 
+    if (!estimate) {
+      setFormError('Không thể tính tiền thuê phòng.')
+      return
+    }
+
+    // Giữ các trường mặc định để tương thích API cũ
     const payload = {
       roomId: Number(form.roomId),
-
-      customerId: form.customerId
-        ? Number(form.customerId)
-        : null,
-
-      customerName: form.customerName.trim(),
-      customerPhone: form.customerPhone.trim(),
-
-      customerEmail:
-        form.customerEmail.trim() || null,
-
-      customerIdCard:
-        form.customerIdCard.trim() || null,
-
-      customerAddress:
-        form.customerAddress.trim() || null,
-
-      guestCount: Number(form.guestCount),
-
+      customerId: null,
+      customerName,
+      customerPhone,
+      customerEmail: null,
+      customerIdCard: customerIdCard || null,
+      customerAddress: null,
+      guestCount: 1,
       checkInDate: form.checkInDate,
-
-      expectedCheckOutDate:
-        form.expectedCheckOutDate,
-
-      note: form.note.trim() || null,
+      expectedCheckOutDate: form.expectedCheckOutDate,
+      note: null,
     }
 
     setSaving(true)
@@ -318,14 +226,11 @@ function RentRoom() {
     try {
       const booking = await api.rentRoom(payload)
 
-      // Sau khi thuê thành công quay về danh sách phòng
-      // và truyền thông tin để RoomList hiển thị Toast.
       navigate('/rooms', {
         replace: true,
         state: {
           roomRented:
-            booking.roomNumber ||
-            selectedRoom?.roomNumber,
+            booking?.roomNumber || selectedRoom.roomNumber,
         },
       })
     } catch (err) {
@@ -337,62 +242,53 @@ function RentRoom() {
     }
   }
 
-  // =========================
-  // NHẬP LẠI
-  // =========================
+  // ================= NHẬP LẠI =================
+
   function handleReset() {
-    const selectedRoomId =
-      roomId || presetRoomId || ''
-
-    setForm({
-      ...createEmptyForm(),
-      roomId: selectedRoomId
-        ? String(selectedRoomId)
-        : '',
-    })
-
-    setCustomerSearch('')
+    setForm(createEmptyForm(initialRoomId))
     setFormError('')
   }
 
+  // ================= LOADING =================
+
   if (loading) {
-    return <Loading text="Đang tải phòng trống..." />
+    return (
+      <Loading text="Đang tải danh sách phòng trống..." />
+    )
   }
 
   if (error) {
     return (
-      <ErrorBox
-        message={error}
-        onRetry={load}
-      />
+      <ErrorBox message={error} onRetry={load} />
     )
   }
 
+  // ================= GIAO DIỆN =================
+
   return (
-    <div>
+    <div className="rent-room-page">
+
+      {/* HEADER */}
       <div className="page-header">
-        <div>
-          <h1>Cho thuê phòng</h1>
-          <p>
-            Lập phiếu thuê cho khách — hiện có{' '}
-            {rooms.length} phòng trống
-          </p>
-        </div>
+        <h1>Cho thuê phòng</h1>
+        <p>
+          Lập phiếu thuê phòng cho khách hàng —
+          hiện có {rooms.length} phòng trống
+        </p>
       </div>
 
       {rooms.length === 0 ? (
         <EmptyState
-          icon="🚫"
+          icon="🏨"
           title="Hiện không còn phòng trống"
-          description="Hãy trả phòng cho khách hoặc chuyển phòng bảo trì về trạng thái trống."
+          description="Vui lòng kiểm tra lại danh sách phòng."
         />
       ) : (
         <div className="grid-2">
 
-          {/* =========================
-              CỘT TRÁI
-          ========================= */}
+          {/* ========== CỘT TRÁI ========== */}
           <div className="card">
+
             <h2 className="card-title">
               1. Chọn phòng
             </h2>
@@ -400,29 +296,15 @@ function RentRoom() {
             <div className="room-grid">
               {rooms.map((room) => (
                 <button
-                  type="button"
                   key={room.id}
-                  className={`room-card status-available ${
-                    String(room.id) ===
-                    String(form.roomId)
+                  type="button"
+                  className={`room-card ${
+                    String(form.roomId) === String(room.id)
                       ? 'selected'
                       : ''
                   }`}
                   onClick={() =>
-                    update(
-                      'roomId',
-                      String(room.id)
-                    )
-                  }
-                  style={
-                    String(room.id) ===
-                    String(form.roomId)
-                      ? {
-                          outline:
-                            '2px solid #2563eb',
-                          outlineOffset: 1,
-                        }
-                      : undefined
+                    update('roomId', String(room.id))
                   }
                 >
                   <span className="room-number">
@@ -430,152 +312,77 @@ function RentRoom() {
                   </span>
 
                   <span className="room-type">
-                    Tầng {room.floor} ·{' '}
-                    {room.roomTypeName}
+                    Tầng {room.floor} · {room.roomTypeName}
                   </span>
 
                   <span className="room-price">
-                    {formatMoney(
-                      room.pricePerNight
-                    )}
-                    /ngày
+                    {formatMoney(room.pricePerNight)}/ngày
                   </span>
                 </button>
               ))}
             </div>
 
-            <h2
-              className="card-title"
-              style={{ marginTop: 24 }}
-            >
-              2. Khách hàng
-            </h2>
+            {selectedRoom && (
+              <div className="summary-box">
 
-            <div
-              className="form-group"
-              style={{ marginBottom: 12 }}
-            >
-              <label>Tìm khách hàng cũ</label>
+                <div className="summary-row">
+                  <span>Phòng đã chọn</span>
+                  <strong>
+                    {selectedRoom.roomNumber}
+                  </strong>
+                </div>
 
-              <input
-                value={customerSearch}
-                onChange={(event) =>
-                  setCustomerSearch(
-                    event.target.value
-                  )
-                }
-                placeholder="🔍 Nhập tên, số điện thoại hoặc CMND..."
-              />
+                <div className="summary-row">
+                  <span>Loại phòng</span>
+                  <strong>
+                    {selectedRoom.roomTypeName}
+                  </strong>
+                </div>
 
-              <span className="form-hint">
-                Bỏ trống nếu đây là khách mới —
-                hệ thống sẽ tự tạo hồ sơ khách hàng.
-              </span>
-            </div>
+                <div className="summary-row">
+                  <span>Đơn giá</span>
+                  <strong>
+                    {formatMoney(
+                      selectedRoom.pricePerNight
+                    )}/ngày
+                  </strong>
+                </div>
 
-            {customerSearch && (
-              <div
-                className="table-wrap"
-                style={{ marginBottom: 12 }}
-              >
-                <table
-                  className="data-table"
-                  style={{ minWidth: 320 }}
-                >
-                  <tbody>
-                    {matchedCustomers.length ===
-                      0 && (
-                      <tr>
-                        <td className="text-muted">
-                          Không tìm thấy khách hàng
-                          phù hợp.
-                        </td>
-                      </tr>
-                    )}
-
-                    {matchedCustomers.map(
-                      (customer) => (
-                        <tr
-                          key={customer.id}
-                          style={{
-                            cursor: 'pointer',
-                          }}
-                          onClick={() =>
-                            pickCustomer(customer)
-                          }
-                        >
-                          <td>
-                            <strong>
-                              {customer.fullName}
-                            </strong>
-
-                            <div className="text-muted">
-                              {customer.phone}
-
-                              {customer.idCard
-                                ? ` · CMND ${customer.idCard}`
-                                : ''}
-                            </div>
-                          </td>
-
-                          <td className="text-right">
-                            <span className="btn btn-ghost btn-sm">
-                              Chọn
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
               </div>
             )}
 
-            {form.customerId && (
-              <div className="alert alert-info">
-                Đang dùng hồ sơ khách cũ:{' '}
-                <strong>
-                  {form.customerName}
-                </strong>{' '}
-                ({form.customerPhone})
-
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={clearCustomer}
-                >
-                  Đổi sang khách mới
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* =========================
-              CỘT PHẢI
-          ========================= */}
+          {/* ========== CỘT PHẢI ========== */}
           <div className="card">
+
             <h2 className="card-title">
-              3. Thông tin thuê phòng
+              2. Thông tin thuê phòng
             </h2>
 
             {formError && (
-              <div className="alert alert-error">
+              <div
+                className="alert alert-error"
+                role="alert"
+              >
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
+
               <div className="form-grid">
 
+                {/* TÊN KHÁCH HÀNG */}
                 <div className="form-group">
-                  <label>
-                    Tên khách hàng{' '}
-                    <span className="required">
-                      *
-                    </span>
+                  <label htmlFor="rent-customer-name">
+                    Tên khách hàng
+                    <span className="required"> *</span>
                   </label>
 
                   <input
+                    id="rent-customer-name"
+                    type="text"
                     value={form.customerName}
                     onChange={(event) =>
                       update(
@@ -583,22 +390,23 @@ function RentRoom() {
                         event.target.value
                       )
                     }
-                    placeholder="Nguyễn Văn A"
-                    disabled={Boolean(
-                      form.customerId
-                    )}
+                    placeholder="Nhập họ và tên"
+                    required
                   />
                 </div>
 
+                {/* SỐ ĐIỆN THOẠI */}
                 <div className="form-group">
-                  <label>
-                    Số điện thoại{' '}
-                    <span className="required">
-                      *
-                    </span>
+                  <label htmlFor="rent-customer-phone">
+                    Số điện thoại
+                    <span className="required"> *</span>
                   </label>
 
                   <input
+                    id="rent-customer-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
                     value={form.customerPhone}
                     onChange={(event) =>
                       update(
@@ -607,16 +415,21 @@ function RentRoom() {
                       )
                     }
                     placeholder="0912345678"
-                    disabled={Boolean(
-                      form.customerId
-                    )}
+                    required
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>CMND / CCCD</label>
+                {/* CMND / CCCD */}
+                <div className="form-group full">
+                  <label htmlFor="rent-customer-id">
+                    CMND / CCCD (không bắt buộc)
+                  </label>
 
                   <input
+                    id="rent-customer-id"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={12}
                     value={form.customerIdCard}
                     onChange={(event) =>
                       update(
@@ -624,79 +437,39 @@ function RentRoom() {
                         event.target.value
                       )
                     }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
+                    placeholder="Nhập số CMND hoặc CCCD"
                   />
                 </div>
 
+                {/* THỜI GIAN NHẬN PHÒNG */}
                 <div className="form-group">
-                  <label>Email</label>
-
-                  <input
-                    type="email"
-                    value={form.customerEmail}
-                    onChange={(event) =>
-                      update(
-                        'customerEmail',
-                        event.target.value
-                      )
-                    }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
-                  />
-                </div>
-
-                <div className="form-group full">
-                  <label>Địa chỉ</label>
-
-                  <input
-                    value={form.customerAddress}
-                    onChange={(event) =>
-                      update(
-                        'customerAddress',
-                        event.target.value
-                      )
-                    }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
-                  />
-                </div>
-
-                {/* GIỜ NHẬN PHÒNG */}
-                <div className="form-group">
-                  <label>
+                  <label htmlFor="rent-check-in">
                     Thời gian nhận phòng
                   </label>
 
                   <input
+                    id="rent-check-in"
                     type="datetime-local"
                     value={form.checkInDate}
                     readOnly
                   />
 
                   <span className="form-hint">
-                    Tự động lấy thời gian hiện tại
-                    của hệ thống.
+                    Tự động lấy thời gian hệ thống.
                   </span>
                 </div>
 
-                {/* GIỜ TRẢ PHÒNG */}
+                {/* THỜI GIAN TRẢ PHÒNG */}
                 <div className="form-group">
-                  <label>
-                    Thời gian trả phòng dự kiến{' '}
-                    <span className="required">
-                      *
-                    </span>
+                  <label htmlFor="rent-check-out">
+                    Thời gian trả phòng dự kiến
+                    <span className="required"> *</span>
                   </label>
 
                   <input
+                    id="rent-check-out"
                     type="datetime-local"
-                    value={
-                      form.expectedCheckOutDate
-                    }
+                    value={form.expectedCheckOutDate}
                     min={form.checkInDate}
                     onChange={(event) =>
                       update(
@@ -708,139 +481,75 @@ function RentRoom() {
                   />
 
                   <span className="form-hint">
-                    Chọn ngày và giờ khách dự kiến
-                    trả phòng.
+                    Chọn ngày và giờ khách dự kiến trả.
                   </span>
                 </div>
 
-                <div className="form-group">
-                  <label>Số người ở</label>
-
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.guestCount}
-                    onChange={(event) =>
-                      update(
-                        'guestCount',
-                        event.target.value
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="form-group full">
-                  <label>Ghi chú</label>
-
-                  <textarea
-                    value={form.note}
-                    onChange={(event) =>
-                      update(
-                        'note',
-                        event.target.value
-                      )
-                    }
-                    placeholder="Yêu cầu đặc biệt của khách..."
-                  />
-                </div>
               </div>
 
-              {/* =========================
-                  TÓM TẮT TIỀN
-              ========================= */}
+              {/* ========== TÓM TẮT TIỀN ========== */}
               {selectedRoom && (
                 <div className="summary-box">
 
-                  <div className="summary-row">
-                    <span>Phòng chọn thuê</span>
+                  <h3 style={{ marginTop: 0 }}>
+                    Chi tiết tiền thuê dự kiến
+                  </h3>
 
+                  <div className="summary-row">
+                    <span>Phòng thuê</span>
                     <strong>
-                      {selectedRoom.roomNumber} —{' '}
-                      {selectedRoom.roomTypeName}
+                      {selectedRoom.roomNumber}
                     </strong>
                   </div>
 
                   <div className="summary-row">
-                    <span>Giá thuê</span>
-
+                    <span>Đơn giá</span>
                     <strong>
                       {formatMoney(
                         selectedRoom.pricePerNight
-                      )}
-                      /ngày
+                      )}/ngày
                     </strong>
                   </div>
 
                   <div className="summary-row">
-                    <span>Giờ nhận</span>
-
+                    <span>Thời gian thuê</span>
                     <strong>
-                      {new Date(
-                        form.checkInDate
-                      ).toLocaleString('vi-VN')}
+                      {estimate
+                        ? `${Number(
+                            estimate.totalHours.toFixed(2)
+                          )} giờ`
+                        : 'Chưa chọn'}
                     </strong>
                   </div>
 
-                  {form.expectedCheckOutDate && (
-                    <div className="summary-row">
-                      <span>Giờ trả dự kiến</span>
+                  <div className="summary-row">
+                    <span>Số ngày tính tiền</span>
+                    <strong>
+                      {estimate
+                        ? `${estimate.days} ngày`
+                        : '—'}
+                    </strong>
+                  </div>
 
-                      <strong>
-                        {new Date(
-                          form.expectedCheckOutDate
-                        ).toLocaleString('vi-VN')}
-                      </strong>
-                    </div>
-                  )}
+                  <div className="summary-row grand">
+                    <span>Tổng tiền dự kiến</span>
+                    <span>
+                      {estimate
+                        ? formatMoney(estimate.total)
+                        : '—'}
+                    </span>
+                  </div>
 
-                  {estimate && (
-                    <>
-                      <div className="summary-row">
-                        <span>
-                          Thời gian thuê
-                        </span>
-
-                        <strong>
-                          {estimate.totalHours < 24
-                            ? `${Math.ceil(
-                                estimate.totalHours
-                              )} giờ`
-                            : `${estimate.days} ngày`}
-                        </strong>
-                      </div>
-
-                      <div className="summary-row">
-                        <span>
-                          Số ngày tính tiền
-                        </span>
-
-                        <strong>
-                          {estimate.days} ngày
-                        </strong>
-                      </div>
-
-                      <div className="summary-row grand">
-                        <span>
-                          Tạm tính tiền phòng
-                        </span>
-
-                        <span>
-                          {formatMoney(
-                            estimate.total
-                          )}
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </div>
               )}
 
+              {/* ========== BUTTON ========== */}
               <div className="form-actions">
 
                 <button
                   type="submit"
                   className="btn btn-success"
-                  disabled={saving}
+                  disabled={saving || !selectedRoom}
                 >
                   {saving
                     ? 'Đang lưu...'
@@ -859,25 +568,20 @@ function RentRoom() {
                 <button
                   type="button"
                   className="btn btn-ghost"
-                  onClick={() =>
-                    navigate('/rooms')
-                  }
+                  onClick={() => navigate('/rooms')}
                   disabled={saving}
                 >
                   ← Quay lại
                 </button>
 
               </div>
+
             </form>
           </div>
+
         </div>
       )}
 
-      <Toast
-        message={toast?.message}
-        type={toast?.type}
-        onClose={() => setToast(null)}
-      />
     </div>
   )
 }

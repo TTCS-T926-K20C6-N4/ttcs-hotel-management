@@ -1,0 +1,412 @@
+
+/* =========================================================
+   RENT ROOM PAGE - ENCORE HOTEL & RESORT
+   ========================================================= */
+
+.rent-room-page {
+  width: 100%;
+  padding-bottom: 40px;
+  color: #172033;
+}
+
+/* ================= HEADER ================= */
+
+.rent-room-page .page-header {
+  margin-bottom: 24px;
+}
+
+.rent-room-page .page-header h1 {
+  margin: 0 0 7px;
+  font-size: 30px;
+  font-weight: 800;
+  color: #172033;
+  letter-spacing: -0.5px;
+}
+
+.rent-room-page .page-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* ================= LAYOUT ================= */
+
+.rent-room-page .grid-2 {
+  display: grid;
+  grid-template-columns:
+    minmax(280px, 0.85fr)
+    minmax(0, 1.4fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* ================= CARD ================= */
+
+.rent-room-page .card {
+  min-width: 0;
+  padding: 26px;
+  background: #ffffff;
+  border: 1px solid #e5eaf2;
+  border-radius: 18px;
+  box-shadow: 0 5px 22px rgba(15, 23, 42, 0.06);
+}
+
+.rent-room-page .card-title {
+  margin: 0 0 20px;
+  font-size: 21px;
+  font-weight: 750;
+  color: #172033;
+}
+
+/* ================= ROOM ================= */
+
+.rent-room-page .room-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rent-room-page .room-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 150px;
+  padding: 20px;
+
+  background: #ffffff;
+  border: 1.5px solid #dce5f2;
+  border-radius: 15px;
+
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.rent-room-page .room-card:hover {
+  transform: translateY(-2px);
+  border-color: #93b4f8;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+}
+
+.rent-room-page .room-card.selected {
+  border-color: #2563eb;
+  background: #f5f8ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.rent-room-page .room-card.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 25px;
+  height: 25px;
+
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rent-room-page .room-number {
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #172033;
+}
+
+.rent-room-page .room-type {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.rent-room-page .room-price {
+  margin-top: auto;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+/* ================= FORM ================= */
+
+.rent-room-page .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.rent-room-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rent-room-page .form-group.full {
+  grid-column: 1 / -1;
+}
+
+.rent-room-page .form-group label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rent-room-page .required {
+  color: #dc2626;
+}
+
+/* ================= INPUT ================= */
+
+.rent-room-page input,
+.rent-room-page textarea,
+.rent-room-page select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d8e0ec;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #1e293b;
+  font: inherit;
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rent-room-page input,
+.rent-room-page select {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.rent-room-page textarea {
+  min-height: 90px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.rent-room-page input:focus,
+.rent-room-page textarea:focus,
+.rent-room-page select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.rent-room-page input:disabled,
+.rent-room-page input:read-only {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: default;
+}
+
+.rent-room-page input::placeholder,
+.rent-room-page textarea::placeholder {
+  color: #a1aec0;
+}
+
+.rent-room-page .form-hint {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ================= ALERT ================= */
+
+.rent-room-page .alert {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border-radius: 11px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rent-room-page .alert-info {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.rent-room-page .alert-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* ================= SUMMARY ================= */
+
+.rent-room-page .summary-box {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #dbe5f5;
+  border-radius: 15px;
+  background: #f5f8ff;
+}
+
+.rent-room-page .summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  color: #64748b;
+  font-size: 14px;
+  border-bottom: 1px dashed #dce4ef;
+}
+
+.rent-room-page .summary-row:last-child {
+  border-bottom: 0;
+}
+
+.rent-room-page .summary-row strong {
+  color: #1e293b;
+  text-align: right;
+}
+
+.rent-room-page .summary-row.grand {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #cbd5e1;
+  border-bottom: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #172033;
+}
+
+.rent-room-page .summary-row.grand span:last-child,
+.rent-room-page .summary-row.grand strong:last-child {
+  color: #2563eb;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* ================= BUTTON ================= */
+
+.rent-room-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  margin-top: 25px;
+  padding-top: 22px;
+  border-top: 1px solid #edf1f6;
+}
+
+.rent-room-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 44px;
+  padding: 0 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.rent-room-page .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.rent-room-page .btn-success {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+}
+
+.rent-room-page .btn-success:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.rent-room-page .btn-ghost {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.rent-room-page .btn-ghost:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.rent-room-page .btn-sm {
+  min-height: 32px;
+  padding: 0 11px;
+  font-size: 12px;
+}
+
+.rent-room-page .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1100px) {
+  .rent-room-page .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .rent-room-page .page-header h1 {
+    font-size: 25px;
+  }
+
+  .rent-room-page .card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .rent-room-page .room-grid,
+  .rent-room-page .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rent-room-page .form-group.full {
+    grid-column: auto;
+  }
+
+  .rent-room-page .form-actions {
+    flex-direction: column;
+  }
+
+  .rent-room-page .form-actions .btn {
+    width: 100%;
+  }
+
+  .rent-room-page .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .rent-room-page .summary-row strong {
+    text-align: left;
+  }
+}
