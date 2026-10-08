@@ -3,6 +3,7 @@
 # =========================
 bin/
 obj/
+appsettings.json
 
 # Visual Studio
 .vs/

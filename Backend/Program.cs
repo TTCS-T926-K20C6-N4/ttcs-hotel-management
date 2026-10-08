@@ -233,14 +233,14 @@ if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
         if (!db.Rooms.Any())
         {
             db.Rooms.AddRange(
-                new Room { RoomNumber = "101", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Available, Note = "Gần thang máy" },
-                new Room { RoomNumber = "102", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Occupied, Note = "Khách thuê dài hạn" },
-                new Room { RoomNumber = "201", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Available, Note = "Hướng Đông Nam mát mẻ" },
-                new Room { RoomNumber = "202", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Occupied, Note = "Đặt qua Agoda" },
-                new Room { RoomNumber = "301", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Available, Note = "Tầng cao view đẹp" },
-                new Room { RoomNumber = "302", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Reserved, Note = "Check-in chiều nay" },
-                new Room { RoomNumber = "401", Floor = 4, RoomTypeId = suite.Id, Status = RoomStatus.Available, Note = "Phòng gia đình tiện nghi" },
-                new Room { RoomNumber = "501", Floor = 5, RoomTypeId = vip.Id, Status = RoomStatus.Available, Note = "Penthouse VIP sang trọng bậc nhất" }
+                new Room { RoomNumber = "101", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Available, Note = "Gần thang máy", ImageUrl = "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "102", Floor = 1, RoomTypeId = standard.Id, Status = RoomStatus.Occupied, Note = "Khách thuê dài hạn", ImageUrl = "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "201", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Available, Note = "Hướng Đông Nam mát mẻ", ImageUrl = "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "202", Floor = 2, RoomTypeId = superior.Id, Status = RoomStatus.Occupied, Note = "Đặt qua Agoda", ImageUrl = "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "301", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Available, Note = "Tầng cao view đẹp", ImageUrl = "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "302", Floor = 3, RoomTypeId = deluxe.Id, Status = RoomStatus.Reserved, Note = "Check-in chiều nay", ImageUrl = "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "401", Floor = 4, RoomTypeId = suite.Id, Status = RoomStatus.Available, Note = "Phòng gia đình tiện nghi", ImageUrl = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80" },
+                new Room { RoomNumber = "501", Floor = 5, RoomTypeId = vip.Id, Status = RoomStatus.Available, Note = "Penthouse VIP sang trọng bậc nhất", ImageUrl = "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80" }
             );
             db.SaveChanges();
         }

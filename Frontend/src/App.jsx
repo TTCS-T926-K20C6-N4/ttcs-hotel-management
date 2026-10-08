@@ -14,6 +14,7 @@ import RoomList from './pages/RoomList'
 import AddRoom from './pages/AddRoom'
 import RoomTypes from './pages/RoomTypes'
 import RentRoom from './pages/RentRoom'
+import RoomStatus from './pages/RoomStatus'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -200,6 +201,18 @@ function App() {
             <Route
               path="/rent-room"
               element={<RentRoom />}
+            />
+
+            {/* Trạng thái phòng & Thống kê */}
+
+            <Route
+              path="/statistics"
+              element={<RoomStatus />}
+            />
+
+            <Route
+              path="/room-status"
+              element={<RoomStatus />}
             />
 
 

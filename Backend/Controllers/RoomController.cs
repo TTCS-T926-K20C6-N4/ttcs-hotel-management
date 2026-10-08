@@ -18,10 +18,16 @@ public class RoomController : ControllerBase
 }
 
 [HttpGet]
-public async Task<IActionResult> GetRooms()
+public async Task<IActionResult> GetRooms([FromQuery] RoomStatus? status = null)
 {
-    var rooms = await _db.Rooms
-        .AsNoTracking()
+    var query = _db.Rooms.AsNoTracking();
+
+    if (status.HasValue)
+    {
+        query = query.Where(r => r.Status == status.Value);
+    }
+
+    var rooms = await query
         .Select(r => new
         {
             id = r.Id,
@@ -42,6 +48,40 @@ public async Task<IActionResult> GetRooms()
         .ToListAsync();
 
     return Ok(rooms);
+}
+
+[HttpGet("status-count")]
+public async Task<IActionResult> GetRoomStatusCount()
+{
+    var counts = await _db.Rooms
+        .GroupBy(r => r.Status)
+        .Select(g => new
+        {
+            status = g.Key,
+            count = g.Count()
+        })
+        .ToListAsync();
+
+    var result = Enum.GetValues<RoomStatus>()
+        .Select(status => new
+        {
+            status = (int)status,
+            statusName = status.ToString(),
+            displayName = status switch
+            {
+                RoomStatus.Available => "Phòng trống",
+                RoomStatus.Occupied => "Đang có khách",
+                RoomStatus.Maintenance => "Bảo trì",
+                RoomStatus.Reserved => "Đã đặt trước",
+                _ => status.ToString()
+            },
+            count = counts
+                .Where(x => x.status == status)
+                .Select(x => x.count)
+                .FirstOrDefault()
+        });
+
+    return Ok(result);
 }
 
 [HttpPost]
