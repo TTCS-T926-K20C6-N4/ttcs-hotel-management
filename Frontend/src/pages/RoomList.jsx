@@ -292,19 +292,60 @@ setStatusCounts(statusData);
           ▦
         </div>
 
-        <div>
-          <span>Tổng số phòng</span>
-          <strong>{rooms.length}</strong>
-        </div>
+<div className="aurora-total-card">
+  <div className="aurora-status-icon" aria-hidden="true">
+    🏨
+  </div>
+  <strong>{rooms.length}</strong>
+  <span>Tổng số phòng</span>
+</div>
+
 
         <div className="room-summary-divider" />
 
-{statusCounts.map((item) => (
-  <div key={item.status} className="room-status-count">
-    <span>{item.statusName}</span>
-    <strong>{item.count}</strong>
-  </div>
-))}
+
+{statusCounts.map((item) => {
+  const statusConfig = {
+    Available: {
+      label: "Phòng trống",
+      icon: "✓",
+      className: "available",
+    },
+    Occupied: {
+      label: "Đang thuê",
+      icon: "🛏",
+      className: "occupied",
+    },
+    Maintenance: {
+      label: "Bảo trì",
+      icon: "🔧",
+      className: "maintenance",
+    },
+    Reserved: {
+      label: "Đã đặt trước",
+      icon: "📅",
+      className: "reserved",
+    },
+  };
+
+  const config = statusConfig[item.statusName] || {
+    label: item.statusName,
+    icon: "🏨",
+    className: "other",
+  };
+
+  return (
+    <div
+      key={item.status}
+      className={`room-status-count aurora-${config.className}`}
+    >
+      <div className="aurora-status-icon">{config.icon}</div>
+      <strong className="aurora-status-number">{item.count}</strong>
+      <span className="aurora-status-label">{config.label}</span>
+    </div>
+  );
+})}
+
 
       </div>
 
