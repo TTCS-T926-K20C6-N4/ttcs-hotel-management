@@ -236,6 +236,18 @@ function App() {
   element={<Profile />}
 />
 
+            {/* Trạng thái phòng & Thống kê */}
+
+            <Route
+              path="/statistics"
+              element={<RoomStatus />}
+            />
+
+            <Route
+              path="/room-status"
+              element={<RoomStatus />}
+            />
+
           </Route>
 
 
