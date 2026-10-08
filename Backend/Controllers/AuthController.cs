@@ -453,4 +453,91 @@ public class AuthController : ControllerBase
             message = "Đăng xuất thành công."
         });
     }
+[HttpPost("forgot-password")]
+public async Task<IActionResult> ForgotPassword(
+    [FromBody] ForgotPasswordRequest request)
+{
+    if (string.IsNullOrWhiteSpace(request.Email))
+    {
+        return BadRequest(new
+        {
+            message = "Vui lòng nhập email."
+        });
+    }
+
+    var email = request.Email.Trim();
+
+    var user = await _context.Users
+        .FirstOrDefaultAsync(
+            u => u.Email == email
+        );
+
+    if (user == null)
+    {
+        return NotFound(new
+        {
+            message = "Email chưa được đăng ký."
+        });
+    }
+
+    return Ok(new
+    {
+        message = "Email hợp lệ."
+    });
+}
+[HttpPost("reset-password")]
+public async Task<IActionResult> ResetPassword(
+    [FromBody] ResetPasswordRequest request)
+{
+    if (string.IsNullOrWhiteSpace(request.Email))
+    {
+        return BadRequest(new
+        {
+            message = "Email không hợp lệ."
+        });
+    }
+
+    if (string.IsNullOrWhiteSpace(request.NewPassword))
+    {
+        return BadRequest(new
+        {
+            message = "Vui lòng nhập mật khẩu mới."
+        });
+    }
+
+    if (request.NewPassword.Length < 6)
+    {
+        return BadRequest(new
+        {
+            message = "Mật khẩu phải có ít nhất 6 ký tự."
+        });
+    }
+
+    var email = request.Email.Trim();
+
+    var user = await _context.Users
+        .FirstOrDefaultAsync(
+            u => u.Email == email
+        );
+
+    if (user == null)
+    {
+        return NotFound(new
+        {
+            message = "Không tìm thấy tài khoản."
+        });
+    }
+
+    user.PasswordHash =
+        BCrypt.Net.BCrypt.HashPassword(
+            request.NewPassword
+        );
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new
+    {
+        message = "Đổi mật khẩu thành công."
+    });
+}
 }
