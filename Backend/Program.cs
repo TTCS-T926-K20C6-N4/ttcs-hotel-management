@@ -2,20 +2,49 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=hotelmanagement.db";
+
 // =====================================
 // DATABASE
 // =====================================
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    );
+    var useSqlServer =
+        connectionString.Contains("(localdb)", StringComparison.OrdinalIgnoreCase)
+        || connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase);
+
+    if (useSqlServer)
+    {
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
+            options.UseSqlServer(connectionString);
+            return;
+        }
+        catch
+        {
+            // LocalDB/SQL Server is not available on this machine; fall back to SQLite.
+        }
+    }
+
+    if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
+        || connectionString.StartsWith("Filename=", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlite(connectionString);
+        return;
+    }
+
+    options.UseSqlite("Data Source=hotelmanagement.db");
 });
 
 // =====================================
@@ -153,10 +182,17 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-   db.Database.Migrate();
+    if (db.Database.IsSqlite())
+    {
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        db.Database.Migrate();
+    }
 
-// Tạo dữ liệu mặc định dùng chung cho cả nhóm
-await DbSeeder.SeedAsync(db);
+    // Tạo dữ liệu mặc định dùng chung cho cả nhóm
+    await DbSeeder.SeedAsync(db);
 
 if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
     {

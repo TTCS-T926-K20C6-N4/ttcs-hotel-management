@@ -204,7 +204,7 @@ public class AuthController : ControllerBase
     // KIỂM TRA SESSION
     // ==========================================
     [HttpGet("me")]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         var isLoggedIn =
             HttpContext.Session.GetString("IsLoggedIn");
@@ -221,14 +221,16 @@ public class AuthController : ControllerBase
         var userId =
             HttpContext.Session.GetInt32("UserId");
 
-        var email =
-            HttpContext.Session.GetString("UserEmail");
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        var fullName =
-            HttpContext.Session.GetString("UserName");
-
-        var role =
-            HttpContext.Session.GetString("UserRole");
+        if (user == null)
+        {
+            return NotFound(new
+            {
+                message = "Không tìm thấy tài khoản."
+            });
+        }
 
         return Ok(new
         {
@@ -236,12 +238,95 @@ public class AuthController : ControllerBase
 
             user = new
             {
-                id = userId,
-                email,
-                fullName,
-                role
+                id = user.Id,
+                email = user.Email,
+                fullName = user.FullName,
+                dateOfBirth = user.DateOfBirth,
+                phoneNumber = user.PhoneNumber,
+                avatarUrl = user.AvatarUrl,
+                role = user.Role
             }
         });
+    }
+
+    [HttpPatch("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var isLoggedIn = HttpContext.Session.GetString("IsLoggedIn");
+        var userId = HttpContext.Session.GetInt32("UserId");
+
+        if (isLoggedIn != "true" || userId == null)
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.FullName) ||
+            request.DateOfBirth == default ||
+            string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            return BadRequest(new { message = "Vui lòng nhập đầy đủ thông tin bắt buộc." });
+        }
+
+        if (request.DateOfBirth > DateTime.UtcNow)
+        {
+            return BadRequest(new { message = "Ngày sinh không được lớn hơn ngày hiện tại." });
+        }
+
+        var user = await _context.Users.FindAsync(userId.Value);
+        if (user == null)
+        {
+            return NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
+
+        user.FullName = request.FullName.Trim();
+        user.DateOfBirth = request.DateOfBirth;
+        user.PhoneNumber = request.PhoneNumber.Trim();
+        user.AvatarUrl = string.IsNullOrWhiteSpace(request.AvatarUrl) ? null : request.AvatarUrl.Trim();
+        await _context.SaveChangesAsync();
+
+        HttpContext.Session.SetString("UserName", user.FullName);
+        HttpContext.Session.SetString("UserPhoneNumber", user.PhoneNumber);
+        HttpContext.Session.SetString("UserAvatarUrl", user.AvatarUrl ?? "");
+
+        return Ok(new
+        {
+            message = "Thông tin cá nhân đã được cập nhật thành công.",
+            user = new
+            {
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.DateOfBirth,
+                user.PhoneNumber,
+                user.AvatarUrl,
+                user.Role
+            }
+        });
+    }
+
+    [HttpPost("profile/avatar")]
+    public async Task<IActionResult> UploadProfileAvatar([FromForm] IFormFile avatar)
+    {
+        if (avatar == null || avatar.Length == 0)
+        {
+            return BadRequest(new { message = "Vui lòng chọn hình ảnh." });
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(avatar.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension) || avatar.Length > 5 * 1024 * 1024)
+        {
+            return BadRequest(new { message = "Chỉ hỗ trợ ảnh JPG, JPEG, PNG hoặc WEBP, tối đa 5 MB." });
+        }
+
+        var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
+        Directory.CreateDirectory(uploadFolder);
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        await using var stream = new FileStream(Path.Combine(uploadFolder, fileName), FileMode.Create);
+        await avatar.CopyToAsync(stream);
+
+        return Ok(new { avatarUrl = $"/uploads/profiles/{fileName}" });
     }
 
     // ==========================================

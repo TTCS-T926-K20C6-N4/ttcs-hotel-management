@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Backend.Dtos;
 
 public class RentalRequest
@@ -8,6 +10,9 @@ public class RentalRequest
 
     public string CustomerName { get; set; } = string.Empty;
 
+    [Required]
+    [RegularExpression(@"^0[35789][0-9]{8}$", ErrorMessage = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.")]
+    [MaxLength(10)]
     public string CustomerPhone { get; set; } = string.Empty;
 
     public string? CustomerEmail { get; set; }

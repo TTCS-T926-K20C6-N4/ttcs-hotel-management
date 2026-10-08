@@ -16,6 +16,14 @@ public class User
     [MaxLength(100)]
     public string? FullName { get; set; }
 
+    public DateTime? DateOfBirth { get; set; }
+
+    [MaxLength(30)]
+    public string? PhoneNumber { get; set; }
+
+    [MaxLength(500)]
+    public string? AvatarUrl { get; set; }
+
     [MaxLength(30)]
     public string Role { get; set; } = "Staff";
 
