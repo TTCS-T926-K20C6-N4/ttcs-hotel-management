@@ -100,8 +100,8 @@ function Profile() {
     if (!form.fullName.trim()) nextErrors.fullName = 'Vui lòng nhập tên đầy đủ.'
     if (!form.dateOfBirth) nextErrors.dateOfBirth = 'Vui lòng chọn ngày sinh.'
     if (!form.phoneNumber.trim()) nextErrors.phoneNumber = 'Vui lòng nhập số điện thoại.'
-    else if (!/^\+?[0-9\s()-]{7,30}$/.test(form.phoneNumber.trim())) {
-      nextErrors.phoneNumber = 'Số điện thoại không hợp lệ.'
+    else if (!/^0[35789][0-9]{8}$/.test(form.phoneNumber.trim())) {
+      nextErrors.phoneNumber = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.'
     }
     setFieldErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -234,10 +234,11 @@ function Profile() {
               <input
                 id="phoneNumber"
                 type="tel"
+                inputMode="numeric"
                 value={form.phoneNumber}
                 onChange={(event) => updateField('phoneNumber', event.target.value)}
-                placeholder="Ví dụ: +84 987 654 321"
-                maxLength={30}
+                placeholder="Ví dụ: 0977548754"
+                maxLength={10}
                 required
                 disabled={saving}
               />
