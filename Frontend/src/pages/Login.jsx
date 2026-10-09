@@ -374,14 +374,15 @@ function Login() {
 
           <div className="forgot-password">
 
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault()
-              }}
-            >
-              Quên mật khẩu?
-            </a>
+<a
+  href="/forgot-password"
+  onClick={(e) => {
+    e.preventDefault()
+    navigate('/forgot-password')
+  }}
+>
+  Quên mật khẩu?
+</a>
 
           </div>
 

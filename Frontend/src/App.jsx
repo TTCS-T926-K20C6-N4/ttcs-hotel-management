@@ -20,6 +20,8 @@ import Checkout from './pages/Checkout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChangePassword from './pages/ChangePassword'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import RoomStatus from './pages/RoomStatus'
 import Profile from './pages/Profile'
 import './App.css'
@@ -157,7 +159,16 @@ function App() {
           element={<Register />}
         />
 
+<Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
 
+<Route
+  path="/reset-password"
+  element={<ResetPassword />}
+/>
+<Route element={<ProtectedRoute />}></Route>
         {/* ================================== */}
         {/* TRANG BẮT BUỘC PHẢI ĐĂNG NHẬP */}
         {/* ================================== */}
