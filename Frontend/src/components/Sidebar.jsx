@@ -77,10 +77,6 @@ function Sidebar() {
           🔑 <span>Cho thuê phòng</span>
         </NavLink>
 
-        <NavLink to="/checkout" className="menu-item">
-          ↩️ <span>Trả phòng</span>
-        </NavLink>
-
         <div className="menu-title">THỐNG KÊ</div>
 
         <NavLink to="/room-status" className="menu-item">
