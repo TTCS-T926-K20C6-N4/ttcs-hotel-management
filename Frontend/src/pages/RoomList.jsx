@@ -19,6 +19,7 @@ function RoomList() {
 
   const [rooms, setRooms] = useState([]);
   const [statusCounts, setStatusCounts] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [activeBookings, setActiveBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -245,12 +246,27 @@ setStatusCounts(statusData);
   }
 
   // ============================
-  // ĐẾM PHÒNG TRỐNG
+  // BỘ LỌC TRẠNG THÁI PHÒNG
   // ============================
-  const availableRooms = rooms.filter(
-    (room) =>
-      Number(room.status) === ROOM_STATUS.Available,
-  ).length;
+
+  const getStatusLabel = (status) => {
+    const item = statusCounts.find((s) => Number(s.status) === Number(status));
+    if (!item) return "đã chọn";
+    const statusLabels = {
+      Available: "Phòng trống",
+      Occupied: "Đang thuê",
+      Maintenance: "Bảo trì",
+      Reserved: "Đã đặt trước",
+    };
+    return statusLabels[item.statusName] || item.statusName;
+  };
+
+  const filteredRooms =
+    selectedStatus === null
+      ? rooms
+      : rooms.filter(
+          (room) => Number(room.status) === Number(selectedStatus),
+        );
 
   return (
     <div className="room-list-page">
@@ -353,62 +369,103 @@ setStatusCounts(statusData);
           ▦
         </div>
 
-<div className="aurora-total-card">
-  <div className="aurora-status-icon" aria-hidden="true">
-    🏨
-  </div>
-  <strong>{rooms.length}</strong>
-  <span>Tổng số phòng</span>
-</div>
-
+        <div
+          className={`aurora-total-card ${selectedStatus === null ? "is-active" : ""}`}
+          onClick={() => setSelectedStatus(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setSelectedStatus(null);
+            }
+          }}
+          title="Nhấp để hiển thị tất cả các phòng"
+        >
+          <div className="aurora-status-icon" aria-hidden="true">
+            🏨
+          </div>
+          <strong>{rooms.length}</strong>
+          <span>Tổng số phòng</span>
+        </div>
 
         <div className="room-summary-divider" />
 
+        {statusCounts.map((item) => {
+          const statusConfig = {
+            Available: {
+              label: "Phòng trống",
+              icon: "✓",
+              className: "available",
+            },
+            Occupied: {
+              label: "Đang thuê",
+              icon: "🛏",
+              className: "occupied",
+            },
+            Maintenance: {
+              label: "Bảo trì",
+              icon: "🔧",
+              className: "maintenance",
+            },
+            Reserved: {
+              label: "Đã đặt trước",
+              icon: "📅",
+              className: "reserved",
+            },
+          };
 
-{statusCounts.map((item) => {
-  const statusConfig = {
-    Available: {
-      label: "Phòng trống",
-      icon: "✓",
-      className: "available",
-    },
-    Occupied: {
-      label: "Đang thuê",
-      icon: "🛏",
-      className: "occupied",
-    },
-    Maintenance: {
-      label: "Bảo trì",
-      icon: "🔧",
-      className: "maintenance",
-    },
-    Reserved: {
-      label: "Đã đặt trước",
-      icon: "📅",
-      className: "reserved",
-    },
-  };
+          const config = statusConfig[item.statusName] || {
+            label: item.statusName,
+            icon: "🏨",
+            className: "other",
+          };
 
-  const config = statusConfig[item.statusName] || {
-    label: item.statusName,
-    icon: "🏨",
-    className: "other",
-  };
+          const isItemActive = selectedStatus === item.status;
 
-  return (
-    <div
-      key={item.status}
-      className={`room-status-count aurora-${config.className}`}
-    >
-      <div className="aurora-status-icon">{config.icon}</div>
-      <strong className="aurora-status-number">{item.count}</strong>
-      <span className="aurora-status-label">{config.label}</span>
-    </div>
-  );
-})}
-
+          return (
+            <div
+              key={item.status}
+              className={`room-status-count aurora-${config.className} ${isItemActive ? "is-active" : ""}`}
+              onClick={() =>
+                setSelectedStatus((prev) => (prev === item.status ? null : item.status))
+              }
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedStatus((prev) => (prev === item.status ? null : item.status));
+                }
+              }}
+              title={`Nhấp để lọc danh sách: ${config.label}`}
+            >
+              <div className="aurora-status-icon">{config.icon}</div>
+              <strong className="aurora-status-number">{item.count}</strong>
+              <span className="aurora-status-label">{config.label}</span>
+            </div>
+          );
+        })}
 
       </div>
+
+      {/* ============================
+          THANH THÔNG BÁO BỘ LỌC
+      ============================ */}
+      {selectedStatus !== null && (
+        <div className="room-filter-status-bar">
+          <span className="room-filter-indicator-text">
+            Đang lọc theo trạng thái: <strong>{getStatusLabel(selectedStatus)}</strong> ({filteredRooms.length} phòng)
+          </span>
+          <button
+            type="button"
+            className="room-filter-reset-button"
+            onClick={() => setSelectedStatus(null)}
+          >
+            ✕ Bỏ lọc (Xem tất cả {rooms.length} phòng)
+          </button>
+        </div>
+      )}
 
       {/* ============================
           DANH SÁCH PHÒNG
@@ -440,11 +497,38 @@ setStatusCounts(statusData);
 
         </div>
 
+      ) : filteredRooms.length === 0 ? (
+
+        <div className="room-empty">
+
+          <div
+            className="room-empty-icon"
+            aria-hidden="true"
+          >
+            ⌂
+          </div>
+
+          <h2>Không có phòng nào ở trạng thái "{getStatusLabel(selectedStatus)}"</h2>
+
+          <p>
+            Hiện tại chưa có phòng nào thuộc trạng thái này. Bạn có thể chuyển sang trạng thái khác hoặc xem lại tất cả phòng.
+          </p>
+
+          <button
+            type="button"
+            className="room-add-button"
+            onClick={() => setSelectedStatus(null)}
+          >
+            Xem tất cả phòng
+          </button>
+
+        </div>
+
       ) : (
 
         <div className="room-grid">
 
-          {rooms.map((room) => {
+          {filteredRooms.map((room) => {
 
             const info = getRoomInfo(room);
             const imageSource =

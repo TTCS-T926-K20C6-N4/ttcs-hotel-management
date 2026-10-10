@@ -506,11 +506,122 @@
   justify-content: center;
   gap: 5px;
   text-align: center;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .room-list-summary .room-status-count {
   min-width: 110px;
   gap: 5px;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.room-list-summary .aurora-total-card:hover,
+.room-list-summary .room-status-count:hover {
+  background: rgba(241, 245, 249, 0.9);
+  transform: translateY(-2px);
+}
+
+.room-list-summary .aurora-total-card:focus-visible,
+.room-list-summary .room-status-count:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Hiệu ứng khi được chọn lọc (Active Filter) */
+.room-list-summary .aurora-total-card.is-active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.room-list-summary .aurora-available.is-active {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
+}
+
+.room-list-summary .aurora-occupied.is-active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.room-list-summary .aurora-maintenance.is-active {
+  background: #fff7ed;
+  border-color: #ea580c;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15);
+}
+
+.room-list-summary .aurora-reserved.is-active {
+  background: #fdf2f8;
+  border-color: #db2777;
+  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.15);
+}
+
+/* Thanh thông báo bộ lọc đang hoạt động */
+.room-filter-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 11px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  animation: filterFadeIn 0.2s ease;
+}
+
+.room-filter-indicator-text {
+  font-size: 13.5px;
+  color: #334155;
+}
+
+.room-filter-indicator-text strong {
+  color: #0f172a;
+}
+
+.room-filter-reset-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.room-filter-reset-button:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+@keyframes filterFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .room-list-summary .aurora-status-icon {

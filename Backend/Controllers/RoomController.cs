@@ -18,10 +18,16 @@ public class RoomController : ControllerBase
 }
 
 [HttpGet]
-public async Task<IActionResult> GetRooms(CancellationToken cancellationToken)
+public async Task<IActionResult> GetRooms([FromQuery] RoomStatus? status, CancellationToken cancellationToken)
 {
-    var rooms = await _db.Rooms
-        .AsNoTracking()
+    var query = _db.Rooms.AsNoTracking();
+
+    if (status.HasValue)
+    {
+        query = query.Where(r => r.Status == status.Value);
+    }
+
+    var rooms = await query
         .Select(r => new
         {
             id = r.Id,
