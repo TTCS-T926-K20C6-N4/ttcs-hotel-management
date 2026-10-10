@@ -68,6 +68,12 @@ function Checkout() {
     [bookings, selectedId]
   )
 
+  const visibleBookings = useMemo(() => {
+    if (!presetBookingId) return bookings
+    const presetBooking = bookings.find((booking) => String(booking.id) === String(presetBookingId))
+    return presetBooking ? [presetBooking] : bookings
+  }, [bookings, presetBookingId])
+
   const totals = useMemo(() => {
     if (!selected) return { room: 0, service: 0, discount: 0, total: 0 }
     const room = Number(selected.roomAmount)
@@ -195,11 +201,11 @@ function Checkout() {
                 <h2>Khách đang lưu trú</h2>
                 <p>Chọn lượt thuê cần trả phòng</p>
               </div>
-              <span className="checkout-count">{bookings.length}</span>
+              <span className="checkout-count">{visibleBookings.length}</span>
             </div>
 
             <div className="checkout-booking-list">
-              {bookings.map((booking) => (
+              {visibleBookings.map((booking) => (
                 <button
                   type="button"
                   key={booking.id}
