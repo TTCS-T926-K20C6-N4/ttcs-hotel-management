@@ -1,4 +1,33 @@
 const API_BASE = 'http://localhost:5097/api'
+let tokenRefreshPromise = null
+
+async function refreshToken() {
+  if (!tokenRefreshPromise) {
+    tokenRefreshPromise = fetch(`${API_BASE}/auth/refresh-token`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          return null
+        }
+
+        const data = await response.json()
+
+        if (!data.token) {
+          throw new Error('Backend không trả về JWT token mới.')
+        }
+
+        localStorage.setItem('token', data.token)
+        return data.token
+      })
+      .finally(() => {
+        tokenRefreshPromise = null
+      })
+  }
+
+  return tokenRefreshPromise
+}
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('token')
@@ -13,11 +42,26 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  let response = await fetch(`${API_BASE}${path}`, {
     ...options,
     credentials: 'include',
     headers,
   })
+
+  if (response.status === 401 && token) {
+    const refreshedToken = await refreshToken()
+
+    if (refreshedToken) {
+      headers.Authorization = `Bearer ${refreshedToken}`
+      response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        credentials: 'include',
+        headers,
+      })
+    } else {
+      localStorage.removeItem('token')
+    }
+  }
 
   let data = null
   const contentType = response.headers.get('content-type') || ''

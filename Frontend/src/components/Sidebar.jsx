@@ -61,10 +61,6 @@ function Sidebar() {
           🛏️ <span>Danh sách phòng</span>
         </NavLink>
 
-        <NavLink to="/rooms/add" className="menu-item">
-          ➕ <span>Thêm phòng</span>
-        </NavLink>
-
         <div className="menu-title">DANH MỤC</div>
 
         <NavLink to="/room-types" className="menu-item">
