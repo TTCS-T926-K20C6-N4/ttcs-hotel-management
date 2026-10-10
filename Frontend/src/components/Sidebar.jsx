@@ -42,14 +42,18 @@ function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-icon">H</div>
+        <div className="brand-icon">G</div>
 
         <div>
-          <h2>QUẢN LÝ KHÁCH SẠN</h2>
+          <h2>The Grand Hotel</h2>
         </div>
       </div>
 
       <nav className="sidebar-menu">
+
+        <NavLink to="/" end className="menu-item">
+          ▦ <span>Tổng quan</span>
+        </NavLink>
 
         <div className="menu-title">QUẢN LÝ PHÒNG</div>
         
@@ -67,17 +71,7 @@ function Sidebar() {
           🏷️ <span>Thể loại phòng</span>
         </NavLink>
 
-        <div className="menu-title">THUÊ PHÒNG</div>
-
-        <NavLink to="/rent-room" className="menu-item">
-          🔑 <span>Cho thuê phòng</span>
-        </NavLink>
-
         <div className="menu-title">THỐNG KÊ</div>
-
-        <NavLink to="/room-status" className="menu-item">
-          📊 <span>Trạng thái phòng</span>
-        </NavLink>
 
         <NavLink to="/income" className="menu-item">
           💰 <span>Thu nhập</span>

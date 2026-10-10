@@ -17,16 +17,11 @@ function toDateTimeLocal(date = new Date()) {
 function createEmptyForm() {
   return {
     roomId: '',
-    customerId: '',
     customerName: '',
     customerPhone: '',
-    customerEmail: '',
     customerIdCard: '',
-    customerAddress: '',
-    guestCount: 1,
     checkInDate: toDateTimeLocal(new Date()),
     expectedCheckOutDate: '',
-    note: '',
   }
 }
 
@@ -37,9 +32,10 @@ function RentRoom() {
   // Vẫn hỗ trợ đường dẫn cũ: /rent-room?roomId=1
   const [searchParams] = useSearchParams()
   const presetRoomId = searchParams.get('roomId')
+  const selectedRoomId = roomId || presetRoomId
+  const roomSelectionIsFixed = Boolean(selectedRoomId)
 
   const [rooms, setRooms] = useState([])
-  const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
@@ -47,7 +43,6 @@ function RentRoom() {
   const [form, setForm] = useState(() => createEmptyForm())
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
-  const [customerSearch, setCustomerSearch] = useState('')
 
   // =========================
   // LOAD DỮ LIỆU
@@ -57,35 +52,26 @@ function RentRoom() {
     setError('')
 
     try {
-      const [availableRooms, customerList] = await Promise.all([
-        api.getAvailableRooms(),
-        api.getCustomers(),
-      ])
+      const availableRooms = await api.getAvailableRooms()
 
       setRooms(availableRooms)
-      setCustomers(customerList)
-
-      // Ưu tiên ID trên URL: /rent-room/3
-      const selectedRoomId = roomId || presetRoomId
 
       if (selectedRoomId) {
-        const exists = availableRooms.some(
+        const selectedRoom = availableRooms.find(
           (room) => String(room.id) === String(selectedRoomId)
         )
 
-        if (exists) {
-          setForm((prev) => ({
-            ...prev,
-            roomId: String(selectedRoomId),
-          }))
-        }
+        setForm((prev) => ({
+          ...prev,
+          roomId: selectedRoom ? String(selectedRoom.id) : '',
+        }))
       }
     } catch (err) {
       setError(err.message || 'Không thể tải dữ liệu.')
     } finally {
       setLoading(false)
     }
-  }, [roomId, presetRoomId])
+  }, [selectedRoomId])
 
   useEffect(() => {
     load()
@@ -111,26 +97,15 @@ function RentRoom() {
       ),
     [rooms, form.roomId]
   )
-
-  // =========================
-  // TÌM KHÁCH HÀNG
-  // =========================
-  const matchedCustomers = useMemo(() => {
-    const key = customerSearch.trim().toLowerCase()
-
-    if (!key) {
-      return customers.slice(0, 6)
-    }
-
-    return customers
-      .filter(
-        (customer) =>
-          customer.fullName.toLowerCase().includes(key) ||
-          customer.phone.includes(key) ||
-          (customer.idCard || '').includes(key)
-      )
-      .slice(0, 6)
-  }, [customers, customerSearch])
+  const displayedRooms = useMemo(
+    () =>
+      roomSelectionIsFixed
+        ? rooms.filter(
+            (room) => String(room.id) === String(selectedRoomId)
+          )
+        : rooms,
+    [rooms, roomSelectionIsFixed, selectedRoomId]
+  )
 
   // =========================
   // TÍNH THỜI GIAN + TIỀN
@@ -187,36 +162,6 @@ function RentRoom() {
   }
 
   // =========================
-  // CHỌN KHÁCH CŨ
-  // =========================
-  function pickCustomer(customer) {
-    setForm((prev) => ({
-      ...prev,
-      customerId: String(customer.id),
-      customerName: customer.fullName,
-      customerPhone: customer.phone,
-      customerEmail: customer.email || '',
-      customerIdCard: customer.idCard || '',
-      customerAddress: customer.address || '',
-    }))
-
-    setCustomerSearch('')
-    setFormError('')
-  }
-
-  function clearCustomer() {
-    setForm((prev) => ({
-      ...prev,
-      customerId: '',
-      customerName: '',
-      customerPhone: '',
-      customerEmail: '',
-      customerIdCard: '',
-      customerAddress: '',
-    }))
-  }
-
-  // =========================
   // LƯU PHIẾU THUÊ
   // =========================
   async function handleSubmit(event) {
@@ -244,14 +189,6 @@ function RentRoom() {
       setFormError(
         'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.'
       )
-      return
-    }
-
-    if (
-      !form.guestCount ||
-      Number(form.guestCount) <= 0
-    ) {
-      setFormError('Số người ở phải lớn hơn 0.')
       return
     }
 
@@ -288,30 +225,18 @@ function RentRoom() {
     const payload = {
       roomId: Number(form.roomId),
 
-      customerId: form.customerId
-        ? Number(form.customerId)
-        : null,
-
       customerName: form.customerName.trim(),
       customerPhone: form.customerPhone.trim(),
-
-      customerEmail:
-        form.customerEmail.trim() || null,
 
       customerIdCard:
         form.customerIdCard.trim() || null,
 
-      customerAddress:
-        form.customerAddress.trim() || null,
-
-      guestCount: Number(form.guestCount),
+      guestCount: 1,
 
       checkInDate: form.checkInDate,
 
       expectedCheckOutDate:
         form.expectedCheckOutDate,
-
-      note: form.note.trim() || null,
     }
 
     setSaving(true)
@@ -352,7 +277,6 @@ function RentRoom() {
         : '',
     })
 
-    setCustomerSearch('')
     setFormError('')
   }
 
@@ -375,13 +299,20 @@ function RentRoom() {
         <div>
           <h1>Cho thuê phòng</h1>
           <p>
-            Lập phiếu thuê cho khách — hiện có{' '}
-            {rooms.length} phòng trống
+            {roomSelectionIsFixed && selectedRoom
+              ? `Lập phiếu thuê cho phòng ${selectedRoom.roomNumber}`
+              : `Lập phiếu thuê cho khách — hiện có ${rooms.length} phòng trống`}
           </p>
         </div>
       </div>
 
-      {rooms.length === 0 ? (
+      {roomSelectionIsFixed && displayedRooms.length === 0 ? (
+        <EmptyState
+          icon="🚫"
+          title="Phòng này hiện không còn trống"
+          description="Vui lòng quay lại danh sách phòng và chọn một phòng đang trống khác."
+        />
+      ) : rooms.length === 0 ? (
         <EmptyState
           icon="🚫"
           title="Hiện không còn phòng trống"
@@ -395,26 +326,22 @@ function RentRoom() {
           ========================= */}
           <div className="card">
             <h2 className="card-title">
-              1. Chọn phòng
+              {roomSelectionIsFixed ? 'Phòng được chọn' : '1. Chọn phòng'}
             </h2>
 
             <div className="room-grid">
-              {rooms.map((room) => (
+              {displayedRooms.map((room) => (
                 <button
                   type="button"
                   key={room.id}
+                  disabled={roomSelectionIsFixed}
                   className={`room-card status-available ${
                     String(room.id) ===
                     String(form.roomId)
                       ? 'selected'
                       : ''
                   }`}
-                  onClick={() =>
-                    update(
-                      'roomId',
-                      String(room.id)
-                    )
-                  }
+                  onClick={() => update('roomId', String(room.id))}
                   style={
                     String(room.id) ===
                     String(form.roomId)
@@ -445,110 +372,6 @@ function RentRoom() {
               ))}
             </div>
 
-            <h2
-              className="card-title"
-              style={{ marginTop: 24 }}
-            >
-              2. Khách hàng
-            </h2>
-
-            <div
-              className="form-group"
-              style={{ marginBottom: 12 }}
-            >
-              <label>Tìm khách hàng cũ</label>
-
-              <input
-                value={customerSearch}
-                onChange={(event) =>
-                  setCustomerSearch(
-                    event.target.value
-                  )
-                }
-                placeholder="🔍 Nhập tên, số điện thoại hoặc CMND..."
-              />
-
-              <span className="form-hint">
-                Bỏ trống nếu đây là khách mới —
-                hệ thống sẽ tự tạo hồ sơ khách hàng.
-              </span>
-            </div>
-
-            {customerSearch && (
-              <div
-                className="table-wrap"
-                style={{ marginBottom: 12 }}
-              >
-                <table
-                  className="data-table"
-                  style={{ minWidth: 320 }}
-                >
-                  <tbody>
-                    {matchedCustomers.length ===
-                      0 && (
-                      <tr>
-                        <td className="text-muted">
-                          Không tìm thấy khách hàng
-                          phù hợp.
-                        </td>
-                      </tr>
-                    )}
-
-                    {matchedCustomers.map(
-                      (customer) => (
-                        <tr
-                          key={customer.id}
-                          style={{
-                            cursor: 'pointer',
-                          }}
-                          onClick={() =>
-                            pickCustomer(customer)
-                          }
-                        >
-                          <td>
-                            <strong>
-                              {customer.fullName}
-                            </strong>
-
-                            <div className="text-muted">
-                              {customer.phone}
-
-                              {customer.idCard
-                                ? ` · CMND ${customer.idCard}`
-                                : ''}
-                            </div>
-                          </td>
-
-                          <td className="text-right">
-                            <span className="btn btn-ghost btn-sm">
-                              Chọn
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {form.customerId && (
-              <div className="alert alert-info">
-                Đang dùng hồ sơ khách cũ:{' '}
-                <strong>
-                  {form.customerName}
-                </strong>{' '}
-                ({form.customerPhone})
-
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={clearCustomer}
-                >
-                  Đổi sang khách mới
-                </button>
-              </div>
-            )}
           </div>
 
           {/* =========================
@@ -556,7 +379,7 @@ function RentRoom() {
           ========================= */}
           <div className="card">
             <h2 className="card-title">
-              3. Thông tin thuê phòng
+              2. Thông tin thuê phòng
             </h2>
 
             {formError && (
@@ -585,9 +408,6 @@ function RentRoom() {
                       )
                     }
                     placeholder="Nguyễn Văn A"
-                    disabled={Boolean(
-                      form.customerId
-                    )}
                   />
                 </div>
 
@@ -611,9 +431,6 @@ function RentRoom() {
                     }
                     placeholder="0912345678"
                     maxLength={10}
-                    disabled={Boolean(
-                      form.customerId
-                    )}
                   />
                 </div>
 
@@ -628,44 +445,6 @@ function RentRoom() {
                         event.target.value
                       )
                     }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Email</label>
-
-                  <input
-                    type="email"
-                    value={form.customerEmail}
-                    onChange={(event) =>
-                      update(
-                        'customerEmail',
-                        event.target.value
-                      )
-                    }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
-                  />
-                </div>
-
-                <div className="form-group full">
-                  <label>Địa chỉ</label>
-
-                  <input
-                    value={form.customerAddress}
-                    onChange={(event) =>
-                      update(
-                        'customerAddress',
-                        event.target.value
-                      )
-                    }
-                    disabled={Boolean(
-                      form.customerId
-                    )}
                   />
                 </div>
 
@@ -688,7 +467,7 @@ function RentRoom() {
                 </div>
 
                 {/* GIỜ TRẢ PHÒNG */}
-                <div className="form-group">
+                <div className="form-group form-group-checkout-date">
                   <label>
                     Thời gian trả phòng dự kiến{' '}
                     <span className="required">
@@ -717,36 +496,6 @@ function RentRoom() {
                   </span>
                 </div>
 
-                <div className="form-group">
-                  <label>Số người ở</label>
-
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.guestCount}
-                    onChange={(event) =>
-                      update(
-                        'guestCount',
-                        event.target.value
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="form-group full">
-                  <label>Ghi chú</label>
-
-                  <textarea
-                    value={form.note}
-                    onChange={(event) =>
-                      update(
-                        'note',
-                        event.target.value
-                      )
-                    }
-                    placeholder="Yêu cầu đặc biệt của khách..."
-                  />
-                </div>
               </div>
 
               {/* =========================

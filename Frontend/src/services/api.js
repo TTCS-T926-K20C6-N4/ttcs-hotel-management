@@ -138,6 +138,10 @@ export const api = {
   // PHÒNG
   // ==========================================
 
+  async getRooms() {
+    return request('/rooms')
+  },
+
   async createRoom(payload) {
     return request('/rooms', {
       method: 'POST',

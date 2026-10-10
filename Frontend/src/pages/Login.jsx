@@ -234,11 +234,11 @@ function Login() {
         {/* LOGO */}
 
         <div className="login-logo">
-          H
+          G
         </div>
 
         <div className="hotel-name">
-          QUẢN LÝ KHÁCH SẠN
+          The Grand Hotel
         </div>
 
         {/* TIÊU ĐỀ */}

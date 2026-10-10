@@ -570,7 +570,7 @@ function RoomTypes() {
       {/* ===== 3-COLUMN ENCORE PRODUCT GRID ===== */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
-          <p>Đang tải danh sách thể loại phòng Encore...</p>
+          <p>Đang tải danh sách thể loại phòng The Grand Hotel...</p>
         </div>
       ) : filteredRoomTypes.length === 0 ? (
         <div className="encore-empty-results">
@@ -1091,7 +1091,7 @@ function RoomTypes() {
 
                 {/* Preset and uploaded photos */}
                 <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>
-                  Hoặc chọn từ thư viện ảnh Encore / Ảnh đã tải lên:
+                  Hoặc chọn từ thư viện ảnh The Grand Hotel / Ảnh đã tải lên:
                 </label>
 
                 <div className="preset-thumbs-grid">
