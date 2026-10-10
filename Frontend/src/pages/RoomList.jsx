@@ -358,8 +358,13 @@ setStatusCounts(statusData);
       </div>
 
       {/* ============================
-          THỐNG KÊ
+          THỐNG KÊ & BỘ LỌC
       ============================ */}
+      <div className="room-list-filter-hint">
+        <span className="room-filter-hint-tag">⚡ Lọc nhanh:</span>
+        <span>Nhấp vào từng ô trạng thái bên dưới để xem danh sách phòng tương ứng</span>
+      </div>
+
       <div className="room-list-summary">
 
         <div

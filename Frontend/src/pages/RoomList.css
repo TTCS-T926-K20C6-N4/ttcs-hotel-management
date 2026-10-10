@@ -62,6 +62,21 @@
   box-shadow: 0 8px 17px rgba(37, 99, 235, 0.26);
 }
 
+.room-list-filter-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.room-filter-hint-tag {
+  color: #2563eb;
+  font-weight: 700;
+}
+
 .room-list-summary {
   display: flex;
   min-height: 84px;
