@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
+import Modal from "../components/Modal";
+import { formatDate, formatMoney } from "../services/api";
 import { getRoomStatusInfo, ROOM_STATUS } from "../services/roomStatus";
 import "./RoomList.css";
 
@@ -13,6 +15,7 @@ function getImageSource(imageUrl) {
 
 function RoomList() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [rooms, setRooms] = useState([]);
   const [statusCounts, setStatusCounts] = useState([]);
@@ -25,8 +28,10 @@ function RoomList() {
       ? location.state.toast
       : location.state?.roomCheckedOut
       ? {
-          type: "success",
-          message: `Đã trả phòng ${location.state.roomCheckedOut}. Phòng hiện đã trống.`,
+          type: location.state.checkoutInvoiceError ? "error" : "success",
+          message: location.state.checkoutInvoiceError
+            ? `Đã trả phòng ${location.state.roomCheckedOut}, nhưng không nhận được thông tin hoá đơn.`
+            : `Đã trả phòng ${location.state.roomCheckedOut}. Phòng hiện đã trống.`,
         }
       : location.state?.roomUpdated
         ? {
@@ -255,6 +260,60 @@ setStatusCounts(statusData);
         type={toast?.type}
         onClose={() => setToast(null)}
       />
+
+      {location.state?.checkoutInvoice && (
+        <Modal
+          title="Hoá đơn thanh toán"
+          onClose={() =>
+            navigate("/rooms", {
+              replace: true,
+              state: { roomCheckedOut: location.state.roomCheckedOut },
+            })
+          }
+          footer={
+            <button
+              type="button"
+              className="room-add-button"
+              onClick={() =>
+                navigate("/rooms", {
+                  replace: true,
+                  state: { roomCheckedOut: location.state.roomCheckedOut },
+                })
+              }
+            >
+              Đóng — xem phòng trống
+            </button>
+          }
+        >
+          <p>
+            Trả phòng hoàn tất. Phòng {location.state.checkoutInvoice.roomNumber} hiện đã được chuyển về trạng thái trống.
+          </p>
+          <dl style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px 20px" }}>
+            <div>
+              <dt>Mã hoá đơn</dt>
+              <dd>{location.state.checkoutInvoice.code}</dd>
+            </div>
+            <div>
+              <dt>Phòng</dt>
+              <dd>{location.state.checkoutInvoice.roomNumber}</dd>
+            </div>
+            <div>
+              <dt>Khách hàng</dt>
+              <dd>{location.state.checkoutInvoice.customerName}</dd>
+            </div>
+            <div>
+              <dt>Thời điểm lập</dt>
+              <dd>{formatDate(location.state.checkoutInvoice.createdAt)}</dd>
+            </div>
+          </dl>
+          <div>
+            <p>Tiền phòng ({location.state.checkoutInvoice.nights} ngày): {formatMoney(location.state.checkoutInvoice.roomAmount)}</p>
+            <p>Tiền dịch vụ: {formatMoney(location.state.checkoutInvoice.serviceAmount)}</p>
+            <p>Giảm giá: -{formatMoney(location.state.checkoutInvoice.discount)}</p>
+            <strong>Tổng thanh toán: {formatMoney(location.state.checkoutInvoice.totalAmount)}</strong>
+          </div>
+        </Modal>
+      )}
 
       {/* ============================
           HEADER
