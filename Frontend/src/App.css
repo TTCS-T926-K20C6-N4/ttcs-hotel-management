@@ -129,28 +129,61 @@
 /* ===== HEADER ===== */
 
 .topbar {
-  height: 70px;
-  background: white;
-
+  position: relative;
+  min-height: 76px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  gap: 20px;
   padding: 0 30px;
+  border-bottom: 1px solid #e7edf5;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(232, 241, 255, 0.72), transparent 45%),
+    #fff;
+  box-shadow: 0 3px 12px rgba(21, 48, 82, 0.035);
+}
 
-  border-bottom: 1px solid #e5e7eb;
+.topbar-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-page-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid #dce8fb;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #f5f9ff, #eaf2ff);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: #2868c8;
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.topbar-context {
+  display: block;
+  margin-bottom: 2px;
+  color: #60748f;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.025em;
 }
 
 .topbar h3 {
   margin: 0;
-  font-size: 18px;
-  color: #1f2937;
-}
-
-.topbar p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #94a3b8;
+  overflow: hidden;
+  color: #1b2c45;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ===== USER ===== */
@@ -158,35 +191,74 @@
 .user-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid #e8edf4;
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
-
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 3px solid #edf4ff;
   border-radius: 50%;
-
-  background: #2563eb;
+  background: linear-gradient(145deg, #4a8cf0, #2258b4);
   color: white;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.18);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .user-box strong {
   display: block;
-  font-size: 13px;
+  color: #253751;
+  font-size: 12px;
+  font-weight: 750;
 }
 
 .user-box span {
   display: block;
-  color: #94a3b8;
-  font-size: 11px;
-  margin-top: 2px;
+  margin-top: 3px;
+  color: #8997aa;
+  font-size: 10px;
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    min-height: 66px;
+    padding: 0 16px;
+  }
+
+  .topbar-page-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .topbar h3 {
+    font-size: 14px;
+  }
+
+  .topbar-context {
+    font-size: 10px;
+  }
+
+  .user-box {
+    gap: 8px;
+    padding-left: 12px;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-box-info {
+    display: none;
+  }
 }
 
 /* ===== NỘI DUNG ===== */

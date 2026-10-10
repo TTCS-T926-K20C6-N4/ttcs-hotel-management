@@ -81,11 +81,11 @@ function ForgotPassword() {
       <div className="forgot-card">
 
         <div className="forgot-logo">
-          H
+          G
         </div>
 
         <div className="forgot-hotel-name">
-          QUẢN LÝ KHÁCH SẠN
+          The Grand Hotel
         </div>
 
         <h1>

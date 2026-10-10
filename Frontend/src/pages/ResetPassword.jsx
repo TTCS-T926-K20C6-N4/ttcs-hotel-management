@@ -104,11 +104,11 @@ function ResetPassword() {
       <div className="reset-card">
 
         <div className="reset-logo">
-          H
+          G
         </div>
 
         <div className="reset-hotel-name">
-          QUẢN LÝ KHÁCH SẠN
+          The Grand Hotel
         </div>
 
         <h1>Đặt lại mật khẩu</h1>
