@@ -32,8 +32,6 @@ function Checkout() {
   const [serviceError, setServiceError] = useState('')
 
   const [confirmCheckout, setConfirmCheckout] = useState(false)
-  const [invoice, setInvoice] = useState(null)
-
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -142,23 +140,24 @@ function Checkout() {
           : null
       )
 
-      setInvoice(invoiceData
+      const invoice = invoiceData
         ? {
             ...invoiceData,
             roomNumber: result.roomNumber || selected.roomNumber,
             customerName: result.customerName || selected.customerName,
             nights: result.nights ?? selected.nights,
           }
-        : null)
+        : null
       setConfirmCheckout(false)
       setDiscount(0)
-      setToast({
-        type: invoiceData ? 'success' : 'error',
-        message: invoiceData
-          ? `Đã trả phòng ${selected.roomNumber} và lập hoá đơn.`
-          : `Đã trả phòng ${selected.roomNumber}, nhưng không nhận được thông tin hoá đơn.`,
+      navigate('/rooms', {
+        replace: true,
+        state: {
+          roomCheckedOut: selected.roomNumber,
+          checkoutInvoice: invoice,
+          checkoutInvoiceError: !invoice,
+        },
       })
-      await load()
     } catch (err) {
       setToast({ type: 'error', message: err.message })
       setConfirmCheckout(false)
@@ -462,68 +461,6 @@ function Checkout() {
             </div>
           </div>
           <p className="text-muted">Sau khi trả phòng, phòng sẽ trở về trạng thái Trống.</p>
-        </Modal>
-      )}
-
-      {/* ===== HOÁ ĐƠN VỪA LẬP ===== */}
-      {invoice && (
-        <Modal
-          title="Hoá đơn thanh toán"
-          onClose={() => navigate('/rooms', {
-            state: { roomCheckedOut: invoice.roomNumber },
-          })}
-          footer={
-            <button
-              type="button"
-              className="checkout-primary-button"
-              onClick={() => navigate('/rooms', {
-                state: { roomCheckedOut: invoice.roomNumber },
-              })}
-            >
-              Xong — xem phòng trống
-            </button>
-          }
-        >
-          <p className="checkout-vacancy-note">
-            Trả phòng hoàn tất. Phòng {invoice.roomNumber} hiện đã được chuyển về trạng thái trống.
-          </p>
-          <div className="detail-grid">
-            <div className="detail-item">
-              <div className="label">Mã hoá đơn</div>
-              <div className="value">{invoice.code}</div>
-            </div>
-            <div className="detail-item">
-              <div className="label">Phòng</div>
-              <div className="value">{invoice.roomNumber}</div>
-            </div>
-            <div className="detail-item">
-              <div className="label">Khách hàng</div>
-              <div className="value">{invoice.customerName}</div>
-            </div>
-            <div className="detail-item">
-              <div className="label">Thời điểm lập</div>
-              <div className="value">{formatDate(invoice.createdAt)}</div>
-            </div>
-          </div>
-
-          <div className="summary-box">
-            <div className="summary-row">
-              <span>Tiền phòng ({invoice.nights} ngày)</span>
-              <strong>{formatMoney(invoice.roomAmount)}</strong>
-            </div>
-            <div className="summary-row">
-              <span>Tiền dịch vụ</span>
-              <strong>{formatMoney(invoice.serviceAmount)}</strong>
-            </div>
-            <div className="summary-row">
-              <span>Giảm giá</span>
-              <strong>-{formatMoney(invoice.discount)}</strong>
-            </div>
-            <div className="summary-row grand">
-              <span>Tổng thanh toán</span>
-              <span>{formatMoney(invoice.totalAmount)}</span>
-            </div>
-          </div>
         </Modal>
       )}
 
