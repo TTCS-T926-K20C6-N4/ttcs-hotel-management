@@ -249,6 +249,36 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken()
+    {
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true")
+        {
+            return Unauthorized(new
+            {
+                message = "Phiên đăng nhập đã hết hạn."
+            });
+        }
+
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || !user.IsActive)
+        {
+            HttpContext.Session.Clear();
+            return Unauthorized(new
+            {
+                message = "Tài khoản không còn hợp lệ. Vui lòng đăng nhập lại."
+            });
+        }
+
+        return Ok(new
+        {
+            token = _tokenService.CreateToken(user)
+        });
+    }
+
     [HttpPatch("profile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {

@@ -21,7 +21,9 @@ function RoomList() {
   const [error, setError] = useState("");
 
   const [toast, setToast] = useState(() =>
-    location.state?.roomCheckedOut
+    location.state?.toast
+      ? location.state.toast
+      : location.state?.roomCheckedOut
       ? {
           type: "success",
           message: `Đã trả phòng ${location.state.roomCheckedOut}. Phòng hiện đã trống.`,

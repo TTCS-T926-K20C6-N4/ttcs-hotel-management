@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, formatMoney } from '../services/api'
 import { ErrorBox, Loading } from '../components/Feedback'
-import Toast from '../components/Toast'
 import './AddRoom.css'
 
 const EMPTY = {
@@ -23,10 +22,6 @@ function AddRoom() {
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [toast, setToast] = useState(null)
-
-  // Cho phép thêm nhanh nhiều phòng liên tiếp
-  const [bulk, setBulk] = useState(false)
 
   // Ảnh phòng
   const [imageFile, setImageFile] = useState(null)
@@ -46,16 +41,6 @@ function AddRoom() {
 
     load()
   }, [])
-
-  useEffect(() => {
-    if (!toast) return undefined
-
-    const timer = setTimeout(() => {
-      setToast(null)
-    }, 3200)
-
-    return () => clearTimeout(timer)
-  }, [toast])
 
   useEffect(() => {
     return () => {
@@ -176,31 +161,14 @@ function AddRoom() {
 
       const created = await api.createRoom(payload)
 
-      if (bulk) {
-        setToast({
-          type: 'success',
-          message: `Đã thêm phòng ${created.roomNumber}.`,
-        })
-
-        // Giữ lại tầng và thể loại khi thêm liên tiếp
-        setForm((prev) => ({
-          ...prev,
-          roomNumber: '',
-          status: 0,
-          note: '',
-        }))
-
-        clearImage()
-      } else {
-        navigate('/rooms', {
-          state: {
-            toast: {
-              type: 'success',
-              message: `Đã thêm phòng ${created.roomNumber}.`,
-            },
+      navigate('/rooms', {
+        state: {
+          toast: {
+            type: 'success',
+            message: `Đã thêm phòng ${created.roomNumber}.`,
           },
-        })
-      }
+        },
+      })
     } catch (err) {
       setError(
         err.message ||
@@ -230,18 +198,7 @@ function AddRoom() {
     <div className="add-room-page">
       {/* HEADER */}
       <div className="add-room-header">
-        <div>
-          <div className="add-room-breadcrumb">
-            QUẢN LÝ PHÒNG / THÊM PHÒNG
-          </div>
-
-          <h1>Thêm mới phòng</h1>
-
-          <p>
-            Nhập thông tin phòng mới để thêm vào hệ thống
-            quản lý khách sạn.
-          </p>
-        </div>
+        <h1>Thêm mới phòng</h1>
 
         <Link
           to="/rooms"
@@ -315,9 +272,6 @@ function AddRoom() {
                 disabled={saving}
               />
 
-              <small>
-                Số phòng không được trùng với phòng đã có.
-              </small>
             </div>
 
             {/* TẦNG */}
@@ -336,9 +290,6 @@ function AddRoom() {
                 disabled={saving}
               />
 
-              <small>
-                Nhập tầng mà phòng đang nằm.
-              </small>
             </div>
 
             {/* THỂ LOẠI */}
@@ -370,9 +321,6 @@ function AddRoom() {
                 ))}
               </select>
 
-              <small>
-                Chọn thể loại để xem giá thuê và sức chứa.
-              </small>
             </div>
 
             {/* TRẠNG THÁI */}
@@ -404,9 +352,6 @@ function AddRoom() {
                 </option>
               </select>
 
-              <small>
-                Phòng mới mặc định ở trạng thái trống.
-              </small>
             </div>
 
             {/* THÔNG TIN THỂ LOẠI */}
@@ -436,12 +381,6 @@ function AddRoom() {
                     </strong>
                   </div>
 
-                  <div>
-                    <span>Trạng thái</span>
-                    <strong>
-                      Sẵn sàng thiết lập
-                    </strong>
-                  </div>
                 </div>
               </div>
             )}
@@ -537,29 +476,6 @@ function AddRoom() {
             </div>
           </div>
 
-          {/* THÊM LIÊN TIẾP */}
-          <label className="add-room-bulk">
-            <input
-              type="checkbox"
-              checked={bulk}
-              onChange={(e) =>
-                setBulk(e.target.checked)
-              }
-              disabled={saving}
-            />
-
-            <div>
-              <strong>
-                Tiếp tục thêm phòng sau khi lưu
-              </strong>
-
-              <span>
-                Giữ lại tầng và thể loại để nhập nhiều
-                phòng nhanh hơn.
-              </span>
-            </div>
-          </label>
-
           {/* BUTTON */}
           <div className="add-room-actions">
             <button
@@ -586,11 +502,6 @@ function AddRoom() {
         </form>
       </div>
 
-      <Toast
-        message={toast?.message}
-        type={toast?.type}
-        onClose={() => setToast(null)}
-      />
     </div>
   )
 }
