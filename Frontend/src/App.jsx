@@ -24,6 +24,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import RoomStatus from './pages/RoomStatus'
 import Profile from './pages/Profile'
+import IncomeStatistics from './pages/IncomeStatistics'
 import './App.css'
 
 
@@ -242,10 +243,18 @@ function App() {
   path="/change-password"
   element={<ChangePassword />}
 />
+
 <Route
   path="/profile"
   element={<Profile />}
 />
+
+{/* Thống kê thu nhập */}
+<Route
+  path="/income"
+  element={<IncomeStatistics />}
+/>
+
 
           </Route>
 

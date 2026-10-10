@@ -9,7 +9,7 @@ const pageDetails = [
   { path: '/rent-room', title: 'Cho thuê phòng', icon: '⌂' },
   { path: '/checkout', title: 'Trả phòng', icon: '↗' },
   { path: '/room-status', title: 'Trạng thái phòng', icon: '◷' },
-  { path: '/income', title: 'Thu nhập', icon: '₫' },
+  { path: '/income', title: 'Thống kê thu nhập', icon: '₫' },
   { path: '/profile', title: 'Thông tin cá nhân', icon: '○' },
   { path: '/change-password', title: 'Đổi mật khẩu', icon: '⌑' },
 ]
