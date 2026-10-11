@@ -9,6 +9,9 @@ namespace Backend.Controllers;
 [Route("api/statistics")]
 public class IncomeStatisticsController : ControllerBase
 {
+    private const int FirstSupportedYear = 2022;
+    private const int LastSupportedYear = 2026;
+
     private readonly AppDbContext _db;
 
     public IncomeStatisticsController(AppDbContext db)
@@ -17,11 +20,23 @@ public class IncomeStatisticsController : ControllerBase
     }
 
     [HttpGet("income")]
-    public async Task<IActionResult> GetIncome()
+    public async Task<IActionResult> GetIncome([FromQuery] int? year)
     {
-        int year = DateTime.Now.Year;
+        var currentYear = LastSupportedYear;
+        var selectedYear = year ?? currentYear;
 
-        var startDate = new DateTime(year, 1, 1);
+        if (selectedYear < FirstSupportedYear || selectedYear > currentYear)
+        {
+            return BadRequest(new { message = "Năm thống kê không hợp lệ." });
+        }
+
+        var years = Enumerable.Range(
+                FirstSupportedYear,
+                LastSupportedYear - FirstSupportedYear + 1)
+            .OrderByDescending(value => value)
+            .ToList();
+
+        var startDate = new DateTime(selectedYear, 1, 1);
         var endDate = startDate.AddYears(1);
 
         var invoices = await _db.Invoices
@@ -47,7 +62,8 @@ public class IncomeStatisticsController : ControllerBase
 
         return Ok(new
         {
-            year,
+            year = selectedYear,
+            years,
             months,
             totalAmount = months.Sum(m => m.totalAmount)
         });

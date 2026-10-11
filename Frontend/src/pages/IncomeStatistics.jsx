@@ -1,51 +1,109 @@
 
 import { useEffect, useState } from 'react'
 
+const STATISTICS_YEARS = [2026, 2025, 2024, 2023, 2022]
+
 function IncomeStatistics() {
+  const [selectedYear, setSelectedYear] = useState(() =>
+    Math.min(Math.max(new Date().getFullYear(), 2022), 2026)
+  )
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const loadIncome = async () => {
+      setLoading(true)
+      setError('')
+      setData(null)
+
       try {
         const response = await fetch(
-          'http://localhost:5097/api/statistics/income',
-          { credentials: 'include' }
+          `http://localhost:5097/api/statistics/income?year=${selectedYear}`,
+          {
+            credentials: 'include',
+            signal: controller.signal
+          }
         )
 
         if (!response.ok) {
-          throw new Error('Không thể tải dữ liệu thu nhập')
+          throw new Error('Không thể tải dữ liệu thu nhập. Vui lòng thử lại.')
         }
 
         const result = await response.json()
+
+        if (Number(result.year) !== selectedYear) {
+          throw new Error(
+            `Backend đang trả thống kê năm ${result.year} thay vì năm ${selectedYear}. Vui lòng khởi động lại Backend rồi thử lại.`
+          )
+        }
+
         setData(result)
       } catch (err) {
-        setError(err.message)
+        if (err.name !== 'AbortError') {
+          setError(err.message)
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     loadIncome()
-  }, [])
+
+    return () => controller.abort()
+  }, [selectedYear])
 
   const formatMoney = (amount) =>
     Number(amount || 0).toLocaleString('vi-VN') + ' ₫'
 
+  const months = Array.from({ length: 12 }, (_, index) => {
+    const month = index + 1
+    const monthData = data?.months?.find(
+      (item) => Number(item.month) === month
+    )
+
+    return {
+      month,
+      totalAmount: Number(monthData?.totalAmount || 0)
+    }
+  })
+  const totalAmount = months.reduce((total, item) => total + item.totalAmount, 0)
+
   return (
     <div style={styles.page}>
       <div style={styles.heading}>
-        <h2 style={styles.title}>Thống kê thu nhập</h2>
-        <p style={styles.subtitle}>
-          Theo dõi doanh thu khách sạn theo 12 tháng của năm hiện tại.
-        </p>
+        <div>
+          <h2 style={styles.title}>Thống kê thu nhập</h2>
+          <p style={styles.subtitle}>
+            Theo dõi doanh thu khách sạn theo từng tháng trong năm.
+          </p>
+        </div>
+
+        <label style={styles.yearSelector}>
+          <span style={styles.yearLabel}>Chọn năm xem</span>
+          <select
+            aria-label="Chọn năm xem thống kê thu nhập"
+            value={selectedYear}
+            onChange={(event) => setSelectedYear(Number(event.target.value))}
+            style={styles.yearSelect}
+          >
+            {STATISTICS_YEARS.map((year) => (
+              <option key={year} value={year}>
+                Năm {year}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
-      {loading && <p>Đang tải dữ liệu...</p>}
+      {loading && <p role="status">Đang tải dữ liệu thu nhập năm {selectedYear}...</p>}
 
       {error && (
-        <p style={{ color: '#dc2626' }}>{error}</p>
+        <p role="alert" style={{ color: '#dc2626' }}>{error}</p>
       )}
 
       {!loading && !error && data && (
@@ -56,7 +114,7 @@ function IncomeStatistics() {
                 TỔNG DOANH THU NĂM {data.year}
               </div>
               <div style={styles.summaryAmount}>
-                {formatMoney(data.totalAmount)}
+                {formatMoney(totalAmount)}
               </div>
               <div style={styles.summaryNote}>
                 Tổng thu nhập từ tháng 1 đến tháng 12
@@ -93,7 +151,7 @@ function IncomeStatistics() {
                 </thead>
 
                 <tbody>
-                  {data.months.map((item, index) => (
+                  {months.map((item, index) => (
                     <tr
                       key={item.month}
                       style={{
@@ -133,7 +191,7 @@ function IncomeStatistics() {
                       Tổng thu nhập 12 tháng
                     </td>
                     <td style={styles.totalMoney}>
-                      {formatMoney(data.totalAmount)}
+                      {formatMoney(totalAmount)}
                     </td>
                   </tr>
                 </tfoot>
@@ -153,7 +211,12 @@ const styles = {
     margin: '0 auto'
   },
   heading: {
-    marginBottom: '24px'
+    marginBottom: '24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '16px'
   },
   title: {
     margin: '0 0 8px',
@@ -165,6 +228,26 @@ const styles = {
     margin: 0,
     color: '#64748b',
     fontSize: '14px'
+  },
+  yearSelector: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    color: '#334155',
+    fontSize: '14px',
+    fontWeight: 600
+  },
+  yearLabel: {
+    whiteSpace: 'nowrap'
+  },
+  yearSelect: {
+    minWidth: '120px',
+    padding: '10px 12px',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    background: '#ffffff',
+    color: '#172b4d',
+    cursor: 'pointer'
   },
   summary: {
     background: '#ffffff',
