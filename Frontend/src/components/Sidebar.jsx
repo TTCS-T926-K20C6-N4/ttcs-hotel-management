@@ -74,7 +74,7 @@ function Sidebar() {
         <div className="menu-title">THỐNG KÊ</div>
 
         <NavLink to="/income" className="menu-item">
-          💰 <span>Thu nhập</span>
+          💰 <span>Thống kê thu nhập</span>
         </NavLink>
 
         <div className="menu-title">TÀI KHOẢN</div>
