@@ -360,25 +360,13 @@ setStatusCounts(statusData);
       {/* ============================
           THỐNG KÊ & BỘ LỌC
       ============================ */}
-      <div className="room-list-filter-hint">
-        <span className="room-filter-hint-tag">⚡ Lọc nhanh:</span>
-        <span>Nhấp vào từng ô trạng thái bên dưới để xem danh sách phòng tương ứng</span>
-      </div>
-
       <div className="room-list-summary">
-
-        <div
-          className="room-summary-icon"
-          aria-hidden="true"
-        >
-          ▦
-        </div>
-
         <div
           className={`aurora-total-card ${selectedStatus === null ? "is-active" : ""}`}
           onClick={() => setSelectedStatus(null)}
           role="button"
           tabIndex={0}
+          aria-pressed={selectedStatus === null}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
@@ -388,13 +376,11 @@ setStatusCounts(statusData);
           title="Nhấp để hiển thị tất cả các phòng"
         >
           <div className="aurora-status-icon" aria-hidden="true">
-            🏨
+            ▦
           </div>
           <strong>{rooms.length}</strong>
           <span>Tổng số phòng</span>
         </div>
-
-        <div className="room-summary-divider" />
 
         {statusCounts.map((item) => {
           const statusConfig = {
@@ -437,6 +423,7 @@ setStatusCounts(statusData);
               }
               role="button"
               tabIndex={0}
+              aria-pressed={isItemActive}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
