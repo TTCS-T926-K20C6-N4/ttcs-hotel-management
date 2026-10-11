@@ -159,7 +159,12 @@ function Profile() {
       <form className="profile-form" onSubmit={handleSubmit} noValidate>
         <section className="profile-card profile-photo-card">
           <div className="profile-card-heading">
-            <div className="profile-heading-icon">▣</div>
+            <div className="profile-heading-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 5H10L8.5 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5L14 5Z" />
+                <circle cx="12" cy="13" r="3.5" />
+              </svg>
+            </div>
             <div>
               <h2>Ảnh đại diện</h2>
               <p>Hình ảnh rõ nét, định dạng JPG, PNG hoặc WEBP.</p>
@@ -167,17 +172,20 @@ function Profile() {
           </div>
 
           <div className="profile-avatar-layout">
-            <div className="profile-avatar-preview">
+            <button
+              type="button"
+              className="profile-avatar-preview"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Chọn ảnh đại diện"
+              disabled={saving}
+            >
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Ảnh đại diện hiện tại" />
               ) : (
                 <span>USER</span>
               )}
-            </div>
+            </button>
             <div className="profile-avatar-actions">
-              <label className="profile-upload-button" htmlFor="profile-avatar">
-                <span>＋</span> Chọn ảnh
-              </label>
               <input
                 ref={fileInputRef}
                 id="profile-avatar"
@@ -194,7 +202,6 @@ function Profile() {
 
         <section className="profile-card profile-details-card">
           <div className="profile-card-heading">
-            <div className="profile-heading-icon">✦</div>
             <div>
               <h2>Thông tin cơ bản</h2>
               <p>Các trường có dấu * là bắt buộc.</p>
@@ -202,7 +209,7 @@ function Profile() {
           </div>
 
           <div className="profile-fields">
-            <div className="profile-field profile-field-wide">
+            <div className="profile-field">
               <label htmlFor="fullName">Tên đầy đủ <span>*</span></label>
               <input
                 id="fullName"
@@ -245,7 +252,7 @@ function Profile() {
               {fieldErrors.phoneNumber && <small className="profile-error">{fieldErrors.phoneNumber}</small>}
             </div>
 
-            <div className="profile-field profile-field-wide">
+            <div className="profile-field">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
