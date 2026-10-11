@@ -62,21 +62,6 @@
   box-shadow: 0 8px 17px rgba(37, 99, 235, 0.26);
 }
 
-.room-list-filter-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.room-filter-hint-tag {
-  color: #2563eb;
-  font-weight: 700;
-}
-
 .room-list-summary {
   display: flex;
   min-height: 84px;
@@ -90,31 +75,6 @@
   box-shadow: 0 3px 12px rgba(21, 48, 82, 0.04);
 }
 
-.room-summary-icon {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border-radius: 12px;
-  background: #eaf2ff;
-  color: #2563eb;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.room-summary-available {
-  background: #e8f8ef;
-  color: #18864b;
-}
-
-.room-list-summary > div:nth-child(2),
-.room-list-summary > div:nth-child(5) {
-  display: flex;
-  min-width: 120px;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .room-list-summary span {
   color: #64748b;
   font-size: 12px;
@@ -123,13 +83,6 @@
 .room-list-summary strong {
   color: #172033;
   font-size: 19px;
-}
-
-.room-summary-divider {
-  width: 1px;
-  height: 39px;
-  margin: 0 12px;
-  background: #e2e8f0;
 }
 
 .room-grid {
@@ -510,46 +463,85 @@
 /* THỐNG KÊ NHỎ GỌN CÓ ICON */
 
 .room-list-summary {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px;
 }
 
 .room-list-summary .aurora-total-card {
-  display: flex;
-  min-width: 110px;
-  flex-direction: column;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  text-align: center;
+  column-gap: 10px;
   cursor: pointer;
-  user-select: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  transition: all 0.2s ease;
 }
 
 .room-list-summary .room-status-count {
-  min-width: 110px;
-  gap: 5px;
-  cursor: pointer;
-  user-select: none;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  transition: all 0.2s ease;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: start;
+  column-gap: 10px;
 }
 
 .room-list-summary .aurora-total-card:hover,
 .room-list-summary .room-status-count:hover {
-  background: rgba(241, 245, 249, 0.9);
-  transform: translateY(-2px);
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
 .room-list-summary .aurora-total-card:focus-visible,
 .room-list-summary .room-status-count:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
+}
+
+.room-list-summary .aurora-total-card,
+.room-list-summary .room-status-count {
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.room-list-summary .aurora-status-icon {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.room-list-summary .aurora-total-card strong,
+.room-list-summary .room-status-count .aurora-status-number {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  color: #172033;
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.room-list-summary .aurora-total-card span,
+.room-list-summary .room-status-count .aurora-status-label {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: normal;
 }
 
 /* Hiệu ứng khi được chọn lọc (Active Filter) */
@@ -641,13 +633,13 @@
 
 .room-list-summary .aurora-status-icon {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #edf4ff;
   color: #2563eb;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .room-list-summary .aurora-available .aurora-status-icon {
@@ -678,21 +670,23 @@
 
 .room-list-summary .aurora-status-label {
   color: #64748b;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 11px;
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .room-list-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
-  .room-list-summary .room-status-count,
-  .room-list-summary .aurora-total-card {
-    flex: 1 1 110px;
+  .room-list-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .room-list-summary > .room-summary-divider {
-    display: none;
+  .room-list-summary .room-status-count,
+  .room-list-summary .aurora-total-card {
+    min-width: 0;
   }
-}
-/* Ẩn icon tổng phòng cũ để tránh trùng */
-.room-list-summary > .room-summary-icon {
-  display: none;
 }
