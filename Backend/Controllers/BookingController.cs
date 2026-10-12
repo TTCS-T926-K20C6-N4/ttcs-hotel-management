@@ -192,10 +192,10 @@ public BookingController(AppDbContext db)
             CheckInDate =
                 req.CheckInDate == default
                     ? DateTime.Today
-                    : req.CheckInDate.Date,
+                    : req.CheckInDate,
 
             ExpectedCheckOutDate =
-                req.ExpectedCheckOutDate?.Date,
+                req.ExpectedCheckOutDate,
 
             PricePerNight =
                 room.RoomType?.PricePerNight ?? 0,
@@ -331,9 +331,21 @@ public BookingController(AppDbContext db)
         }
 
         // -----------------------------------------------------
+        // Tính theo cùng khoảng thời gian và quy tắc làm tròn ngày như báo giá thuê.
+        var actualCheckOutDate = DateTime.Now;
+        var chargeUntil = booking.ExpectedCheckOutDate.HasValue
+            ? booking.ExpectedCheckOutDate.Value > actualCheckOutDate
+                ? booking.ExpectedCheckOutDate.Value
+                : actualCheckOutDate
+            : actualCheckOutDate;
+        var billableDays = Math.Max(
+            1,
+            (int)Math.Ceiling((chargeUntil - booking.CheckInDate).TotalDays));
+        var roomAmount = billableDays * booking.PricePerNight;
+
         // Cập nhật trạng thái lượt thuê
         // -----------------------------------------------------
-        booking.ActualCheckOutDate = DateTime.Today;
+        booking.ActualCheckOutDate = actualCheckOutDate;
 
         booking.Status = BookingStatus.CheckedOut;
 
@@ -346,8 +358,6 @@ public BookingController(AppDbContext db)
         // -----------------------------------------------------
         // Tính tiền
         // -----------------------------------------------------
-        var roomAmount = booking.SubTotal;
-
         var serviceAmount = booking.ServiceTotal;
 
         var discount =
