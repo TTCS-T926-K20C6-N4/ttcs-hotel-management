@@ -1,5 +1,6 @@
-
 import { useEffect, useState } from 'react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const STATISTICS_YEARS = [2026, 2025, 2024, 2023, 2022]
 
@@ -29,7 +30,9 @@ function IncomeStatistics() {
         )
 
         if (!response.ok) {
-          throw new Error('Không thể tải dữ liệu thu nhập. Vui lòng thử lại.')
+          throw new Error(
+            'Không thể tải dữ liệu thu nhập. Vui lòng thử lại.'
+          )
         }
 
         const result = await response.json()
@@ -62,6 +65,7 @@ function IncomeStatistics() {
 
   const months = Array.from({ length: 12 }, (_, index) => {
     const month = index + 1
+
     const monthData = data?.months?.find(
       (item) => Number(item.month) === month
     )
@@ -71,96 +75,308 @@ function IncomeStatistics() {
       totalAmount: Number(monthData?.totalAmount || 0)
     }
   })
-  const totalAmount = months.reduce((total, item) => total + item.totalAmount, 0)
+
+  const totalAmount = months.reduce(
+    (total, item) => total + item.totalAmount,
+    0
+  )
+
+  // ================================
+  // EXPORT THỐNG KÊ THU NHẬP RA PDF
+  // ================================
+  const handleExportPDF = () => {
+    if (!data) {
+      return
+    }
+
+    const doc = new jsPDF()
+
+    // Tiêu đề PDF
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+
+    doc.text(
+      'THONG KE THU NHAP',
+      105,
+      20,
+      { align: 'center' }
+    )
+
+    // Thông tin năm và tổng doanh thu
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+
+    doc.text(
+      `Nam: ${selectedYear}`,
+      14,
+      32
+    )
+
+    doc.text(
+      `Tong doanh thu: ${Number(totalAmount).toLocaleString(
+        'vi-VN'
+      )} VND`,
+      14,
+      40
+    )
+
+    // Dữ liệu 12 tháng
+    const tableData = months.map((item, index) => [
+      String(index + 1).padStart(2, '0'),
+      `Thang ${item.month}`,
+      `${Number(item.totalAmount).toLocaleString('vi-VN')} VND`
+    ])
+
+    // Tạo bảng trong PDF
+    autoTable(doc, {
+      startY: 48,
+
+      head: [
+        ['STT', 'Thang', 'Tong tien']
+      ],
+
+      body: tableData,
+
+      foot: [
+        [
+          '',
+          'Tong thu nhap 12 thang',
+          `${Number(totalAmount).toLocaleString('vi-VN')} VND`
+        ]
+      ],
+
+      styles: {
+        fontSize: 10,
+        cellPadding: 4
+      },
+
+      headStyles: {
+        halign: 'center'
+      },
+
+      columnStyles: {
+        0: {
+          halign: 'center',
+          cellWidth: 25
+        },
+
+        1: {
+          halign: 'left'
+        },
+
+        2: {
+          halign: 'right'
+        }
+      },
+
+      footStyles: {
+        fontStyle: 'bold'
+      }
+    })
+
+    // Tên file tải xuống
+    doc.save(
+      `thong-ke-thu-nhap-${selectedYear}.pdf`
+    )
+  }
 
   return (
     <div style={styles.page}>
+
+      {/* ================= HEADER ================= */}
+
       <div style={styles.heading}>
+
         <div>
-          <h2 style={styles.title}>Thống kê thu nhập</h2>
+          <h2 style={styles.title}>
+            Thống kê thu nhập
+          </h2>
+
           <p style={styles.subtitle}>
             Theo dõi doanh thu khách sạn theo từng tháng trong năm.
           </p>
         </div>
 
-        <label style={styles.yearSelector}>
-          <span style={styles.yearLabel}>Chọn năm xem</span>
-          <select
-            aria-label="Chọn năm xem thống kê thu nhập"
-            value={selectedYear}
-            onChange={(event) => setSelectedYear(Number(event.target.value))}
-            style={styles.yearSelect}
+        {/* Export PDF + chọn năm */}
+
+        <div style={styles.actions}>
+
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            disabled={loading || !data}
+            style={{
+              ...styles.exportButton,
+
+              opacity:
+                loading || !data
+                  ? 0.6
+                  : 1,
+
+              cursor:
+                loading || !data
+                  ? 'not-allowed'
+                  : 'pointer'
+            }}
           >
-            {STATISTICS_YEARS.map((year) => (
-              <option key={year} value={year}>
-                Năm {year}
-              </option>
-            ))}
-          </select>
-        </label>
+            Export PDF
+          </button>
+
+          <label style={styles.yearSelector}>
+
+            <span style={styles.yearLabel}>
+              Chọn năm xem
+            </span>
+
+            <select
+              aria-label="Chọn năm xem thống kê thu nhập"
+              value={selectedYear}
+              onChange={(event) =>
+                setSelectedYear(
+                  Number(event.target.value)
+                )
+              }
+              style={styles.yearSelect}
+            >
+              {STATISTICS_YEARS.map((year) => (
+                <option
+                  key={year}
+                  value={year}
+                >
+                  Năm {year}
+                </option>
+              ))}
+            </select>
+
+          </label>
+
+        </div>
+
       </div>
 
-      {loading && <p role="status">Đang tải dữ liệu thu nhập năm {selectedYear}...</p>}
+      {/* ================= LOADING ================= */}
+
+      {loading && (
+        <p role="status">
+          Đang tải dữ liệu thu nhập năm {selectedYear}...
+        </p>
+      )}
+
+      {/* ================= ERROR ================= */}
 
       {error && (
-        <p role="alert" style={{ color: '#dc2626' }}>{error}</p>
+        <p
+          role="alert"
+          style={{
+            color: '#dc2626'
+          }}
+        >
+          {error}
+        </p>
       )}
+
+      {/* ================= DATA ================= */}
 
       {!loading && !error && data && (
         <>
+
+          {/* Tổng doanh thu */}
+
           <div style={styles.summary}>
+
             <div>
+
               <div style={styles.summaryLabel}>
                 TỔNG DOANH THU NĂM {data.year}
               </div>
+
               <div style={styles.summaryAmount}>
                 {formatMoney(totalAmount)}
               </div>
+
               <div style={styles.summaryNote}>
                 Tổng thu nhập từ tháng 1 đến tháng 12
               </div>
+
             </div>
 
             <div style={styles.yearTag}>
               Năm {data.year}
             </div>
+
           </div>
 
+          {/* ================= BẢNG ================= */}
+
           <div style={styles.tableCard}>
+
             <div style={styles.tableHeading}>
+
               <div>
+
                 <h3 style={styles.tableTitle}>
                   Chi tiết doanh thu
                 </h3>
+
                 <p style={styles.tableSubtitle}>
                   Báo cáo thu nhập theo từng tháng
                 </p>
+
               </div>
 
-              <span style={styles.monthTag}>12 tháng</span>
+              <span style={styles.monthTag}>
+                12 tháng
+              </span>
+
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
+            <div
+              style={{
+                overflowX: 'auto'
+              }}
+            >
+
               <table style={styles.table}>
+
                 <thead>
+
                   <tr>
-                    <th style={styles.numberHeader}>STT</th>
-                    <th style={styles.header}>Tháng</th>
-                    <th style={styles.moneyHeader}>Tổng tiền</th>
+
+                    <th style={styles.numberHeader}>
+                      STT
+                    </th>
+
+                    <th style={styles.header}>
+                      Tháng
+                    </th>
+
+                    <th style={styles.moneyHeader}>
+                      Tổng tiền
+                    </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
+
                   {months.map((item, index) => (
+
                     <tr
                       key={item.month}
                       style={{
                         background:
-                          index % 2 === 0 ? '#ffffff' : '#f8fafc'
+                          index % 2 === 0
+                            ? '#ffffff'
+                            : '#f8fafc'
                       }}
                     >
+
                       <td style={styles.numberCell}>
-                        {String(index + 1).padStart(2, '0')}
+                        {String(index + 1).padStart(
+                          2,
+                          '0'
+                        )}
                       </td>
 
                       <td style={styles.cell}>
@@ -170,46 +386,73 @@ function IncomeStatistics() {
                       <td
                         style={{
                           ...styles.moneyCell,
+
                           color:
                             item.totalAmount > 0
                               ? '#1d4ed8'
                               : '#64748b',
+
                           fontWeight:
-                            item.totalAmount > 0 ? 700 : 400
+                            item.totalAmount > 0
+                              ? 700
+                              : 400
                         }}
                       >
-                        {formatMoney(item.totalAmount)}
+                        {formatMoney(
+                          item.totalAmount
+                        )}
                       </td>
+
                     </tr>
+
                   ))}
+
                 </tbody>
 
                 <tfoot>
+
                   <tr style={styles.totalRow}>
-                    <td style={styles.totalCell}></td>
+
+                    <td style={styles.totalCell}>
+                    </td>
+
                     <td style={styles.totalCell}>
                       Tổng thu nhập 12 tháng
                     </td>
+
                     <td style={styles.totalMoney}>
                       {formatMoney(totalAmount)}
                     </td>
+
                   </tr>
+
                 </tfoot>
+
               </table>
+
             </div>
+
           </div>
+
         </>
       )}
+
     </div>
   )
 }
 
+// ========================================
+// STYLE
+// ========================================
+
 const styles = {
+
   page: {
     padding: '28px',
     maxWidth: '1400px',
     margin: '0 auto'
   },
+
   heading: {
     marginBottom: '24px',
     display: 'flex',
@@ -218,17 +461,40 @@ const styles = {
     flexWrap: 'wrap',
     gap: '16px'
   },
+
   title: {
     margin: '0 0 8px',
     fontSize: '26px',
     fontWeight: 700,
     color: '#142b49'
   },
+
   subtitle: {
     margin: 0,
     color: '#64748b',
     fontSize: '14px'
   },
+
+  // Nhóm Export PDF + chọn năm
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap'
+  },
+
+  // Nút Export PDF
+  exportButton: {
+    padding: '10px 18px',
+    border: 'none',
+    borderRadius: '8px',
+    background: '#2563eb',
+    color: '#ffffff',
+    fontSize: '14px',
+    fontWeight: 600,
+    minHeight: '40px'
+  },
+
   yearSelector: {
     display: 'flex',
     alignItems: 'center',
@@ -237,9 +503,11 @@ const styles = {
     fontSize: '14px',
     fontWeight: 600
   },
+
   yearLabel: {
     whiteSpace: 'nowrap'
   },
+
   yearSelect: {
     minWidth: '120px',
     padding: '10px 12px',
@@ -249,6 +517,7 @@ const styles = {
     color: '#172b4d',
     cursor: 'pointer'
   },
+
   summary: {
     background: '#ffffff',
     border: '1px solid #e2e8f0',
@@ -263,23 +532,27 @@ const styles = {
     gap: '12px',
     boxShadow: '0 3px 12px rgba(0,0,0,0.03)'
   },
+
   summaryLabel: {
     fontSize: '12px',
     letterSpacing: '1px',
     fontWeight: 700,
     color: '#64748b'
   },
+
   summaryAmount: {
     fontSize: '30px',
     fontWeight: 750,
     color: '#172b4d',
     marginTop: '10px'
   },
+
   summaryNote: {
     color: '#94a3b8',
     fontSize: '13px',
     marginTop: '6px'
   },
+
   yearTag: {
     background: '#eff6ff',
     color: '#2563eb',
@@ -288,6 +561,7 @@ const styles = {
     fontSize: '13px',
     fontWeight: 600
   },
+
   tableCard: {
     background: '#ffffff',
     border: '1px solid #e2e8f0',
@@ -295,6 +569,7 @@ const styles = {
     padding: '24px',
     boxShadow: '0 3px 12px rgba(0,0,0,0.03)'
   },
+
   tableHeading: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -303,16 +578,19 @@ const styles = {
     gap: '12px',
     marginBottom: '20px'
   },
+
   tableTitle: {
     margin: '0 0 5px',
     fontSize: '19px',
     color: '#172b4d'
   },
+
   tableSubtitle: {
     margin: 0,
     color: '#94a3b8',
     fontSize: '13px'
   },
+
   monthTag: {
     padding: '7px 12px',
     border: '1px solid #e2e8f0',
@@ -320,11 +598,13 @@ const styles = {
     color: '#64748b',
     fontSize: '13px'
   },
+
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     minWidth: '420px'
   },
+
   header: {
     background: '#eef2f7',
     color: '#334155',
@@ -332,6 +612,7 @@ const styles = {
     textAlign: 'left',
     fontSize: '14px'
   },
+
   numberHeader: {
     background: '#eef2f7',
     color: '#334155',
@@ -340,6 +621,7 @@ const styles = {
     width: '70px',
     fontSize: '14px'
   },
+
   moneyHeader: {
     background: '#eef2f7',
     color: '#334155',
@@ -347,30 +629,36 @@ const styles = {
     textAlign: 'right',
     fontSize: '14px'
   },
+
   numberCell: {
     padding: '13px 18px',
     textAlign: 'center',
     color: '#94a3b8',
     borderBottom: '1px solid #e9edf3'
   },
+
   cell: {
     padding: '13px 18px',
     color: '#334155',
     borderBottom: '1px solid #e9edf3'
   },
+
   moneyCell: {
     padding: '13px 18px',
     textAlign: 'right',
     borderBottom: '1px solid #e9edf3'
   },
+
   totalRow: {
     background: '#e8f1ff'
   },
+
   totalCell: {
     padding: '16px 18px',
     fontWeight: 700,
     color: '#172b4d'
   },
+
   totalMoney: {
     padding: '16px 18px',
     textAlign: 'right',
