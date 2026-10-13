@@ -14,6 +14,27 @@ const SERVICE_PRESETS = [
   { name: 'Thuê xe máy', price: 150000 },
 ]
 
+function getRoomEstimate(booking) {
+  const checkIn = new Date(booking.checkInDate).getTime()
+  const expectedCheckOut = booking.expectedCheckOutDate
+    ? new Date(booking.expectedCheckOutDate).getTime()
+    : Number.NaN
+
+  if (!Number.isFinite(checkIn)) {
+    return { days: Number(booking.nights) || 1, amount: Number(booking.roomAmount) || 0 }
+  }
+
+  const chargeUntil = Number.isFinite(expectedCheckOut)
+    ? Math.max(expectedCheckOut, Date.now())
+    : Date.now()
+  const days = Math.max(1, Math.ceil((chargeUntil - checkIn) / (24 * 60 * 60 * 1000)))
+
+  return {
+    days,
+    amount: days * Number(booking.pricePerNight || 0),
+  }
+}
+
 function Checkout() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -76,7 +97,7 @@ function Checkout() {
 
   const totals = useMemo(() => {
     if (!selected) return { room: 0, service: 0, discount: 0, total: 0 }
-    const room = Number(selected.roomAmount)
+    const room = getRoomEstimate(selected).amount
     const service = Number(selected.serviceAmount)
     const disc = Math.max(0, Number(discount) || 0)
     return { room, service, discount: disc, total: Math.max(0, room + service - disc) }
@@ -219,7 +240,7 @@ function Checkout() {
                     <span>{booking.roomTypeName} · nhận {formatDate(booking.checkInDate)}</span>
                   </span>
                   <span className="checkout-booking-total">
-                    {formatMoney(Number(booking.roomAmount) + Number(booking.serviceAmount))}
+                    {formatMoney(getRoomEstimate(booking).amount + Number(booking.serviceAmount))}
                   </span>
                 </button>
               ))}
@@ -251,8 +272,8 @@ function Checkout() {
                   <div className="value">{formatDate(selected.checkInDate)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="label">Số ngày đã ở</div>
-                  <div className="value">{selected.nights} ngày</div>
+                  <div className="label">Số ngày tính tiền</div>
+                  <div className="value">{getRoomEstimate(selected).days} ngày</div>
                 </div>
                 <div className="detail-item">
                   <div className="label">Giá thuê</div>
@@ -386,7 +407,7 @@ function Checkout() {
               {/* ===== TỔNG KẾT ===== */}
               <div className="summary-box checkout-summary">
                 <div className="summary-row">
-                  <span>Tiền phòng ({selected.nights} ngày)</span>
+                  <span>Tiền phòng ({getRoomEstimate(selected).days} ngày)</span>
                   <strong>{formatMoney(totals.room)}</strong>
                 </div>
                 <div className="summary-row">
