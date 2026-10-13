@@ -153,31 +153,35 @@ function Profile() {
         </div>
       </header>
 
-      {success && <div className="profile-alert profile-success" role="status">✓ {success}</div>}
+      {success && <div className="profile-alert profile-success" role="status">{success}</div>}
       {error && <div className="profile-alert profile-error" role="alert">{error}</div>}
 
       <form className="profile-form" onSubmit={handleSubmit} noValidate>
         <section className="profile-card profile-photo-card">
           <div className="profile-card-heading">
-            <div className="profile-heading-icon">▣</div>
             <div>
               <h2>Ảnh đại diện</h2>
-              <p>Hình ảnh rõ nét, định dạng JPG, PNG hoặc WEBP.</p>
+              <p>Nhấn trực tiếp vào ảnh để thay đổi.</p>
             </div>
           </div>
 
           <div className="profile-avatar-layout">
-            <div className="profile-avatar-preview">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Ảnh đại diện hiện tại" />
-              ) : (
-                <span>USER</span>
-              )}
-            </div>
+            <button
+              type="button"
+              className="profile-avatar-trigger"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={saving}
+              aria-label="Thay đổi ảnh đại diện"
+            >
+              <span className="profile-avatar-preview">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Ảnh đại diện hiện tại" />
+                ) : (
+                  <span>USER</span>
+                )}
+              </span>
+            </button>
             <div className="profile-avatar-actions">
-              <label className="profile-upload-button" htmlFor="profile-avatar">
-                <span>＋</span> Chọn ảnh
-              </label>
               <input
                 ref={fileInputRef}
                 id="profile-avatar"
@@ -194,7 +198,6 @@ function Profile() {
 
         <section className="profile-card profile-details-card">
           <div className="profile-card-heading">
-            <div className="profile-heading-icon">✦</div>
             <div>
               <h2>Thông tin cơ bản</h2>
               <p>Các trường có dấu * là bắt buộc.</p>
@@ -202,7 +205,7 @@ function Profile() {
           </div>
 
           <div className="profile-fields">
-            <div className="profile-field profile-field-wide">
+            <div className="profile-field">
               <label htmlFor="fullName">Tên đầy đủ <span>*</span></label>
               <input
                 id="fullName"
@@ -230,6 +233,18 @@ function Profile() {
             </div>
 
             <div className="profile-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={form.email}
+                disabled
+                aria-describedby="profile-email-note"
+              />
+              <small id="profile-email-note" className="profile-helper">Email không thể chỉnh sửa.</small>
+            </div>
+
+            <div className="profile-field">
               <label htmlFor="phoneNumber">Số điện thoại <span>*</span></label>
               <input
                 id="phoneNumber"
@@ -243,18 +258,6 @@ function Profile() {
                 disabled={saving}
               />
               {fieldErrors.phoneNumber && <small className="profile-error">{fieldErrors.phoneNumber}</small>}
-            </div>
-
-            <div className="profile-field profile-field-wide">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={form.email}
-                disabled
-                aria-describedby="profile-email-note"
-              />
-              <small id="profile-email-note" className="profile-helper">Email không thể chỉnh sửa.</small>
             </div>
           </div>
 
