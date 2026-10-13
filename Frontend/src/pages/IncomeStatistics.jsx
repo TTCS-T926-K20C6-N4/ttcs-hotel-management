@@ -1,8 +1,30 @@
 import { useEffect, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import notoSansBoldUrl from '../assets/fonts/NotoSans-Bold.ttf?url'
+import notoSansRegularUrl from '../assets/fonts/NotoSans-Regular.ttf?url'
 
 const STATISTICS_YEARS = [2026, 2025, 2024, 2023, 2022]
+
+const loadFontAsBase64 = async (fontUrl) => {
+  const response = await fetch(fontUrl)
+
+  if (!response.ok) {
+    throw new Error('Không tải được phông chữ tiếng Việt cho báo cáo PDF.')
+  }
+
+  const bytes = new Uint8Array(await response.arrayBuffer())
+  let binary = ''
+  const chunkSize = 0x8000
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(index, index + chunkSize)
+    )
+  }
+
+  return btoa(binary)
+}
 
 function IncomeStatistics() {
   const [selectedYear, setSelectedYear] = useState(() =>
@@ -12,6 +34,7 @@ function IncomeStatistics() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [exportError, setExportError] = useState('')
 
   // =====================================================
   // LOAD DATA
@@ -117,51 +140,152 @@ function IncomeStatistics() {
   // EXPORT PDF
   // =====================================================
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!data) return
 
+    setExportError('')
+
+    let regularFont
+    let boldFont
+
+    try {
+      [regularFont, boldFont] = await Promise.all([
+        loadFontAsBase64(notoSansRegularUrl),
+        loadFontAsBase64(notoSansBoldUrl)
+      ])
+    } catch (err) {
+      setExportError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể tạo báo cáo PDF. Vui lòng thử lại.'
+      )
+      return
+    }
+
     const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const formatPdfMoney = (amount) =>
+      `${Number(amount || 0).toLocaleString('vi-VN')} VND`
+    const generatedAt = new Date().toLocaleString('vi-VN', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    })
 
-    doc.setFontSize(18)
-    doc.setFont('helvetica', 'bold')
+    doc.setProperties({
+      title: `Thong ke thu nhap nam ${selectedYear}`,
+      subject: 'Bao cao doanh thu theo thang',
+      author: 'Hotel Management'
+    })
 
-    doc.text(
-      'THONG KE THU NHAP',
-      105,
-      20,
-      { align: 'center' }
-    )
+    doc.addFileToVFS('NotoSans-Regular.ttf', regularFont)
+    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
+    doc.addFileToVFS('NotoSans-Bold.ttf', boldFont)
+    doc.addFont('NotoSans-Bold.ttf', 'NotoSans', 'bold')
 
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
+    doc.setFillColor(18, 38, 58)
+    doc.rect(0, 0, pageWidth, 51, 'F')
+    doc.setFillColor(59, 130, 246)
+    doc.rect(0, 0, 3, 51, 'F')
 
-    doc.text(
-      `Nam: ${selectedYear}`,
-      14,
-      32
-    )
+    doc.setFont('NotoSans', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(147, 197, 253)
+    doc.text('HOTEL MANAGEMENT  /  BÁO CÁO TÀI CHÍNH', 16, 14)
 
-    doc.text(
-      `Tong doanh thu: ${Number(
-        totalAmount
-      ).toLocaleString('vi-VN')} VND`,
-      14,
-      40
-    )
+    doc.setFontSize(19)
+    doc.setTextColor(255, 255, 255)
+    doc.text('THỐNG KÊ THU NHẬP', 16, 26)
+
+    doc.setFont('NotoSans', 'normal')
+    doc.setFontSize(9)
+    doc.setTextColor(203, 213, 225)
+    doc.text('Tổng quan doanh thu theo tháng', 16, 34)
+
+    doc.setFillColor(30, 55, 79)
+    doc.roundedRect(pageWidth - 54, 12, 38, 25, 3, 3, 'F')
+    doc.setFont('NotoSans', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(191, 219, 254)
+    doc.text('NĂM BÁO CÁO', pageWidth - 35, 20, { align: 'center' })
+    doc.setFont('NotoSans', 'bold')
+    doc.setFontSize(12)
+    doc.setTextColor(255, 255, 255)
+    doc.text(String(selectedYear), pageWidth - 35, 30, { align: 'center' })
+
+    const summaryCards = [
+      {
+        label: 'TỔNG DOANH THU',
+        value: formatPdfMoney(totalAmount),
+        note: `Trong năm ${selectedYear}`
+      },
+      {
+        label: 'THÁNG CAO NHẤT',
+        value: totalAmount > 0 ? `Tháng ${highestMonth.month}` : '--',
+        note: formatPdfMoney(totalAmount > 0 ? highestMonth.totalAmount : 0)
+      },
+      {
+        label: 'TRUNG BÌNH / THÁNG',
+        value: formatPdfMoney(averageAmount),
+        note: 'Tính trên 12 tháng'
+      }
+    ]
+
+    const cardGap = 5
+    const cardWidth = (pageWidth - 32 - cardGap * 2) / 3
+
+    summaryCards.forEach((card, index) => {
+      const x = 16 + index * (cardWidth + cardGap)
+
+      doc.setFillColor(255, 255, 255)
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.3)
+      doc.roundedRect(x, 59, cardWidth, 34, 2, 2, 'FD')
+      doc.setFillColor(59, 130, 246)
+      doc.roundedRect(x, 59, 1.5, 34, 0.7, 0.7, 'F')
+
+      doc.setFont('NotoSans', 'bold')
+      doc.setFontSize(7)
+      doc.setTextColor(100, 116, 139)
+      doc.text(card.label, x + 5, 67)
+
+      doc.setFontSize(11)
+      doc.setTextColor(30, 41, 59)
+      doc.text(card.value, x + 5, 77, {
+        maxWidth: cardWidth - 10
+      })
+
+      doc.setFont('NotoSans', 'normal')
+      doc.setFontSize(7)
+      doc.setTextColor(100, 116, 139)
+      doc.text(card.note, x + 5, 86, {
+        maxWidth: cardWidth - 10
+      })
+    })
+
+    doc.setFont('NotoSans', 'bold')
+    doc.setFontSize(9)
+    doc.setTextColor(30, 41, 59)
+    doc.text('CHI TIẾT DOANH THU THEO THÁNG', 16, 106)
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.3)
+    doc.line(16, 109, pageWidth - 16, 109)
 
     const tableData = months.map((item, index) => [
       String(index + 1).padStart(2, '0'),
-      `Thang ${item.month}`,
-      `${Number(
-        item.totalAmount
-      ).toLocaleString('vi-VN')} VND`
+      `Tháng ${item.month}`,
+      formatPdfMoney(item.totalAmount),
+      `${totalAmount > 0
+        ? ((item.totalAmount / totalAmount) * 100).toFixed(1)
+        : '0.0'}%`
     ])
 
     autoTable(doc, {
-      startY: 48,
+      startY: 114,
+      margin: { left: 16, right: 16 },
 
       head: [
-        ['STT', 'Thang', 'Tong tien']
+        ['STT', 'THÁNG', 'DOANH THU', 'TỶ TRỌNG']
       ],
 
       body: tableData,
@@ -169,39 +293,83 @@ function IncomeStatistics() {
       foot: [
         [
           '',
-          'Tong thu nhap 12 thang',
-          `${Number(
-            totalAmount
-          ).toLocaleString('vi-VN')} VND`
+          'TỔNG DOANH THU NĂM',
+          formatPdfMoney(totalAmount),
+          totalAmount > 0 ? '100.0%' : '0.0%'
         ]
       ],
 
       styles: {
-        fontSize: 10,
-        cellPadding: 4
+        font: 'NotoSans',
+        fontSize: 8,
+        cellPadding: 3.5,
+        textColor: [51, 65, 85],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.15
       },
 
       headStyles: {
-        halign: 'center'
+        fillColor: [37, 99, 170],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+        halign: 'center',
+        cellPadding: 4
+      },
+
+      alternateRowStyles: {
+        fillColor: [244, 248, 252]
       },
 
       columnStyles: {
         0: {
           halign: 'center',
-          cellWidth: 25
+          cellWidth: 18
         },
 
         1: {
-          halign: 'left'
+          halign: 'left',
+          cellWidth: 66
         },
 
         2: {
-          halign: 'right'
+          halign: 'right',
+          cellWidth: 56,
+          fontStyle: 'bold'
+        },
+
+        3: {
+          halign: 'right',
+          cellWidth: 38
         }
       },
 
       footStyles: {
-        fontStyle: 'bold'
+        fillColor: [18, 38, 58],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        cellPadding: 4
+      },
+
+      didDrawPage: () => {
+        doc.setDrawColor(226, 232, 240)
+        doc.setLineWidth(0.3)
+        doc.line(16, pageHeight - 15, pageWidth - 16, pageHeight - 15)
+
+        doc.setFont('NotoSans', 'normal')
+        doc.setFontSize(7)
+        doc.setTextColor(100, 116, 139)
+        doc.text(
+          'BÁO CÁO NỘI BỘ  |  HOTEL MANAGEMENT',
+          16,
+          pageHeight - 9
+        )
+        doc.text(
+          `Ngày xuất: ${generatedAt}`,
+          pageWidth - 16,
+          pageHeight - 9,
+          { align: 'right' }
+        )
       }
     })
 
@@ -287,6 +455,16 @@ function IncomeStatistics() {
           </button>
         </div>
       </div>
+
+      {exportError && (
+        <div role="alert" style={styles.errorCard}>
+          <div style={styles.errorIcon}>!</div>
+          <div>
+            <div style={styles.errorTitle}>Không thể xuất PDF</div>
+            <div style={styles.errorText}>{exportError}</div>
+          </div>
+        </div>
+      )}
 
       {/* LOADING */}
 
