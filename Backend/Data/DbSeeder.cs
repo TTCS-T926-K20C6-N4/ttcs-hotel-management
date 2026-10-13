@@ -5,6 +5,64 @@ namespace Backend.Data;
 
 public static class DbSeeder
 {
+    public const string DefaultAdminEmail = "admin@hotel.com";
+    public const string DefaultAdminPassword = "Admin@123";
+
+    public static async Task EnsureDefaultAdminAsync(AppDbContext context)
+    {
+        var normalizedEmail = DefaultAdminEmail.Trim();
+
+        var admin = await context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail.ToLower());
+
+        if (admin is null)
+        {
+            admin = new User
+            {
+                Email = normalizedEmail,
+                FullName = "Administrator",
+                Role = "Admin",
+                IsActive = true,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultAdminPassword),
+                FailedLoginAttempts = 0,
+                LockoutEnd = null,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Đã tạo tài khoản Admin mặc định.");
+            return;
+        }
+
+        var needsPasswordReset = string.IsNullOrWhiteSpace(admin.PasswordHash);
+
+        if (!needsPasswordReset)
+        {
+            try
+            {
+                needsPasswordReset = !BCrypt.Net.BCrypt.Verify(DefaultAdminPassword, admin.PasswordHash);
+            }
+            catch
+            {
+                needsPasswordReset = true;
+            }
+        }
+
+        if (needsPasswordReset)
+        {
+            admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(DefaultAdminPassword);
+            admin.IsActive = true;
+            admin.Role = string.IsNullOrWhiteSpace(admin.Role) ? "Admin" : admin.Role;
+            admin.FullName ??= "Administrator";
+            admin.Email = admin.Email.Trim();
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Đã cập nhật mật khẩu Admin mặc định.");
+        }
+    }
+
     public static async Task SeedAsync(AppDbContext context)
     {
         // Danh sách loại phòng mặc định dùng chung cho cả nhóm
