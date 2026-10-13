@@ -10,6 +10,7 @@ function IncomeStatistics() {
   )
 
   const [data, setData] = useState(null)
+  const [selectedMonth, setSelectedMonth] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -24,6 +25,7 @@ function IncomeStatistics() {
       setLoading(true)
       setError('')
       setData(null)
+      setSelectedMonth(null)
 
       try {
         const response = await fetch(
@@ -502,9 +504,9 @@ function IncomeStatistics() {
                     const height =
                       hasRevenue
                         ? Math.max(
-                            (item.totalAmount / maxRevenue) * 100,
-                            8
-                          )
+                          (item.totalAmount / maxRevenue) * 100,
+                          8
+                        )
                         : 2
 
                     const isHighest =
@@ -677,14 +679,24 @@ function IncomeStatistics() {
                   item.month === highestMonth.month
 
                 return (
-                  <div
+                  <button
                     key={item.month}
+                    type="button"
+                    onClick={() => setSelectedMonth(item.month)}
+                    aria-label={`Xem chi tiết doanh thu tháng ${item.month}`}
                     style={{
                       ...styles.monthCard,
-
-                      ...(isHighest
-                        ? styles.highestMonthCard
-                        : {})
+                      ...(isHighest ? styles.highestMonthCard : {}),
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.2s ease',
+                      border: selectedMonth === item.month
+                        ? '2px solid #2563eb'
+                        : '1px solid #e2e8f0',
+                      boxShadow: selectedMonth === item.month
+                        ? '0 8px 24px rgba(37,99,235,0.18)'
+                        : '0 3px 12px rgba(15,23,42,0.05)'
                     }}
                   >
                     <div style={styles.monthCardTop}>
@@ -730,17 +742,58 @@ function IncomeStatistics() {
 
                           width: hasRevenue
                             ? `${Math.max(
-                                (item.totalAmount / maxRevenue) * 100,
-                                4
-                              )}%`
+                              (item.totalAmount / maxRevenue) * 100,
+                              4
+                            )}%`
                             : '0%'
                         }}
                       />
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
+            {selectedMonth !== null && (
+              <div
+                style={{
+                  marginTop: '24px',
+                  padding: '24px',
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 24px rgba(37,99,235,0.08)'
+                }}
+              >
+                <h3 style={{ color: '#1d4ed8', marginTop: 0 }}>
+                  Chi tiết doanh thu tháng {selectedMonth}/{selectedYear}
+                </h3>
+
+                <p style={{ color: '#64748b' }}>
+                  Tổng doanh thu trong tháng
+                </p>
+
+                <h2 style={{ color: '#1d4ed8', fontSize: '28px' }}>
+                  {formatMoney(
+                    months.find(item => item.month === selectedMonth)?.totalAmount ?? 0
+                  )}
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonth(null)}
+                  style={{
+                    padding: '10px 18px',
+                    background: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Đóng chi tiết
+                </button>
+              </div>
+            )}
           </div>
 
         </>
