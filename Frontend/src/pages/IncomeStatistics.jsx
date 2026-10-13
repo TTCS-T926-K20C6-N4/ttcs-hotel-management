@@ -8,9 +8,14 @@ function IncomeStatistics() {
   const [selectedYear, setSelectedYear] = useState(() =>
     Math.min(Math.max(new Date().getFullYear(), 2022), 2026)
   )
+
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // =====================================================
+  // LOAD DATA
+  // =====================================================
 
   useEffect(() => {
     const controller = new AbortController()
@@ -60,8 +65,16 @@ function IncomeStatistics() {
     return () => controller.abort()
   }, [selectedYear])
 
+  // =====================================================
+  // FORMAT
+  // =====================================================
+
   const formatMoney = (amount) =>
     Number(amount || 0).toLocaleString('vi-VN') + ' ₫'
+
+  // =====================================================
+  // DATA 12 THÁNG
+  // =====================================================
 
   const months = Array.from({ length: 12 }, (_, index) => {
     const month = index + 1
@@ -81,17 +94,34 @@ function IncomeStatistics() {
     0
   )
 
-  // ================================
-  // EXPORT THỐNG KÊ THU NHẬP RA PDF
-  // ================================
+  const highestMonth = months.reduce(
+    (highest, item) =>
+      item.totalAmount > highest.totalAmount
+        ? item
+        : highest,
+    months[0]
+  )
+
+  const activeMonths = months.filter(
+    (item) => item.totalAmount > 0
+  ).length
+
+  const averageAmount = totalAmount / 12
+
+  const maxRevenue = Math.max(
+    ...months.map((item) => item.totalAmount),
+    1
+  )
+
+  // =====================================================
+  // EXPORT PDF
+  // =====================================================
+
   const handleExportPDF = () => {
-    if (!data) {
-      return
-    }
+    if (!data) return
 
     const doc = new jsPDF()
 
-    // Tiêu đề PDF
     doc.setFontSize(18)
     doc.setFont('helvetica', 'bold')
 
@@ -102,7 +132,6 @@ function IncomeStatistics() {
       { align: 'center' }
     )
 
-    // Thông tin năm và tổng doanh thu
     doc.setFontSize(11)
     doc.setFont('helvetica', 'normal')
 
@@ -113,21 +142,21 @@ function IncomeStatistics() {
     )
 
     doc.text(
-      `Tong doanh thu: ${Number(totalAmount).toLocaleString(
-        'vi-VN'
-      )} VND`,
+      `Tong doanh thu: ${Number(
+        totalAmount
+      ).toLocaleString('vi-VN')} VND`,
       14,
       40
     )
 
-    // Dữ liệu 12 tháng
     const tableData = months.map((item, index) => [
       String(index + 1).padStart(2, '0'),
       `Thang ${item.month}`,
-      `${Number(item.totalAmount).toLocaleString('vi-VN')} VND`
+      `${Number(
+        item.totalAmount
+      ).toLocaleString('vi-VN')} VND`
     ])
 
-    // Tạo bảng trong PDF
     autoTable(doc, {
       startY: 48,
 
@@ -141,7 +170,9 @@ function IncomeStatistics() {
         [
           '',
           'Tong thu nhap 12 thang',
-          `${Number(totalAmount).toLocaleString('vi-VN')} VND`
+          `${Number(
+            totalAmount
+          ).toLocaleString('vi-VN')} VND`
         ]
       ],
 
@@ -174,32 +205,66 @@ function IncomeStatistics() {
       }
     })
 
-    // Tên file tải xuống
     doc.save(
       `thong-ke-thu-nhap-${selectedYear}.pdf`
     )
   }
 
+  // =====================================================
+  // UI
+  // =====================================================
+
   return (
     <div style={styles.page}>
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
 
-      <div style={styles.heading}>
-
+      <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>
+          <div style={styles.eyebrow}>
+            BÁO CÁO TÀI CHÍNH
+          </div>
+
+          <h1 style={styles.title}>
             Thống kê thu nhập
-          </h2>
+          </h1>
 
           <p style={styles.subtitle}>
-            Theo dõi doanh thu khách sạn theo từng tháng trong năm.
+            Tổng quan và phân tích doanh thu khách sạn theo từng tháng.
           </p>
         </div>
 
-        {/* Export PDF + chọn năm */}
-
         <div style={styles.actions}>
+          <div style={styles.yearControl}>
+            <span style={styles.calendarIcon}>
+              ◫
+            </span>
+
+            <div>
+              <div style={styles.yearControlLabel}>
+                Năm thống kê
+              </div>
+
+              <select
+                value={selectedYear}
+                onChange={(event) =>
+                  setSelectedYear(
+                    Number(event.target.value)
+                  )
+                }
+                style={styles.yearSelect}
+              >
+                {STATISTICS_YEARS.map((year) => (
+                  <option
+                    key={year}
+                    value={year}
+                  >
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <button
             type="button"
@@ -207,275 +272,530 @@ function IncomeStatistics() {
             disabled={loading || !data}
             style={{
               ...styles.exportButton,
-
-              opacity:
-                loading || !data
-                  ? 0.6
-                  : 1,
-
+              opacity: loading || !data ? 0.55 : 1,
               cursor:
                 loading || !data
                   ? 'not-allowed'
                   : 'pointer'
             }}
           >
-            Export PDF
-          </button>
-
-          <label style={styles.yearSelector}>
-
-            <span style={styles.yearLabel}>
-              Chọn năm xem
+            <span style={styles.exportIcon}>
+              ↓
             </span>
 
-            <select
-              aria-label="Chọn năm xem thống kê thu nhập"
-              value={selectedYear}
-              onChange={(event) =>
-                setSelectedYear(
-                  Number(event.target.value)
-                )
-              }
-              style={styles.yearSelect}
-            >
-              {STATISTICS_YEARS.map((year) => (
-                <option
-                  key={year}
-                  value={year}
-                >
-                  Năm {year}
-                </option>
-              ))}
-            </select>
-
-          </label>
-
+            Xuất PDF
+          </button>
         </div>
-
       </div>
 
-      {/* ================= LOADING ================= */}
+      {/* LOADING */}
 
       {loading && (
-        <p role="status">
-          Đang tải dữ liệu thu nhập năm {selectedYear}...
-        </p>
+        <div style={styles.stateCard}>
+          <div style={styles.loadingCircle}>
+            ↻
+          </div>
+
+          <div>
+            <div style={styles.stateTitle}>
+              Đang tải báo cáo
+            </div>
+
+            <div style={styles.stateText}>
+              Đang tổng hợp doanh thu năm {selectedYear}...
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* ================= ERROR ================= */}
+      {/* ERROR */}
 
       {error && (
-        <p
-          role="alert"
-          style={{
-            color: '#dc2626'
-          }}
-        >
-          {error}
-        </p>
-      )}
+        <div style={styles.errorCard}>
+          <div style={styles.errorIcon}>
+            !
+          </div>
 
-      {/* ================= DATA ================= */}
+          <div>
+            <div style={styles.errorTitle}>
+              Không thể tải dữ liệu
+            </div>
+
+            <div style={styles.errorText}>
+              {error}
+            </div>
+          </div>
+        </div>
+      )}
 
       {!loading && !error && data && (
         <>
 
-          {/* Tổng doanh thu */}
+          {/* ================================================= */}
+          {/* HERO REVENUE */}
+          {/* ================================================= */}
 
-          <div style={styles.summary}>
+          <div style={styles.heroGrid}>
 
-            <div>
+            <div style={styles.heroCard}>
+              <div style={styles.heroGlowOne} />
+              <div style={styles.heroGlowTwo} />
 
-              <div style={styles.summaryLabel}>
-                TỔNG DOANH THU NĂM {data.year}
+              <div style={styles.heroContent}>
+                <div style={styles.heroTop}>
+                  <div>
+                    <div style={styles.heroLabel}>
+                      TỔNG DOANH THU NĂM {data.year}
+                    </div>
+
+                    <div style={styles.heroAmount}>
+                      {formatMoney(totalAmount)}
+                    </div>
+
+                    <div style={styles.heroDescription}>
+                      Tổng doanh thu ghi nhận trong 12 tháng
+                    </div>
+                  </div>
+
+                  <div style={styles.heroMoneyIcon}>
+                    ₫
+                  </div>
+                </div>
+
+                <div style={styles.heroBottom}>
+                  <div style={styles.heroMiniStat}>
+                    <div style={styles.heroMiniLabel}>
+                      Tháng hoạt động
+                    </div>
+
+                    <div style={styles.heroMiniValue}>
+                      {activeMonths}/12
+                    </div>
+                  </div>
+
+                  <div style={styles.heroVerticalLine} />
+
+                  <div style={styles.heroMiniStat}>
+                    <div style={styles.heroMiniLabel}>
+                      Trung bình / tháng
+                    </div>
+
+                    <div style={styles.heroMiniValue}>
+                      {formatMoney(averageAmount)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT CARDS */}
+
+            <div style={styles.rightStats}>
+
+              <div style={styles.metricCard}>
+                <div style={styles.metricHeader}>
+                  <div style={styles.metricIconGreen}>
+                    ↗
+                  </div>
+
+                  <span style={styles.greenBadge}>
+                    Cao nhất
+                  </span>
+                </div>
+
+                <div style={styles.metricLabel}>
+                  THÁNG DOANH THU CAO NHẤT
+                </div>
+
+                <div style={styles.metricMain}>
+                  {totalAmount > 0
+                    ? `Tháng ${highestMonth.month}`
+                    : 'Chưa có'}
+                </div>
+
+                <div style={styles.metricMoney}>
+                  {formatMoney(
+                    totalAmount > 0
+                      ? highestMonth.totalAmount
+                      : 0
+                  )}
+                </div>
               </div>
 
-              <div style={styles.summaryAmount}>
-                {formatMoney(totalAmount)}
-              </div>
+              <div style={styles.metricCard}>
+                <div style={styles.metricHeader}>
+                  <div style={styles.metricIconBlue}>
+                    ≈
+                  </div>
 
-              <div style={styles.summaryNote}>
-                Tổng thu nhập từ tháng 1 đến tháng 12
+                  <span style={styles.blueBadge}>
+                    Bình quân
+                  </span>
+                </div>
+
+                <div style={styles.metricLabel}>
+                  DOANH THU TRUNG BÌNH
+                </div>
+
+                <div style={styles.metricMain}>
+                  {formatMoney(averageAmount)}
+                </div>
+
+                <div style={styles.metricNote}>
+                  Tính trên tổng 12 tháng
+                </div>
               </div>
 
             </div>
-
-            <div style={styles.yearTag}>
-              Năm {data.year}
-            </div>
-
           </div>
 
-          {/* ================= BẢNG ================= */}
+          {/* ================================================= */}
+          {/* CHART */}
+          {/* ================================================= */}
 
-          <div style={styles.tableCard}>
+          <div style={styles.chartCard}>
 
-            <div style={styles.tableHeading}>
-
+            <div style={styles.chartHeader}>
               <div>
+                <div style={styles.chartTitle}>
+                  Doanh thu theo tháng
+                </div>
 
-                <h3 style={styles.tableTitle}>
-                  Chi tiết doanh thu
-                </h3>
-
-                <p style={styles.tableSubtitle}>
-                  Báo cáo thu nhập theo từng tháng
-                </p>
-
+                <div style={styles.chartSubtitle}>
+                  So sánh doanh thu 12 tháng trong năm {data.year}
+                </div>
               </div>
 
-              <span style={styles.monthTag}>
-                12 tháng
-              </span>
-
+              <div style={styles.chartLegend}>
+                <span style={styles.legendDot} />
+                Doanh thu
+              </div>
             </div>
 
-            <div
-              style={{
-                overflowX: 'auto'
-              }}
-            >
+            {/* COLUMN CHART */}
 
-              <table style={styles.table}>
+            <div style={styles.chartBody}>
 
-                <thead>
+              <div style={styles.yAxis}>
+                <span>100%</span>
+                <span>75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+              </div>
 
-                  <tr>
+              <div style={styles.chartContent}>
 
-                    <th style={styles.numberHeader}>
-                      STT
-                    </th>
+                <div style={styles.gridLines}>
+                  <div style={styles.gridLine} />
+                  <div style={styles.gridLine} />
+                  <div style={styles.gridLine} />
+                  <div style={styles.gridLine} />
+                  <div style={styles.gridLine} />
+                </div>
 
-                    <th style={styles.header}>
-                      Tháng
-                    </th>
+                <div style={styles.columns}>
+                  {months.map((item) => {
+                    const hasRevenue =
+                      item.totalAmount > 0
 
-                    <th style={styles.moneyHeader}>
-                      Tổng tiền
-                    </th>
+                    const height =
+                      hasRevenue
+                        ? Math.max(
+                            (item.totalAmount / maxRevenue) * 100,
+                            8
+                          )
+                        : 2
 
-                  </tr>
+                    const isHighest =
+                      totalAmount > 0 &&
+                      item.month === highestMonth.month
 
-                </thead>
+                    return (
+                      <div
+                        key={item.month}
+                        style={styles.columnItem}
+                      >
+                        <div style={styles.columnArea}>
 
-                <tbody>
+                          {hasRevenue && (
+                            <div style={styles.columnTooltip}>
+                              {formatMoney(item.totalAmount)}
+                            </div>
+                          )}
 
-                  {months.map((item, index) => (
+                          <div
+                            style={{
+                              ...styles.column,
 
-                    <tr
-                      key={item.month}
-                      style={{
-                        background:
-                          index % 2 === 0
-                            ? '#ffffff'
-                            : '#f8fafc'
-                      }}
-                    >
+                              height: `${height}%`,
 
-                      <td style={styles.numberCell}>
-                        {String(index + 1).padStart(
-                          2,
-                          '0'
-                        )}
-                      </td>
+                              background: isHighest
+                                ? 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)'
+                                : hasRevenue
+                                  ? 'linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)'
+                                  : '#e8eef6',
 
-                      <td style={styles.cell}>
-                        Tháng {item.month}
-                      </td>
+                              boxShadow: isHighest
+                                ? '0 8px 18px rgba(37,99,235,0.25)'
+                                : 'none'
+                            }}
+                          />
+                        </div>
 
-                      <td
-                        style={{
-                          ...styles.moneyCell,
+                        <div
+                          style={{
+                            ...styles.columnMonth,
 
-                          color:
-                            item.totalAmount > 0
+                            color: isHighest
                               ? '#1d4ed8'
                               : '#64748b',
 
-                          fontWeight:
-                            item.totalAmount > 0
-                              ? 700
-                              : 400
-                        }}
-                      >
-                        {formatMoney(
-                          item.totalAmount
-                        )}
-                      </td>
+                            fontWeight: isHighest
+                              ? 800
+                              : 600
+                          }}
+                        >
+                          T{item.month}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
 
-                    </tr>
-
-                  ))}
-
-                </tbody>
-
-                <tfoot>
-
-                  <tr style={styles.totalRow}>
-
-                    <td style={styles.totalCell}>
-                    </td>
-
-                    <td style={styles.totalCell}>
-                      Tổng thu nhập 12 tháng
-                    </td>
-
-                    <td style={styles.totalMoney}>
-                      {formatMoney(totalAmount)}
-                    </td>
-
-                  </tr>
-
-                </tfoot>
-
-              </table>
-
+              </div>
             </div>
 
+            {/* CHART FOOTER */}
+
+            <div style={styles.chartFooter}>
+
+              <div style={styles.summaryItem}>
+                <div style={styles.summaryIcon}>
+                  ₫
+                </div>
+
+                <div>
+                  <div style={styles.summaryLabel}>
+                    Tổng doanh thu
+                  </div>
+
+                  <div style={styles.summaryValue}>
+                    {formatMoney(totalAmount)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={styles.summaryDivider} />
+
+              <div style={styles.summaryItem}>
+                <div style={styles.summaryIcon}>
+                  ↗
+                </div>
+
+                <div>
+                  <div style={styles.summaryLabel}>
+                    Tháng cao nhất
+                  </div>
+
+                  <div style={styles.summaryValue}>
+                    {totalAmount > 0
+                      ? `Tháng ${highestMonth.month}`
+                      : '--'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={styles.summaryDivider} />
+
+              <div style={styles.summaryItem}>
+                <div style={styles.summaryIcon}>
+                  ◷
+                </div>
+
+                <div>
+                  <div style={styles.summaryLabel}>
+                    Có doanh thu
+                  </div>
+
+                  <div style={styles.summaryValue}>
+                    {activeMonths}/12 tháng
+                  </div>
+                </div>
+              </div>
+
+              <div style={styles.summaryDivider} />
+
+              <div style={styles.summaryItem}>
+                <div style={styles.summaryIcon}>
+                  ≈
+                </div>
+
+                <div>
+                  <div style={styles.summaryLabel}>
+                    Bình quân
+                  </div>
+
+                  <div style={styles.summaryValue}>
+                    {formatMoney(averageAmount)}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ================================================= */}
+          {/* MONTHLY REVENUE */}
+          {/* ================================================= */}
+
+          <div style={styles.monthSection}>
+
+            <div style={styles.monthSectionHeader}>
+              <div>
+                <div style={styles.monthSectionTitle}>
+                  Chi tiết doanh thu
+                </div>
+
+                <div style={styles.monthSectionSubtitle}>
+                  Doanh thu thực tế của từng tháng
+                </div>
+              </div>
+
+              <div style={styles.monthCount}>
+                {activeMonths} tháng có doanh thu
+              </div>
+            </div>
+
+            <div style={styles.monthGrid}>
+              {months.map((item) => {
+                const hasRevenue =
+                  item.totalAmount > 0
+
+                const isHighest =
+                  totalAmount > 0 &&
+                  item.month === highestMonth.month
+
+                return (
+                  <div
+                    key={item.month}
+                    style={{
+                      ...styles.monthCard,
+
+                      ...(isHighest
+                        ? styles.highestMonthCard
+                        : {})
+                    }}
+                  >
+                    <div style={styles.monthCardTop}>
+                      <div
+                        style={{
+                          ...styles.monthNumber,
+
+                          ...(hasRevenue
+                            ? styles.activeMonthNumber
+                            : {})
+                        }}
+                      >
+                        {String(item.month).padStart(2, '0')}
+                      </div>
+
+                      {isHighest && (
+                        <span style={styles.bestBadge}>
+                          Cao nhất
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={styles.monthName}>
+                      Tháng {item.month}
+                    </div>
+
+                    <div
+                      style={{
+                        ...styles.monthMoney,
+
+                        color: hasRevenue
+                          ? '#172b4d'
+                          : '#94a3b8'
+                      }}
+                    >
+                      {formatMoney(item.totalAmount)}
+                    </div>
+
+                    <div style={styles.monthProgress}>
+                      <div
+                        style={{
+                          ...styles.monthProgressValue,
+
+                          width: hasRevenue
+                            ? `${Math.max(
+                                (item.totalAmount / maxRevenue) * 100,
+                                4
+                              )}%`
+                            : '0%'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
         </>
       )}
-
     </div>
   )
 }
 
-// ========================================
+// =====================================================
 // STYLE
-// ========================================
+// =====================================================
 
 const styles = {
-
   page: {
-    padding: '28px',
     maxWidth: '1400px',
-    margin: '0 auto'
+    margin: '0 auto',
+    padding: '30px'
   },
 
-  heading: {
-    marginBottom: '24px',
+  // =====================================================
+  // HEADER
+  // =====================================================
+
+  header: {
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '24px',
     flexWrap: 'wrap',
-    gap: '16px'
+    marginBottom: '26px'
+  },
+
+  eyebrow: {
+    marginBottom: '7px',
+    color: '#2563eb',
+    fontSize: '10px',
+    fontWeight: 800,
+    letterSpacing: '1.7px'
   },
 
   title: {
-    margin: '0 0 8px',
-    fontSize: '26px',
-    fontWeight: 700,
-    color: '#142b49'
+    margin: 0,
+    color: '#172b4d',
+    fontSize: '29px',
+    lineHeight: 1.25,
+    fontWeight: 800
   },
 
   subtitle: {
-    margin: 0,
+    margin: '7px 0 0',
     color: '#64748b',
-    fontSize: '14px'
+    fontSize: '13px',
+    lineHeight: 1.6
   },
 
-  // Nhóm Export PDF + chọn năm
   actions: {
     display: 'flex',
     alignItems: 'center',
@@ -483,187 +803,691 @@ const styles = {
     flexWrap: 'wrap'
   },
 
-  // Nút Export PDF
-  exportButton: {
-    padding: '10px 18px',
-    border: 'none',
-    borderRadius: '8px',
-    background: '#2563eb',
-    color: '#ffffff',
-    fontSize: '14px',
-    fontWeight: 600,
-    minHeight: '40px'
-  },
-
-  yearSelector: {
+  yearControl: {
+    minHeight: '48px',
+    padding: '7px 13px',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    color: '#334155',
-    fontSize: '14px',
-    fontWeight: 600
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    boxShadow:
+      '0 3px 10px rgba(15,23,42,0.04)'
   },
 
-  yearLabel: {
-    whiteSpace: 'nowrap'
+  calendarIcon: {
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '8px',
+    background: '#eff6ff',
+    color: '#2563eb',
+    fontSize: '15px'
+  },
+
+  yearControlLabel: {
+    marginBottom: '1px',
+    color: '#94a3b8',
+    fontSize: '9px',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
 
   yearSelect: {
-    minWidth: '120px',
-    padding: '10px 12px',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    background: '#ffffff',
+    minWidth: '78px',
+    padding: 0,
+    border: 'none',
+    outline: 'none',
+    background: 'transparent',
     color: '#172b4d',
+    fontSize: '14px',
+    fontWeight: 800,
     cursor: 'pointer'
   },
 
-  summary: {
+  exportButton: {
+    minHeight: '48px',
+    padding: '0 18px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    border: 'none',
+    borderRadius: '12px',
+    background: '#172b4d',
+    color: '#ffffff',
+    fontSize: '13px',
+    fontWeight: 700,
+    boxShadow:
+      '0 7px 18px rgba(23,43,77,0.16)'
+  },
+
+  exportIcon: {
+    fontSize: '17px'
+  },
+
+  // =====================================================
+  // STATE
+  // =====================================================
+
+  stateCard: {
+    padding: '22px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
     background: '#ffffff',
     border: '1px solid #e2e8f0',
-    borderLeft: '4px solid #2563eb',
-    borderRadius: '12px',
-    padding: '22px 26px',
-    marginBottom: '22px',
+    borderRadius: '16px'
+  },
+
+  loadingCircle: {
+    width: '42px',
+    height: '42px',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
-    gap: '12px',
-    boxShadow: '0 3px 12px rgba(0,0,0,0.03)'
-  },
-
-  summaryLabel: {
-    fontSize: '12px',
-    letterSpacing: '1px',
-    fontWeight: 700,
-    color: '#64748b'
-  },
-
-  summaryAmount: {
-    fontSize: '30px',
-    fontWeight: 750,
-    color: '#172b4d',
-    marginTop: '10px'
-  },
-
-  summaryNote: {
-    color: '#94a3b8',
-    fontSize: '13px',
-    marginTop: '6px'
-  },
-
-  yearTag: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
     background: '#eff6ff',
     color: '#2563eb',
-    padding: '8px 14px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: 600
+    fontSize: '20px',
+    fontWeight: 800
   },
 
-  tableCard: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 3px 12px rgba(0,0,0,0.03)'
+  stateTitle: {
+    color: '#172b4d',
+    fontSize: '14px',
+    fontWeight: 700
   },
 
-  tableHeading: {
+  stateText: {
+    marginTop: '3px',
+    color: '#94a3b8',
+    fontSize: '12px'
+  },
+
+  errorCard: {
+    padding: '22px',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '12px',
+    gap: '14px',
+    background: '#fff7f7',
+    border: '1px solid #fecaca',
+    borderRadius: '16px'
+  },
+
+  errorIcon: {
+    width: '42px',
+    height: '42px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    background: '#fee2e2',
+    color: '#dc2626',
+    fontWeight: 800
+  },
+
+  errorTitle: {
+    color: '#991b1b',
+    fontSize: '14px',
+    fontWeight: 700
+  },
+
+  errorText: {
+    marginTop: '3px',
+    color: '#b91c1c',
+    fontSize: '12px'
+  },
+
+  // =====================================================
+  // HERO
+  // =====================================================
+
+  heroGrid: {
+    display: 'grid',
+    gridTemplateColumns:
+      'minmax(420px, 1.6fr) minmax(400px, 1fr)',
+    gap: '18px',
     marginBottom: '20px'
   },
 
-  tableTitle: {
-    margin: '0 0 5px',
+  heroCard: {
+    position: 'relative',
+    minHeight: '245px',
+    overflow: 'hidden',
+    borderRadius: '20px',
+    background:
+      'linear-gradient(135deg, #172554 0%, #1e3a8a 42%, #2563eb 100%)',
+    boxShadow:
+      '0 16px 34px rgba(30,64,175,0.20)'
+  },
+
+  heroGlowOne: {
+    position: 'absolute',
+    width: '240px',
+    height: '240px',
+    top: '-100px',
+    right: '-60px',
+    borderRadius: '50%',
+    background: 'rgba(96,165,250,0.20)'
+  },
+
+  heroGlowTwo: {
+    position: 'absolute',
+    width: '180px',
+    height: '180px',
+    right: '80px',
+    bottom: '-120px',
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.07)'
+  },
+
+  heroContent: {
+    position: 'relative',
+    zIndex: 1,
+    height: '100%',
+    boxSizing: 'border-box',
+    padding: '27px'
+  },
+
+  heroTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '20px'
+  },
+
+  heroLabel: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '1px'
+  },
+
+  heroAmount: {
+    marginTop: '10px',
+    color: '#ffffff',
+    fontSize: '38px',
+    lineHeight: 1.2,
+    fontWeight: 800
+  },
+
+  heroDescription: {
+    marginTop: '8px',
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: '12px'
+  },
+
+  heroMoneyIcon: {
+    width: '54px',
+    height: '54px',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid rgba(255,255,255,0.16)',
+    borderRadius: '16px',
+    background: 'rgba(255,255,255,0.11)',
+    color: '#ffffff',
+    fontSize: '26px',
+    fontWeight: 800
+  },
+
+  heroBottom: {
+    marginTop: '30px',
+    paddingTop: '18px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    borderTop: '1px solid rgba(255,255,255,0.14)'
+  },
+
+  heroMiniStat: {
+    flex: 1
+  },
+
+  heroMiniLabel: {
+    color: 'rgba(255,255,255,0.58)',
+    fontSize: '10px'
+  },
+
+  heroMiniValue: {
+    marginTop: '5px',
+    color: '#ffffff',
+    fontSize: '14px',
+    fontWeight: 700
+  },
+
+  heroVerticalLine: {
+    width: '1px',
+    height: '32px',
+    background: 'rgba(255,255,255,0.14)'
+  },
+
+  rightStats: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '18px'
+  },
+
+  metricCard: {
+    minWidth: 0,
+    padding: '22px',
+    background: '#ffffff',
+    border: '1px solid #e5eaf2',
+    borderRadius: '18px',
+    boxShadow:
+      '0 7px 22px rgba(15,23,42,0.045)'
+  },
+
+  metricHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    marginBottom: '24px'
+  },
+
+  metricIconGreen: {
+    width: '42px',
+    height: '42px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '12px',
+    background: '#f0fdf4',
+    color: '#16a34a',
     fontSize: '19px',
-    color: '#172b4d'
+    fontWeight: 800
   },
 
-  tableSubtitle: {
-    margin: 0,
+  metricIconBlue: {
+    width: '42px',
+    height: '42px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '12px',
+    background: '#eff6ff',
+    color: '#2563eb',
+    fontSize: '19px',
+    fontWeight: 800
+  },
+
+  greenBadge: {
+    padding: '5px 8px',
+    borderRadius: '20px',
+    background: '#f0fdf4',
+    color: '#16a34a',
+    fontSize: '9px',
+    fontWeight: 700
+  },
+
+  blueBadge: {
+    padding: '5px 8px',
+    borderRadius: '20px',
+    background: '#eff6ff',
+    color: '#2563eb',
+    fontSize: '9px',
+    fontWeight: 700
+  },
+
+  metricLabel: {
+    minHeight: '28px',
     color: '#94a3b8',
-    fontSize: '13px'
+    fontSize: '9px',
+    fontWeight: 700,
+    letterSpacing: '0.6px'
   },
 
-  monthTag: {
-    padding: '7px 12px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '7px',
+  metricMain: {
+    marginTop: '7px',
+    color: '#172b4d',
+    fontSize: '19px',
+    lineHeight: 1.3,
+    fontWeight: 800
+  },
+
+  metricMoney: {
+    marginTop: '6px',
+    color: '#16a34a',
+    fontSize: '13px',
+    fontWeight: 700
+  },
+
+  metricNote: {
+    marginTop: '7px',
+    color: '#94a3b8',
+    fontSize: '11px'
+  },
+
+  // =====================================================
+  // CHART
+  // =====================================================
+
+  chartCard: {
+    marginBottom: '20px',
+    padding: '25px',
+    background: '#ffffff',
+    border: '1px solid #e5eaf2',
+    borderRadius: '20px',
+    boxShadow:
+      '0 8px 28px rgba(15,23,42,0.05)'
+  },
+
+  chartHeader: {
+    paddingBottom: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '15px',
+    flexWrap: 'wrap',
+    borderBottom: '1px solid #edf1f5'
+  },
+
+  chartTitle: {
+    color: '#172b4d',
+    fontSize: '18px',
+    fontWeight: 800
+  },
+
+  chartSubtitle: {
+    marginTop: '5px',
+    color: '#94a3b8',
+    fontSize: '12px'
+  },
+
+  chartLegend: {
+    padding: '7px 11px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+    borderRadius: '20px',
+    background: '#f8fafc',
     color: '#64748b',
-    fontSize: '13px'
+    fontSize: '11px',
+    fontWeight: 600
   },
 
-  table: {
+  legendDot: {
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    background: '#2563eb'
+  },
+
+  chartBody: {
+    height: '300px',
+    paddingTop: '24px',
+    display: 'flex',
+    gap: '13px'
+  },
+
+  yAxis: {
+    width: '36px',
+    paddingBottom: '29px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    color: '#b0bac8',
+    fontSize: '9px'
+  },
+
+  chartContent: {
+    position: 'relative',
+    flex: 1,
+    minWidth: 0
+  },
+
+  gridLines: {
+    position: 'absolute',
+    inset: '0 0 29px 0',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    pointerEvents: 'none'
+  },
+
+  gridLine: {
     width: '100%',
-    borderCollapse: 'collapse',
-    minWidth: '420px'
+    borderTop: '1px dashed #e9eef5'
   },
 
-  header: {
-    background: '#eef2f7',
-    color: '#334155',
-    padding: '14px 18px',
-    textAlign: 'left',
-    fontSize: '14px'
+  columns: {
+    position: 'absolute',
+    inset: 0,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(12, 1fr)',
+    gap: '12px'
   },
 
-  numberHeader: {
-    background: '#eef2f7',
-    color: '#334155',
-    padding: '14px 18px',
-    textAlign: 'center',
-    width: '70px',
-    fontSize: '14px'
+  columnItem: {
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column'
   },
 
-  moneyHeader: {
-    background: '#eef2f7',
-    color: '#334155',
-    padding: '14px 18px',
-    textAlign: 'right',
-    fontSize: '14px'
+  columnArea: {
+    position: 'relative',
+    height: 'calc(100% - 29px)',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center'
   },
 
-  numberCell: {
-    padding: '13px 18px',
-    textAlign: 'center',
+  column: {
+    width: '56%',
+    minWidth: '14px',
+    maxWidth: '34px',
+    borderRadius: '7px 7px 3px 3px',
+    transition: 'height 0.25s ease'
+  },
+
+  columnTooltip: {
+    position: 'absolute',
+    top: '-2px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '4px 6px',
+    borderRadius: '5px',
+    background: '#172b4d',
+    color: '#ffffff',
+    fontSize: '8px',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    zIndex: 2
+  },
+
+  columnMonth: {
+    height: '29px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    color: '#64748b',
+    fontSize: '10px'
+  },
+
+  chartFooter: {
+    marginTop: '7px',
+    padding: '17px 20px',
+    display: 'grid',
+    gridTemplateColumns:
+      '1fr auto 1fr auto 1fr auto 1fr',
+    alignItems: 'center',
+    gap: '18px',
+    borderRadius: '14px',
+    background: '#f8fafc'
+  },
+
+  summaryItem: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px'
+  },
+
+  summaryIcon: {
+    width: '32px',
+    height: '32px',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '9px',
+    background: '#ffffff',
+    border: '1px solid #e5eaf2',
+    color: '#2563eb',
+    fontSize: '13px',
+    fontWeight: 800
+  },
+
+  summaryLabel: {
     color: '#94a3b8',
-    borderBottom: '1px solid #e9edf3'
+    fontSize: '9px',
+    fontWeight: 600
   },
 
-  cell: {
-    padding: '13px 18px',
-    color: '#334155',
-    borderBottom: '1px solid #e9edf3'
+  summaryValue: {
+    marginTop: '3px',
+    color: '#172b4d',
+    fontSize: '12px',
+    fontWeight: 800
   },
 
-  moneyCell: {
-    padding: '13px 18px',
-    textAlign: 'right',
-    borderBottom: '1px solid #e9edf3'
+  summaryDivider: {
+    width: '1px',
+    height: '32px',
+    background: '#e2e8f0'
   },
 
-  totalRow: {
-    background: '#e8f1ff'
+  // =====================================================
+  // MONTH DETAIL
+  // =====================================================
+
+  monthSection: {
+    padding: '25px',
+    background: '#ffffff',
+    border: '1px solid #e5eaf2',
+    borderRadius: '20px',
+    boxShadow:
+      '0 8px 28px rgba(15,23,42,0.05)'
   },
 
-  totalCell: {
-    padding: '16px 18px',
-    fontWeight: 700,
-    color: '#172b4d'
+  monthSectionHeader: {
+    marginBottom: '20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '15px',
+    flexWrap: 'wrap'
   },
 
-  totalMoney: {
-    padding: '16px 18px',
-    textAlign: 'right',
-    fontWeight: 700,
+  monthSectionTitle: {
+    color: '#172b4d',
+    fontSize: '18px',
+    fontWeight: 800
+  },
+
+  monthSectionSubtitle: {
+    marginTop: '5px',
+    color: '#94a3b8',
+    fontSize: '12px'
+  },
+
+  monthCount: {
+    padding: '7px 11px',
+    borderRadius: '20px',
+    background: '#eff6ff',
+    color: '#2563eb',
+    fontSize: '10px',
+    fontWeight: 700
+  },
+
+  monthGrid: {
+    display: 'grid',
+    gridTemplateColumns:
+      'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '12px'
+  },
+
+  monthCard: {
+    padding: '16px',
+    border: '1px solid #edf1f5',
+    borderRadius: '14px',
+    background: '#fbfcfe'
+  },
+
+  highestMonthCard: {
+    border: '1px solid #bfdbfe',
+    background:
+      'linear-gradient(145deg, #eff6ff, #ffffff)'
+  },
+
+  monthCardTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px'
+  },
+
+  monthNumber: {
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '9px',
+    background: '#f1f5f9',
+    color: '#94a3b8',
+    fontSize: '10px',
+    fontWeight: 800
+  },
+
+  activeMonthNumber: {
+    background: '#dbeafe',
     color: '#1d4ed8'
+  },
+
+  bestBadge: {
+    padding: '4px 7px',
+    borderRadius: '20px',
+    background: '#dbeafe',
+    color: '#1d4ed8',
+    fontSize: '8px',
+    fontWeight: 700
+  },
+
+  monthName: {
+    marginTop: '13px',
+    color: '#64748b',
+    fontSize: '10px',
+    fontWeight: 600
+  },
+
+  monthMoney: {
+    marginTop: '4px',
+    fontSize: '14px',
+    fontWeight: 800
+  },
+
+  monthProgress: {
+    height: '4px',
+    marginTop: '13px',
+    overflow: 'hidden',
+    borderRadius: '20px',
+    background: '#e8eef5'
+  },
+
+  monthProgressValue: {
+    height: '100%',
+    borderRadius: '20px',
+    background:
+      'linear-gradient(90deg, #2563eb, #60a5fa)'
   }
 }
 
