@@ -289,7 +289,7 @@ setStatusCounts(statusData);
           footer={
             <button
               type="button"
-              className="room-add-button"
+              className="room-add-button invoice-close-button"
               onClick={() =>
                 navigate("/rooms", {
                   replace: true,
@@ -301,32 +301,58 @@ setStatusCounts(statusData);
             </button>
           }
         >
-          <p>
-            Trả phòng hoàn tất. Phòng {location.state.checkoutInvoice.roomNumber} hiện đã được chuyển về trạng thái trống.
-          </p>
-          <dl style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px 20px" }}>
-            <div>
-              <dt>Mã hoá đơn</dt>
-              <dd>{location.state.checkoutInvoice.code}</dd>
+          <div className="invoice-card">
+            <div className="invoice-success-banner">
+              <span className="invoice-badge">✓ Hoàn tất</span>
+              <p>Trả phòng thành công. Phòng {location.state.checkoutInvoice.roomNumber} đã trở về trạng thái trống.</p>
             </div>
-            <div>
-              <dt>Phòng</dt>
-              <dd>{location.state.checkoutInvoice.roomNumber}</dd>
+
+            <div className="invoice-header-row">
+              <div>
+                <div className="invoice-kicker">PHIẾU THU THUÊ</div>
+                <h3>{location.state.checkoutInvoice.code}</h3>
+              </div>
+              <span className="invoice-status">Đã thanh toán</span>
             </div>
-            <div>
-              <dt>Khách hàng</dt>
-              <dd>{location.state.checkoutInvoice.customerName}</dd>
+
+            <div className="invoice-meta-grid">
+              <div className="invoice-meta-item">
+                <span>Phòng</span>
+                <strong>{location.state.checkoutInvoice.roomNumber}</strong>
+              </div>
+              <div className="invoice-meta-item">
+                <span>Khách hàng</span>
+                <strong>{location.state.checkoutInvoice.customerName}</strong>
+              </div>
+              <div className="invoice-meta-item">
+                <span>Thời điểm lập</span>
+                <strong>{formatDate(location.state.checkoutInvoice.createdAt)}</strong>
+              </div>
+              <div className="invoice-meta-item">
+                <span>Số ngày lưu trú</span>
+                <strong>{location.state.checkoutInvoice.nights} ngày</strong>
+              </div>
             </div>
-            <div>
-              <dt>Thời điểm lập</dt>
-              <dd>{formatDate(location.state.checkoutInvoice.createdAt)}</dd>
+
+            <div className="invoice-breakdown">
+              <div className="invoice-line">
+                <span>Tiền phòng</span>
+                <strong>{formatMoney(location.state.checkoutInvoice.roomAmount)}</strong>
+              </div>
+              <div className="invoice-line">
+                <span>Tiền dịch vụ</span>
+                <strong>{formatMoney(location.state.checkoutInvoice.serviceAmount)}</strong>
+              </div>
+              <div className="invoice-line discount">
+                <span>Giảm giá</span>
+                <strong>-{formatMoney(location.state.checkoutInvoice.discount)}</strong>
+              </div>
             </div>
-          </dl>
-          <div>
-            <p>Tiền phòng ({location.state.checkoutInvoice.nights} ngày): {formatMoney(location.state.checkoutInvoice.roomAmount)}</p>
-            <p>Tiền dịch vụ: {formatMoney(location.state.checkoutInvoice.serviceAmount)}</p>
-            <p>Giảm giá: -{formatMoney(location.state.checkoutInvoice.discount)}</p>
-            <strong>Tổng thanh toán: {formatMoney(location.state.checkoutInvoice.totalAmount)}</strong>
+
+            <div className="invoice-total-row">
+              <span>Tổng thanh toán</span>
+              <strong>{formatMoney(location.state.checkoutInvoice.totalAmount)}</strong>
+            </div>
           </div>
         </Modal>
       )}

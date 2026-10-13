@@ -193,33 +193,7 @@ using (var scope = app.Services.CreateScope())
 
     // Tạo dữ liệu mặc định dùng chung cho cả nhóm
     await DbSeeder.SeedAsync(db);
-
-if (!db.Users.Any(u => u.Email == "admin@hotel.com"))
-    {
-        var admin = new User
-        {
-            Email = "admin@hotel.com",
-            FullName = "Administrator",
-            Role = "Admin",
-            IsActive = true,
-
-            PasswordHash =
-                BCrypt.Net.BCrypt.HashPassword(
-                    "Admin@123"
-                ),
-
-            FailedLoginAttempts = 0,
-            LockoutEnd = null,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        db.Users.Add(admin);
-        db.SaveChanges();
-
-        Console.WriteLine(
-            "Đã tạo tài khoản Admin test."
-        );
-    }
+    await DbSeeder.EnsureDefaultAdminAsync(db);
 
     if (!db.RoomTypes.Any())
     {
