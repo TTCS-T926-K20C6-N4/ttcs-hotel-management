@@ -44,10 +44,32 @@ public class IncomeStatisticsController : ControllerBase
             .Where(i => i.CreatedAt >= startDate
                      && i.CreatedAt < endDate)
             .Select(i => new
-            {
-                i.CreatedAt,
-                i.TotalAmount
-            })
+{
+    i.Id,
+    i.Code,
+    i.CreatedAt,
+    i.TotalAmount,
+
+    RoomNumber = i.Booking != null && i.Booking.Room != null
+        ? i.Booking.Room.RoomNumber
+        : "",
+
+    CustomerName = i.Booking != null && i.Booking.Customer != null
+        ? i.Booking.Customer.FullName
+        : "",
+
+    CustomerPhone = i.Booking != null && i.Booking.Customer != null
+        ? i.Booking.Customer.Phone
+        : "",
+
+    CheckInDate = i.Booking != null
+        ? (DateTime?)i.Booking.CheckInDate
+        : null,
+
+    CheckOutDate = i.Booking != null
+        ? i.Booking.ActualCheckOutDate
+        : null
+})
             .ToListAsync();
 
         var months = Enumerable.Range(1, 12)
@@ -60,12 +82,15 @@ public class IncomeStatisticsController : ControllerBase
             })
             .ToList();
 
-        return Ok(new
+               return Ok(new
         {
             year = selectedYear,
             years,
             months,
-            totalAmount = months.Sum(m => m.totalAmount)
+            totalAmount = months.Sum(m => m.totalAmount),
+            invoiceDetails = invoices
+                .OrderByDescending(i => i.CreatedAt)
+                .ToList()
         });
     }
 }

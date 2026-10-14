@@ -32,6 +32,8 @@ function IncomeStatistics() {
   )
 
   const [data, setData] = useState(null)
+  const [selectedMonth, setSelectedMonth] = useState(null)
+  const [showRevenueDetails, setShowRevenueDetails] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [exportError, setExportError] = useState('')
@@ -47,6 +49,8 @@ function IncomeStatistics() {
       setLoading(true)
       setError('')
       setData(null)
+      setSelectedMonth(null)
+      setShowRevenueDetails(false)
 
       try {
         const response = await fetch(
@@ -680,9 +684,9 @@ function IncomeStatistics() {
                     const height =
                       hasRevenue
                         ? Math.max(
-                            (item.totalAmount / maxRevenue) * 100,
-                            8
-                          )
+                          (item.totalAmount / maxRevenue) * 100,
+                          8
+                        )
                         : 2
 
                     const isHighest =
@@ -855,14 +859,24 @@ function IncomeStatistics() {
                   item.month === highestMonth.month
 
                 return (
-                  <div
+                  <button
                     key={item.month}
+                    type="button"
+                    onClick={() => setSelectedMonth(item.month)}
+                    aria-label={`Xem chi tiết doanh thu tháng ${item.month}`}
                     style={{
                       ...styles.monthCard,
-
-                      ...(isHighest
-                        ? styles.highestMonthCard
-                        : {})
+                      ...(isHighest ? styles.highestMonthCard : {}),
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.2s ease',
+                      border: selectedMonth === item.month
+                        ? '2px solid #2563eb'
+                        : '1px solid #e2e8f0',
+                      boxShadow: selectedMonth === item.month
+                        ? '0 8px 24px rgba(37,99,235,0.18)'
+                        : '0 3px 12px rgba(15,23,42,0.05)'
                     }}
                   >
                     <div style={styles.monthCardTop}>
@@ -908,19 +922,178 @@ function IncomeStatistics() {
 
                           width: hasRevenue
                             ? `${Math.max(
-                                (item.totalAmount / maxRevenue) * 100,
-                                4
-                              )}%`
+                              (item.totalAmount / maxRevenue) * 100,
+                              4
+                            )}%`
                             : '0%'
                         }}
                       />
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
-          </div>
+            {selectedMonth !== null && (
+              <div
+                style={{
+                  marginTop: '24px',
+                  padding: '24px',
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 24px rgba(37,99,235,0.08)'
+                }}
+              >
+                <h3 style={{ color: '#1d4ed8', marginTop: 0 }}>
+                  Chi tiết doanh thu tháng {selectedMonth}/{selectedYear}
+                </h3>
 
+                <p style={{ color: '#64748b' }}>
+                  Tổng doanh thu trong tháng
+                </p>
+
+                <h2 style={{ color: '#1d4ed8', fontSize: '28px' }}>
+                  {formatMoney(
+                    months.find(item => item.month === selectedMonth)?.totalAmount ?? 0
+                  )}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowRevenueDetails(!showRevenueDetails)}
+                  style={{
+                    padding: "10px 18px",
+                    background: "#16a34a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    marginRight: "10px"
+                  }}
+                >
+                  {showRevenueDetails
+                    ? "Ẩn chi tiết doanh thu"
+                    : "Xem chi tiết doanh thu"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMonth(null)}
+                  style={{
+                    padding: '10px 18px',
+                    background: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Đóng chi tiết
+                </button>
+                {showRevenueDetails && (
+  <div
+    style={{
+      marginTop: "20px",
+      padding: "20px",
+      background: "#ffffff",
+      border: "1px solid #dbeafe",
+      borderRadius: "12px"
+    }}
+  >
+    <h3>Chi tiết doanh thu từng phòng</h3>
+
+    {(() => {
+      const invoiceDetails = (data?.invoiceDetails || [])
+        .filter((invoice) => {
+          const date = new Date(invoice.createdAt);
+
+          return (
+            date.getFullYear() === Number(selectedYear) &&
+            date.getMonth() + 1 === Number(selectedMonth)
+          );
+        });
+
+      if (invoiceDetails.length === 0) {
+        return (
+          <p>
+            Không có hóa đơn trong tháng {selectedMonth}/{selectedYear}.
+          </p>
+        );
+      }
+
+      return (
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "15px",
+              fontSize: "14px"
+            }}
+          >
+            <thead>
+              <tr style={{ background: "#eff6ff" }}>
+                {[
+                  "Mã hóa đơn",
+                  "Số phòng",
+                  "Khách hàng",
+                  "Số điện thoại",
+                  "Ngày nhận phòng",
+                  "Ngày trả phòng",
+                  "Ngày lập hóa đơn",
+                  "Số tiền"
+                ].map((title) => (
+                  <th
+                    key={title}
+                    style={{
+                      padding: "12px",
+                      border: "1px solid #e2e8f0",
+                      textAlign: "left"
+                    }}
+                  >
+                    {title}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {invoiceDetails.map((invoice) => (
+                <tr key={invoice.id}>
+                  <td style={{ padding: "10px" }}>{invoice.code}</td>
+                  <td style={{ padding: "10px" }}>{invoice.roomNumber || "—"}</td>
+                  <td style={{ padding: "10px" }}>{invoice.customerName || "—"}</td>
+                  <td style={{ padding: "10px" }}>{invoice.customerPhone || "—"}</td>
+
+                  <td style={{ padding: "10px" }}>
+                    {invoice.checkInDate
+                      ? new Date(invoice.checkInDate).toLocaleDateString("vi-VN")
+                      : "—"}
+                  </td>
+
+                  <td style={{ padding: "10px" }}>
+                    {invoice.checkOutDate
+                      ? new Date(invoice.checkOutDate).toLocaleDateString("vi-VN")
+                      : "—"}
+                  </td>
+
+                  <td style={{ padding: "10px" }}>
+                    {new Date(invoice.createdAt).toLocaleString("vi-VN")}
+                  </td>
+
+                  <td style={{ padding: "10px", fontWeight: "bold" }}>
+                    {Number(invoice.totalAmount || 0).toLocaleString("vi-VN")} đ
+                  </td>
+                </tr>
+              ))}
+                        </tbody>
+          </table>
+        </div>
+      );
+    })()}
+  </div>
+)}
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>
