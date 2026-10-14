@@ -191,7 +191,7 @@ function IncomeStatistics() {
     doc.setFont('NotoSans', 'bold')
     doc.setFontSize(8)
     doc.setTextColor(147, 197, 253)
-    doc.text('HOTEL MANAGEMENT  /  BÁO CÁO TÀI CHÍNH', 16, 14)
+    doc.text('The Grand Hotel  /  BÁO CÁO TÀI CHÍNH', 16, 14)
 
     doc.setFontSize(19)
     doc.setTextColor(255, 255, 255)
