@@ -331,7 +331,7 @@ public BookingController(AppDbContext db)
         }
 
         // -----------------------------------------------------
-        // Tính theo cùng khoảng thời gian và quy tắc làm tròn ngày như báo giá thuê.
+        // Tính đến ngày trả dự kiến nếu ngày đó muộn hơn thời điểm trả thực tế.
         var actualCheckOutDate = DateTime.Now;
         var chargeUntil = booking.ExpectedCheckOutDate.HasValue
             ? booking.ExpectedCheckOutDate.Value > actualCheckOutDate

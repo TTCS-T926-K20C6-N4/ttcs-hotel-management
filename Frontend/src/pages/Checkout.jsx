@@ -281,7 +281,7 @@ function Checkout() {
                 </div>
                 <div className="detail-item">
                   <div className="label">Tiền phòng</div>
-                  <div className="value">{formatMoney(selected.roomAmount)}</div>
+                  <div className="value">{formatMoney(totals.room)}</div>
                 </div>
               </div>
 
