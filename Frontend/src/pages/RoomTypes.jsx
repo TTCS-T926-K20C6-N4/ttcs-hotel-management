@@ -996,6 +996,10 @@ function RoomTypes() {
             <form onSubmit={handleSubmitForm}>
               <div className="room-type-form-layout">
                 <div className="room-type-form-fields">
+                  <div className="room-type-fields-heading">
+                    <strong>Thông tin phòng</strong>
+                    <span>Các mục có dấu <span className="required-mark">*</span> là bắt buộc</span>
+                  </div>
                   <div className="form-group-encore">
                     <label htmlFor="room-type-name">
                       Tên thể loại phòng <span className="required-mark">*</span>
@@ -1011,43 +1015,25 @@ function RoomTypes() {
                     />
                   </div>
 
-                  <div className="form-row-encore">
-                    <div className="form-group-encore">
-                      <label htmlFor="room-type-price">
-                        Giá mỗi đêm (VNĐ) <span className="required-mark">*</span>
-                      </label>
-                      <input
-                        id="room-type-price"
-                        type="number"
-                        min="0"
-                        step="50000"
-                        placeholder="1.500.000"
-                        value={formData.pricePerNight}
-                        onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
-                        required
-                      />
-                      <span className="form-hint-encore">
-                        {formData.pricePerNight
-                          ? `Xem trước: ${formatMoney(formData.pricePerNight)}`
-                          : 'Giá niêm yết cho một đêm'}
-                      </span>
-                    </div>
-
-                    <div className="form-group-encore">
-                      <label htmlFor="room-type-capacity">
-                        Sức chứa (khách) <span className="required-mark">*</span>
-                      </label>
-                      <input
-                        id="room-type-capacity"
-                        type="number"
-                        min="1"
-                        max="20"
-                        placeholder="2"
-                        value={formData.capacity}
-                        onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                        required
-                      />
-                    </div>
+                  <div className="form-group-encore">
+                    <label htmlFor="room-type-price">
+                      Giá mỗi đêm (VNĐ) <span className="required-mark">*</span>
+                    </label>
+                    <input
+                      id="room-type-price"
+                      type="number"
+                      min="0"
+                      step="50000"
+                      placeholder="1.500.000"
+                      value={formData.pricePerNight}
+                      onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
+                      required
+                    />
+                    <span className="form-hint-encore">
+                      {formData.pricePerNight
+                        ? `Xem trước: ${formatMoney(formData.pricePerNight)}`
+                        : 'Giá niêm yết cho một đêm'}
+                    </span>
                   </div>
 
                   <div className="form-group-encore room-type-description">

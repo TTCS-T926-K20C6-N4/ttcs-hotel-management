@@ -859,6 +859,24 @@
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+  animation: room-type-form-enter 0.2s ease-out;
+}
+
+@keyframes room-type-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-type-form-modal {
+    animation: none;
+  }
 }
 
 .room-type-form-heading {
@@ -898,7 +916,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
   gap: 26px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .room-type-form-fields,
@@ -907,17 +925,41 @@
 }
 
 .room-type-form-fields {
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   border: 1px solid #e8edf2;
   border-radius: 14px;
-  background: #fff;
+  background: linear-gradient(160deg, #fff 55%, #fbfdff);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.025);
 }
 
 .room-type-image-panel {
   padding: 18px;
   border: 1px solid #e8edf2;
   border-radius: 14px;
-  background: #f8fafc;
+  background: linear-gradient(160deg, #f8fafc, #f4f8fb);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.025);
+}
+
+.room-type-fields-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.room-type-fields-heading strong {
+  color: #26394a;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.room-type-fields-heading > span {
+  color: #8491a0;
+  font-size: 10.5px;
 }
 
 .room-type-image-heading {
@@ -1021,7 +1063,13 @@
 }
 
 .room-type-description {
+  flex: 1;
   margin-bottom: 0 !important;
+}
+
+.room-type-description textarea {
+  flex: 1;
+  min-height: 130px !important;
 }
 
 .form-hint-encore {
@@ -1121,6 +1169,13 @@
   background: #1987ba;
 }
 
+.btn-apply-url:focus-visible,
+.btn-upload-file:focus-visible,
+.room-type-form-modal .encore-modal-footer button:focus-visible {
+  outline: 3px solid rgba(32, 152, 209, 0.3);
+  outline-offset: 2px;
+}
+
 /* Live Preview of Selected Image */
 .img-live-preview-box {
   position: relative;
@@ -1131,6 +1186,7 @@
   margin-bottom: 13px;
   border: 1px solid #dce5ec;
   background: #e9eef2;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .img-live-preview-box img {
@@ -1320,6 +1376,10 @@
 
   .room-type-form-fields {
     padding: 16px;
+  }
+
+  .room-type-description textarea {
+    min-height: 112px !important;
   }
 
   .room-type-image-panel {
