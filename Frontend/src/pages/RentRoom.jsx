@@ -192,6 +192,15 @@ function RentRoom() {
       return
     }
 
+    const customerIdCard = form.customerIdCard.trim()
+    if (
+      customerIdCard &&
+      !/^(?:[0-9]{9}|[0-9]{12})$/.test(customerIdCard)
+    ) {
+      setFormError('CMND phải gồm 9 chữ số hoặc CCCD phải gồm 12 chữ số.')
+      return
+    }
+
     if (!form.checkInDate) {
       setFormError('Không xác định được thời gian nhận phòng.')
       return
@@ -228,8 +237,7 @@ function RentRoom() {
       customerName: form.customerName.trim(),
       customerPhone: form.customerPhone.trim(),
 
-      customerIdCard:
-        form.customerIdCard.trim() || null,
+      customerIdCard: customerIdCard || null,
 
       guestCount: 1,
 
@@ -438,6 +446,8 @@ function RentRoom() {
                   <label>CMND / CCCD</label>
 
                   <input
+                    type="tel"
+                    inputMode="numeric"
                     value={form.customerIdCard}
                     onChange={(event) =>
                       update(
@@ -445,7 +455,12 @@ function RentRoom() {
                         event.target.value
                       )
                     }
+                    placeholder="9 số CMND hoặc 12 số CCCD"
+                    maxLength={12}
                   />
+                  <span className="form-hint">
+                    Không bắt buộc. CMND gồm 9 chữ số, CCCD gồm 12 chữ số.
+                  </span>
                 </div>
 
                 {/* GIỜ NHẬN PHÒNG */}
