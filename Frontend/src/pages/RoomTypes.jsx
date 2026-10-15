@@ -980,169 +980,165 @@ function RoomTypes() {
           onClick={() => !formSubmitting && setFormModal({ open: false, isEdit: false, id: null })}
         >
           <div
-            className="encore-form-modal"
+            className="encore-form-modal room-type-form-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>{formModal.isEdit ? 'Chỉnh Sửa Thể Loại Phòng' : 'Thêm Thể Loại Phòng Mới'}</h3>
+            <div className="room-type-form-heading">
+              <div>
+                <span className="room-type-form-eyebrow">THE GRAND HOTEL · QUẢN LÝ PHÒNG</span>
+                <h3>{formModal.isEdit ? 'Chỉnh sửa thể loại phòng' : 'Thêm thể loại phòng mới'}</h3>
+                <p>Thiết lập thông tin, giá phòng và hình ảnh đại diện.</p>
+              </div>
+            </div>
 
             {formError && <div className="modal-alert-encore">⚠️ {formError}</div>}
 
             <form onSubmit={handleSubmitForm}>
-              <div className="form-group-encore">
-                <label>
-                  Tên thể loại phòng <span style={{ color: '#dc2626' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ví dụ: Double Suite Attic Floor, Family Double Room Suite..."
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <div className="form-row-encore">
-                <div className="form-group-encore">
-                  <label>
-                    Đơn giá mỗi đêm (VNĐ) <span style={{ color: '#dc2626' }}>*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="50000"
-                    placeholder="Ví dụ: 1500000"
-                    value={formData.pricePerNight}
-                    onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
-                    required
-                  />
-                  <span className="form-hint-encore">
-                    {formData.pricePerNight
-                      ? `Xem trước: ${formatMoney(formData.pricePerNight)}`
-                      : 'Nhập số tiền VNĐ'}
-                  </span>
-                </div>
-
-                <div className="form-group-encore">
-                  <label>
-                    Sức chứa tối đa (Khách) <span style={{ color: '#dc2626' }}>*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    placeholder="Ví dụ: 2"
-                    value={formData.capacity}
-                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* ===== IMAGE UPLOAD & SELECTION SECTION (ẢNH 2 FEATURE) ===== */}
-              <div className="form-group-encore">
-                <label>Hình ảnh đại diện phòng</label>
-
-                {/* Live Preview Box */}
-                {formData.imageUrl && (
-                  <div className="img-live-preview-box">
-                    <img src={formData.imageUrl} alt="Xem trước ảnh phòng" />
-                    <span className="preview-badge">Ảnh đang chọn</span>
+              <div className="room-type-form-layout">
+                <div className="room-type-form-fields">
+                  <div className="room-type-fields-heading">
+                    <strong>Thông tin phòng</strong>
+                    <span>Các mục có dấu <span className="required-mark">*</span> là bắt buộc</span>
                   </div>
-                )}
+                  <div className="form-group-encore">
+                    <label htmlFor="room-type-name">
+                      Tên thể loại phòng <span className="required-mark">*</span>
+                    </label>
+                    <input
+                      id="room-type-name"
+                      type="text"
+                      placeholder="Ví dụ: Deluxe, Suite gia đình..."
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      autoFocus
+                    />
+                  </div>
 
-                {/* Upload Action Toolbar */}
-                <div className="img-upload-toolbar">
-                  {/* Hidden file input */}
+                  <div className="form-group-encore">
+                    <label htmlFor="room-type-price">
+                      Giá mỗi đêm (VNĐ) <span className="required-mark">*</span>
+                    </label>
+                    <input
+                      id="room-type-price"
+                      type="number"
+                      min="0"
+                      step="50000"
+                      placeholder="1.500.000"
+                      value={formData.pricePerNight}
+                      onChange={(e) => setFormData({ ...formData, pricePerNight: e.target.value })}
+                      required
+                    />
+                    <span className="form-hint-encore">
+                      {formData.pricePerNight
+                        ? `Xem trước: ${formatMoney(formData.pricePerNight)}`
+                        : 'Giá niêm yết cho một đêm'}
+                    </span>
+                  </div>
+
+                  <div className="form-group-encore room-type-description">
+                    <label htmlFor="room-type-description">Mô tả &amp; tiện nghi</label>
+                    <textarea
+                      id="room-type-description"
+                      rows={4}
+                      placeholder="Mô tả nội thất, tầm nhìn, bồn tắm thư giãn, trang thiết bị..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="room-type-image-panel">
+                  <div className="room-type-image-heading">
+                    <div>
+                      <label>Ảnh đại diện</label>
+                      <span>Chọn ảnh phù hợp với hạng phòng</span>
+                    </div>
+                    <span className="image-optional-tag">Tùy chọn</span>
+                  </div>
+
+                  {formData.imageUrl && (
+                    <div className="img-live-preview-box">
+                      <img src={formData.imageUrl} alt="Xem trước ảnh phòng" />
+                      <span className="preview-badge">Ảnh đang chọn</span>
+                    </div>
+                  )}
+
                   <input
                     type="file"
                     ref={fileInputRef}
                     accept="image/*"
-                    style={{ display: 'none' }}
+                    className="room-type-file-input"
                     onChange={handleFileUpload}
                   />
 
-                  {/* Button to upload from computer */}
-                  <button
-                    type="button"
-                    className="btn-upload-file"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    📁 Tải ảnh từ máy tính lên
-                  </button>
-
-                  {/* Input for image URL */}
-                  <div className="img-url-input-group">
-                    <input
-                      type="url"
-                      placeholder="Hoặc dán URL ảnh trực tuyến..."
-                      value={customUrlInput}
-                      onChange={(e) => setCustomUrlInput(e.target.value)}
-                    />
+                  <div className="room-type-image-actions">
                     <button
                       type="button"
-                      className="btn-apply-url"
-                      onClick={handleApplyCustomUrl}
+                      className="btn-upload-file"
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      Áp dụng
+                      📁 Tải ảnh lên
                     </button>
+                    <div className="img-url-input-group">
+                      <input
+                        type="url"
+                        aria-label="Đường dẫn ảnh trực tuyến"
+                        placeholder="Dán URL ảnh..."
+                        value={customUrlInput}
+                        onChange={(e) => setCustomUrlInput(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn-apply-url"
+                        onClick={handleApplyCustomUrl}
+                      >
+                        Dùng ảnh
+                      </button>
+                    </div>
+                  </div>
+
+                  <span className="room-type-library-label">Thư viện ảnh</span>
+                  <div className="preset-thumbs-grid">
+                    <button
+                      type="button"
+                      className="preset-add-tile"
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Nhấp để tải ảnh từ máy tính"
+                    >
+                      <span>+</span>
+                      <small>Tải ảnh</small>
+                    </button>
+
+                    {userPresets.map((url, idx) => (
+                      <button
+                        type="button"
+                        key={`user-${idx}`}
+                        className={`preset-thumb-item ${formData.imageUrl === url ? 'active' : ''}`}
+                        onClick={() => setFormData({ ...formData, imageUrl: url })}
+                        title="Ảnh bạn đã tải lên"
+                        aria-label={`Chọn ảnh đã tải lên ${idx + 1}`}
+                        aria-pressed={formData.imageUrl === url}
+                      >
+                        <img src={url} alt="" />
+                      </button>
+                    ))}
+
+                    {ENCORE_IMAGE_PRESETS.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.id}
+                        className={`preset-thumb-item ${formData.imageUrl === preset.url ? 'active' : ''}`}
+                        onClick={() => setFormData({ ...formData, imageUrl: preset.url })}
+                        title={preset.title}
+                        aria-label={`Chọn ảnh ${preset.title}`}
+                        aria-pressed={formData.imageUrl === preset.url}
+                      >
+                        <img src={preset.url} alt="" />
+                      </button>
+                    ))}
                   </div>
                 </div>
-
-                {/* Preset and uploaded photos */}
-                <label style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, marginTop: '4px' }}>
-                  Hoặc chọn từ thư viện ảnh The Grand Hotel / Ảnh đã tải lên:
-                </label>
-
-                <div className="preset-thumbs-grid">
-                  {/* Tile to click and upload */}
-                  <div
-                    className="preset-add-tile"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Nhấp để tải ảnh từ máy tính"
-                  >
-                    <span>+</span>
-                    <small>Tải ảnh</small>
-                  </div>
-
-                  {/* User uploaded presets */}
-                  {userPresets.map((url, idx) => (
-                    <div
-                      key={`user-${idx}`}
-                      className={`preset-thumb-item ${formData.imageUrl === url ? 'active' : ''}`}
-                      onClick={() => setFormData({ ...formData, imageUrl: url })}
-                      title="Ảnh bạn đã tải lên"
-                    >
-                      <img src={url} alt={`Ảnh tải lên ${idx + 1}`} />
-                    </div>
-                  ))}
-
-                  {/* Built-in Encore luxury presets */}
-                  {ENCORE_IMAGE_PRESETS.map((preset) => (
-                    <div
-                      key={preset.id}
-                      className={`preset-thumb-item ${formData.imageUrl === preset.url ? 'active' : ''}`}
-                      onClick={() => setFormData({ ...formData, imageUrl: preset.url })}
-                      title={preset.title}
-                    >
-                      <img src={preset.url} alt={preset.title} />
-                    </div>
-                  ))}
-                </div>
-
-                <span className="form-hint-encore">
-                  Bạn có thể bấm &quot;📁 Tải ảnh từ máy tính lên&quot;, dán đường dẫn ảnh hoặc chọn ảnh mẫu có sẵn ở trên.
-                </span>
-              </div>
-
-              <div className="form-group-encore">
-                <label>Mô tả tiện ích &amp; nội thất</label>
-                <textarea
-                  rows={3}
-                  placeholder="Mô tả nội thất, tầm nhìn, bồn tắm thư giãn, trang thiết bị..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
               </div>
 
               <div className="encore-modal-footer">
@@ -1163,7 +1159,7 @@ function RoomTypes() {
                     ? 'Đang lưu...'
                     : formModal.isEdit
                     ? 'Lưu thay đổi'
-                    : 'Thêm mới'}
+                    : 'Thêm thể loại phòng'}
                 </button>
               </div>
             </form>
