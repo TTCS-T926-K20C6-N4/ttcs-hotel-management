@@ -17,6 +17,7 @@ public class RentalRequest
 
     public string? CustomerEmail { get; set; }
 
+    [RegularExpression(@"^(?:[0-9]{9}|[0-9]{12})$", ErrorMessage = "CMND phải gồm 9 chữ số hoặc CCCD phải gồm 12 chữ số.")]
     public string? CustomerIdCard { get; set; }
 
     public string? CustomerAddress { get; set; }
