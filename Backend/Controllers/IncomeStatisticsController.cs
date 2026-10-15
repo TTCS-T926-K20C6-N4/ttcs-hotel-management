@@ -1,5 +1,6 @@
 
 using Backend.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/statistics")]
+[Authorize(Roles = "Admin")]
 public class IncomeStatisticsController : ControllerBase
 {
     private const int FirstSupportedYear = 2022;

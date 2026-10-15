@@ -12,9 +12,10 @@ import {
   LogOut
 } from 'lucide-react'
 
-function Sidebar() {
+function Sidebar({ user }) {
   const navigate = useNavigate()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const isAdmin = user?.role === 'Admin'
 
   const iconStyle = {
     width: 19,
@@ -72,19 +73,23 @@ function Sidebar() {
           <span>Danh sách phòng</span>
         </NavLink>
 
-        <div className="menu-title">DANH MỤC</div>
+        {isAdmin && (
+          <>
+            <div className="menu-title">DANH MỤC</div>
 
-        <NavLink to="/room-types" className="menu-item">
-          <Tags style={iconStyle} />
-          <span>Thể loại phòng</span>
-        </NavLink>
+            <NavLink to="/room-types" className="menu-item">
+              <Tags style={iconStyle} />
+              <span>Thể loại phòng</span>
+            </NavLink>
 
-        <div className="menu-title">THỐNG KÊ</div>
+            <div className="menu-title">THỐNG KÊ</div>
 
-        <NavLink to="/income" className="menu-item">
-          <ChartNoAxesColumnIncreasing style={iconStyle} />
-          <span>Thống kê thu nhập</span>
-        </NavLink>
+            <NavLink to="/income" className="menu-item">
+              <ChartNoAxesColumnIncreasing style={iconStyle} />
+              <span>Thống kê thu nhập</span>
+            </NavLink>
+          </>
+        )}
 
         <div className="menu-title">TÀI KHOẢN</div>
 

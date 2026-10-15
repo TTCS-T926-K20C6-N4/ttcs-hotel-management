@@ -90,7 +90,11 @@ builder.Services
             };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("StaffOrAdmin", policy =>
+        policy.RequireRole("Admin", "Staff", "User"));
+});
 
 // =====================================
 // SESSION

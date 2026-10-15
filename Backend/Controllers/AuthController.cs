@@ -79,7 +79,7 @@ public class AuthController : ControllerBase
             FullName = request.FullName.Trim(),
             Email = email,
             PasswordHash = passwordHash,
-            Role = "User",
+            Role = "Staff",
             IsActive = true
         };
 
@@ -338,6 +338,12 @@ public class AuthController : ControllerBase
     [HttpPost("profile/avatar")]
     public async Task<IActionResult> UploadProfileAvatar([FromForm] IFormFile avatar)
     {
+        if (HttpContext.Session.GetString("IsLoggedIn") != "true" ||
+            HttpContext.Session.GetInt32("UserId") is null)
+        {
+            return Unauthorized(new { message = "Bạn chưa đăng nhập." });
+        }
+
         if (avatar == null || avatar.Length == 0)
         {
             return BadRequest(new { message = "Vui lòng chọn hình ảnh." });

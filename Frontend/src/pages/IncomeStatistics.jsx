@@ -53,10 +53,14 @@ function IncomeStatistics() {
       setShowRevenueDetails(false)
 
       try {
+        const token = localStorage.getItem('token')
         const response = await fetch(
           `http://localhost:5097/api/statistics/income?year=${selectedYear}`,
           {
             credentials: 'include',
+            headers: token
+              ? { Authorization: `Bearer ${token}` }
+              : {},
             signal: controller.signal
           }
         )
