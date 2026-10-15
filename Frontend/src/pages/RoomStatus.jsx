@@ -10,10 +10,15 @@ const [selectedStatus, setSelectedStatus] = useState(null);
   useEffect(() => {
     const loadStatusCounts = async () => {
       try {
+        const token = localStorage.getItem("token");
+        const headers = token
+          ? { Authorization: `Bearer ${token}` }
+          : {};
         const response = await fetch(
           "http://localhost:5097/api/rooms/status-count",
           {
             credentials: "include",
+            headers,
           }
         );
 
@@ -27,6 +32,7 @@ const [selectedStatus, setSelectedStatus] = useState(null);
   "http://localhost:5097/api/rooms",
   {
     credentials: "include",
+    headers,
   }
 );
 

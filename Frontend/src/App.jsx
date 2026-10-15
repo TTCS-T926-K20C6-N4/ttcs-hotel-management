@@ -4,7 +4,8 @@ import {
   Routes,
   Route,
   Navigate,
-  Outlet
+  Outlet,
+  useOutletContext
 } from 'react-router-dom'
 
 import MainLayout from './layouts/MainLayout'
@@ -36,6 +37,7 @@ import './App.css'
 function ProtectedRoute() {
 
   const [isLoggedIn, setIsLoggedIn] = useState(null)
+  const [user, setUser] = useState(null)
 
 
   useEffect(() => {
@@ -57,6 +59,8 @@ function ProtectedRoute() {
 
         if (response.ok) {
 
+          const data = await response.json()
+          setUser(data.user)
           setIsLoggedIn(true)
 
         } else {
@@ -126,7 +130,15 @@ function ProtectedRoute() {
   // ĐÃ ĐĂNG NHẬP
   // ========================================
 
-  return <Outlet />
+  return <Outlet context={{ user }} />
+}
+
+function AdminRoute() {
+  const { user } = useOutletContext()
+
+  return user?.role === 'Admin'
+    ? <Outlet />
+    : <Navigate to="/" replace />
 }
 
 
@@ -201,24 +213,28 @@ function App() {
             />
 
 
-            {/* Thêm phòng */}
+            <Route element={<AdminRoute />}>
+              <Route
+                path="/rooms/add"
+                element={<AddRoom />}
+              />
 
-            <Route
-              path="/rooms/add"
-              element={<AddRoom />}
-            />
+              <Route
+                path="/rooms/:id/edit"
+                element={<EditRoom />}
+              />
 
-            <Route
-              path="/rooms/:id/edit"
-              element={<EditRoom />}
-            />
+              <Route
+                path="/room-types"
+                element={<RoomTypes />}
+              />
 
-            {/* Thể loại phòng */}
+              <Route
+                path="/income"
+                element={<IncomeStatistics />}
+              />
+            </Route>
 
-            <Route
-              path="/room-types"
-              element={<RoomTypes />}
-            />
 <Route
   path="/room-status"
   element={<RoomStatus />}
@@ -248,13 +264,6 @@ function App() {
   path="/profile"
   element={<Profile />}
 />
-
-{/* Thống kê thu nhập */}
-<Route
-  path="/income"
-  element={<IncomeStatistics />}
-/>
-
 
           </Route>
 
