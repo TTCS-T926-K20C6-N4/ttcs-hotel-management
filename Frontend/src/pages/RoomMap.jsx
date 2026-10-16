@@ -18,8 +18,12 @@ function RoomMap() {
       setLoading(true)
       setError('')
 
+      const token = localStorage.getItem('token')
       const response = await fetch(API_URL, {
         credentials: 'include',
+        headers: token
+          ? { Authorization: `Bearer ${token}` }
+          : {},
       })
 
       if (!response.ok) {
