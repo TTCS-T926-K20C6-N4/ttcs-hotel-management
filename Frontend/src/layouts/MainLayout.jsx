@@ -1,19 +1,21 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useOutletContext } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 
 function MainLayout() {
+  const { user } = useOutletContext()
+
   return (
     <div className="app-layout">
 
-      <Sidebar />
+      <Sidebar user={user} />
 
       <div className="main-area">
 
-        <Header />
+        <Header user={user} />
 
         <main className="content">
-          <Outlet />
+          <Outlet context={{ user }} />
         </main>
 
       </div>

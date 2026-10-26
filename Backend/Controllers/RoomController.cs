@@ -1,6 +1,7 @@
 using Backend.Data;
 using Backend.DTOs;
 using Backend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
+[Authorize(Policy = "StaffOrAdmin")]
 public class RoomController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -108,6 +110,7 @@ public async Task<IActionResult> GetRoomById(int id, CancellationToken cancellat
 }
 
 [HttpPost]
+[Authorize(Roles = "Admin")]
 public async Task<IActionResult> CreateRoom(Room room)
 {
     if (string.IsNullOrWhiteSpace(room.RoomNumber))
@@ -159,6 +162,7 @@ public async Task<IActionResult> CreateRoom(Room room)
 }
 
 [HttpPost("upload-image")]
+[Authorize(Roles = "Admin")]
 public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
 {
     if (image == null || image.Length == 0)
@@ -209,6 +213,7 @@ public async Task<IActionResult> UploadRoomImage([FromForm] IFormFile image)
 }
 
 [HttpPut("{id:int}")]
+[Authorize(Roles = "Admin")]
 public async Task<IActionResult> UpdateRoom(
     int id,
     [FromBody] UpdateRoomRequest request,
@@ -264,6 +269,7 @@ public async Task<IActionResult> UpdateRoom(
 }
 
 [HttpDelete("{id}")]
+[Authorize(Roles = "Admin")]
 public async Task<IActionResult> DeleteRoom(int id)
     {
         var room = await _db.Rooms.FindAsync(id);
@@ -354,6 +360,7 @@ _db.Rooms.Remove(room);
     }
 
     [HttpPost("room-types")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateRoomType([FromBody] RoomTypeRequest request)
     {
         if (!ModelState.IsValid)
@@ -398,6 +405,7 @@ _db.Rooms.Remove(room);
     }
 
     [HttpPut("room-types/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateRoomType(int id, [FromBody] RoomTypeRequest request)
     {
         if (!ModelState.IsValid)
@@ -442,6 +450,7 @@ _db.Rooms.Remove(room);
     }
 
     [HttpDelete("room-types/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteRoomType(int id)
     {
         var roomType = await _db.RoomTypes

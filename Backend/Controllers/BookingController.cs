@@ -13,7 +13,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/bookings")]
-[Authorize]
+[Authorize(Policy = "StaffOrAdmin")]
 public class BookingController : ControllerBase
 {
    private readonly AppDbContext _db;
@@ -27,6 +27,7 @@ public BookingController(AppDbContext db)
     // Danh sách lượt thuê phòng
     // =========================================================
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetBookings([FromQuery] string? status)
     {
         var query = _db.Bookings
@@ -76,6 +77,7 @@ public BookingController(AppDbContext db)
     // Chi tiết một lượt thuê
     // =========================================================
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetBooking(int id)
     {
         var booking = await _db.Bookings
@@ -331,7 +333,7 @@ public BookingController(AppDbContext db)
         }
 
         // -----------------------------------------------------
-        // Tính theo cùng khoảng thời gian và quy tắc làm tròn ngày như báo giá thuê.
+        // Tính đến ngày trả dự kiến nếu ngày đó muộn hơn thời điểm trả thực tế.
         var actualCheckOutDate = DateTime.Now;
         var chargeUntil = booking.ExpectedCheckOutDate.HasValue
             ? booking.ExpectedCheckOutDate.Value > actualCheckOutDate
@@ -421,6 +423,7 @@ public BookingController(AppDbContext db)
     // Hủy lượt thuê
     // =========================================================
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CancelBooking(int id)
     {
         var booking = await _db.Bookings

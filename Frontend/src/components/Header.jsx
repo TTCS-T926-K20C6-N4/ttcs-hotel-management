@@ -14,7 +14,7 @@ const pageDetails = [
   { path: '/change-password', title: 'Đổi mật khẩu', icon: '⌑' },
 ]
 
-function Header() {
+function Header({ user }) {
   const { pathname } = useLocation()
   const page = pageDetails.find(
     (item) =>
@@ -36,10 +36,12 @@ function Header() {
 
       <div className="user-box">
         <div className="user-box-info">
-          <strong>Admin</strong>
-          <span>Quản trị viên</span>
+          <strong>{user?.fullName || user?.email || 'Tài khoản'}</strong>
+          <span>{user?.role === 'Admin' ? 'Quản trị viên' : 'Nhân viên'}</span>
         </div>
-        <div className="avatar">A</div>
+        <div className="avatar">
+          {(user?.fullName || user?.email || 'U').charAt(0).toUpperCase()}
+        </div>
       </div>
     </header>
   )

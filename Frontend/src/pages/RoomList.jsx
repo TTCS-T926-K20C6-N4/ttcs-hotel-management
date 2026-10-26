@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import Toast from "../components/Toast";
 import Modal from "../components/Modal";
 import { formatDate, formatMoney } from "../services/api";
@@ -16,6 +16,8 @@ function getImageSource(imageUrl) {
 function RoomList() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useOutletContext();
+  const isAdmin = user?.role === "Admin";
 
   const [rooms, setRooms] = useState([]);
   const [statusCounts, setStatusCounts] = useState([]);
@@ -57,10 +59,15 @@ function RoomList() {
       // ============================
       // LẤY DANH SÁCH PHÒNG
       // ============================
+      const token = localStorage.getItem("token");
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
       const roomsResponse = await fetch(
         "http://localhost:5097/api/rooms",
         {
           credentials: "include",
+          headers,
         },
       );
 
@@ -77,6 +84,7 @@ const statusResponse = await fetch(
   "http://localhost:5097/api/rooms/status-count",
   {
     credentials: "include",
+    headers,
   }
 );
 
@@ -191,8 +199,11 @@ setStatusCounts(statusData);
         {
           method: "DELETE",
           credentials: "include",
-        },
-      );
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
 
       const data = await response.json();
 
@@ -374,13 +385,15 @@ setStatusCounts(statusData);
           </p>
         </div>
 
-        <Link
-          to="/rooms/add"
-          className="room-add-button"
-        >
-          <span aria-hidden="true">＋</span>
-          Thêm phòng
-        </Link>
+        {isAdmin && (
+          <Link
+            to="/rooms/add"
+            className="room-add-button"
+          >
+            <span aria-hidden="true">＋</span>
+            Thêm phòng
+          </Link>
+        )}
       </div>
 
       {/* ============================
@@ -501,17 +514,22 @@ setStatusCounts(statusData);
 
           <h2>Chưa có phòng nào</h2>
 
-          <p>
-            Thêm phòng đầu tiên để bắt đầu quản lý
-            khách sạn.
-          </p>
-
-          <Link
-            to="/rooms/add"
-            className="room-add-button"
-          >
-            Thêm phòng ngay
-          </Link>
+          {isAdmin ? (
+            <>
+              <p>
+                Thêm phòng đầu tiên để bắt đầu quản lý
+                khách sạn.
+              </p>
+              <Link
+                to="/rooms/add"
+                className="room-add-button"
+              >
+                Thêm phòng ngay
+              </Link>
+            </>
+          ) : (
+            <p>Chưa có phòng nào trong hệ thống.</p>
+          )}
 
         </div>
 
@@ -680,23 +698,27 @@ setStatusCounts(statusData);
                       </Link>
                     )}
 
-                    <Link
-                      to={`/rooms/${room.id}/edit`}
-                      className="room-edit-button"
-                    >
-                      <span aria-hidden="true">↻</span>
-                      Cập nhật
-                    </Link>
+                    {isAdmin && (
+                      <>
+                        <Link
+                          to={`/rooms/${room.id}/edit`}
+                          className="room-edit-button"
+                        >
+                          <span aria-hidden="true">↻</span>
+                          Cập nhật
+                        </Link>
 
-                    <button
-                      type="button"
-                      className="room-delete-button"
-                      onClick={() =>
-                        handleDelete(room.id)
-                      }
-                    >
-                      Xóa phòng
-                    </button>
+                        <button
+                          type="button"
+                          className="room-delete-button"
+                          onClick={() =>
+                            handleDelete(room.id)
+                          }
+                        >
+                          Xóa phòng
+                        </button>
+                      </>
+                    )}
 
                   </div>
 

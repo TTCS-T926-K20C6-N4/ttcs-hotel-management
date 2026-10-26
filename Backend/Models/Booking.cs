@@ -48,12 +48,25 @@ public class Booking
 
     public List<Invoice> Invoices { get; set; } = new();
 
-    /// <summary>Số đêm lưu trú (đã chốt nếu đã trả phòng).</summary>
+    /// <summary>Số ngày tính tiền, được chốt theo ngày trả dự kiến hoặc thực tế khi đã trả phòng.</summary>
     public int Nights
     {
         get
         {
             var end = ActualCheckOutDate ?? ExpectedCheckOutDate ?? DateTime.Now;
+
+            if (Status == BookingStatus.CheckedOut)
+            {
+                if (ExpectedCheckOutDate.HasValue &&
+                    ExpectedCheckOutDate.Value > end)
+                {
+                    end = ExpectedCheckOutDate.Value;
+                }
+
+                var billedDays = (int)Math.Ceiling((end - CheckInDate).TotalDays);
+                return billedDays <= 0 ? 1 : billedDays;
+            }
+
             var nights = (end.Date - CheckInDate.Date).Days;
             return nights <= 0 ? 1 : nights;
         }

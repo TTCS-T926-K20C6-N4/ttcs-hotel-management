@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { api } from '../services/api'
 import { ROOM_STATUS } from '../services/roomStatus'
 import { ErrorBox, Loading } from '../components/Feedback'
@@ -78,6 +78,9 @@ const dashboardDate = new Intl.DateTimeFormat('vi-VN', {
 }).format(new Date())
 
 function Home() {
+  const { user } = useOutletContext()
+  const isAdmin = user?.role === 'Admin'
+
   const [currentSlide, setCurrentSlide] = useState(0)
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -328,11 +331,13 @@ function Home() {
               <span><strong>Sơ đồ phòng</strong><small>Quan sát phòng theo tầng</small></span>
               <span className="dashboard-shortcut-arrow">→</span>
             </Link>
-            <Link to="/room-types" className="dashboard-shortcut">
-              <span className="dashboard-shortcut-icon">◇</span>
-              <span><strong>Thể loại phòng</strong><small>Quản lý loại phòng và giá</small></span>
-              <span className="dashboard-shortcut-arrow">→</span>
-            </Link>
+            {isAdmin && (
+              <Link to="/room-types" className="dashboard-shortcut">
+                <span className="dashboard-shortcut-icon">◇</span>
+                <span><strong>Thể loại phòng</strong><small>Quản lý loại phòng và giá</small></span>
+                <span className="dashboard-shortcut-arrow">→</span>
+              </Link>
+            )}
           </div>
         </article>
       </section>
